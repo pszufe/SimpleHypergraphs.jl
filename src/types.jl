@@ -1,15 +1,19 @@
 # We support two-way mapping as in different problems both might be needed.
 # In the matrix representation rows are vertices and columns are hyperedges
 # n is number of vertices and k is number of hyperedges
-struct Hypergraph <: AbstractMatrix{Bool}
-    v2he::Vector{Set{Int}}
-    he2v::Vector{Set{Int}}
-    Hypergraph(n,k) = new([Set{Int}() for i in 1:n],
-                          [Set{Int}() for i in 1:k])
+# if he[vertex, hyperedge] returns nothing this means that the vertex
+# is not present in the hyperedge
+# if he[vertex, hyperedge] returns a real number it is a weight
+# of the vertex in this hyperedge
+struct Hypergraph{T} <: AbstractMatrix{Union{T, Nothing}}
+    v2he::Vector{Dict{Int,T}}
+    he2v::Vector{Dict{Int,T}}
+    Hypergraph{T}(n,k) where {T<:Real} =
+        new([Dict{Int,T}() for i in 1:n], [Dict{Int,T}() for i in 1:k])
 end
 
-function Hypergraph(m::AbstractMatrix{Bool})
-    h = Hypergraph(size(m)...)
+function Hypergraph(m::AbstractMatrix{T}) where {T<:Real}
+    h = Hypergraph{T}(size(m)...)
     h .= m
     h
 end
@@ -18,19 +22,20 @@ Base.size(h::Hypergraph) = (length(h.v2he), length(h.he2v))
 
 @inline function Base.getindex(h::Hypergraph, idx::Vararg{Int,2})
     @boundscheck checkbounds(h, idx...)
-    idx[2] in h.v2he[idx[1]]
+    get(h.v2he[idx[1]], idx[2], nothing)
 end
 
-@inline function Base.setindex!(h::Hypergraph, v::Bool, idx::Vararg{Int,2})
+@inline function Base.setindex!(h::Hypergraph, ::Nothing, idx::Vararg{Int,2})
     @boundscheck checkbounds(h, idx...)
-    if v
-        push!(h.v2he[idx[1]], idx[2])
-        push!(h.he2v[idx[2]], idx[1])
-    else
-        # do not throw error if hyperedge did not contain some vertex
-        pop!(h.v2he[idx[1]], idx[2], idx[2])
-        pop!(h.he2v[idx[2]], idx[1], idx[1])
-    end
+    pop!(h.v2he[idx[1]], idx[2])
+    pop!(h.he2v[idx[2]], idx[1])
+    h
+end
+
+@inline function Base.setindex!(h::Hypergraph, v::Real, idx::Vararg{Int,2})
+    @boundscheck checkbounds(h, idx...)
+    h.v2he[idx[1]][idx[2]] = v
+    h.he2v[idx[2]][idx[1]] = v
     h
 end
 

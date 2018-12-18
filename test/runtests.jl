@@ -1,13 +1,13 @@
 using Test, SimpleHypergraphs
 
-h = hg_load("data/test1.hgf")
+h = hg_load("data/test1.hgf", Int)
 @test size(h) == (4, 4)
 m = Matrix(h)
 @test m == h
-@test h == [true  false true  false
-            true  true  false false
-            false false true  false
-            false false true  false]
+@test h == [1       nothing 4       nothing
+            2       3       nothing nothing
+            nothing nothing 5       nothing
+            nothing nothing 6       nothing]
 mktemp("data") do path, _
     println(path)
     hg_save(path, h)
