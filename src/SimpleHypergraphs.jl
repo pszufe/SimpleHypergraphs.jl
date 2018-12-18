@@ -31,7 +31,7 @@ end
     h
 end
 
-getvertices(h::Hypergraph, he_id::Int) = h.he2v
-gethyperedges(h::Hypergraph, v_id::Int) = h.v2he
+@inline getvertices(h::Hypergraph, he_id::Int) = h.he2v[he_id]
+@inline gethyperedges(h::Hypergraph, v_id::Int) = h.v2he[v_id]
 
 end # module
