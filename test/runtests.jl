@@ -11,5 +11,5 @@ m = Matrix(h)
 mktemp("data") do path, _
     println(path)
     hg_save(path, h)
-    @test read(path, String) == read("data/test1.hgf", String)
+    @test read(path, String) == replace(read("data/test1.hgf", String), "\r\n" => "\n")
 end

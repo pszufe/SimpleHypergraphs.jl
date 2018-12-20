@@ -1,6 +1,7 @@
-authors = ["Bogumił Kamiński <bkamins@sgh.waw.pl>"]
 name = "SimpleHypergraphs"
 uuid = "7558dd50-0253-11e9-0eb7-479a738ce184"
+authors = ["Bogumił Kamiński <bkamins@sgh.waw.pl>", "Przemysław Szufel <pszufe@sgh.waw.pl>"]
 version = "0.1.0"
 
 [deps]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
