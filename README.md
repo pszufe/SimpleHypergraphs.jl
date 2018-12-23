@@ -1,5 +1,5 @@
-Linux and macOS: [![Build Status](https://travis-ci.org/pszufe/SimpleHypergraphs.jl.svg?branch=master)](https://travis-ci.org/pszufe/SimpleHypergraphs.jl)
-
-
 # SimpleHypergraphs.jl
-A simple hypergraphs package for the Julia programming language
+
+Coverage: [![Coverage Status](https://coveralls.io/repos/github/pszufe/SimpleHypergraphs.jl/badge.svg?branch=master)](https://coveralls.io/github/pszufe/SimpleHypergraphs.jl?branch=master) Linux and macOS: [![Build Status](https://travis-ci.org/pszufe/SimpleHypergraphs.jl.svg?branch=master)](https://travis-ci.org/pszufe/SimpleHypergraphs.jl)
+
+A simple hypergraphs package for the Julia programming language.
