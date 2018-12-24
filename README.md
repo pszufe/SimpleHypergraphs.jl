@@ -4,5 +4,5 @@ Coverage: [![Coverage Status](https://coveralls.io/repos/github/pszufe/SimpleHyp
 
 A simple hypergraphs package for the Julia programming language.
 
-Documentation: [![](https://img.shields.io/badge/docs-latest-blue.svg)](https://USER_NAME.github.io/PACKAGE_NAME.jl/latest)
+Documentation: [![](https://img.shields.io/badge/docs-latest-blue.svg)](https://pszufe.github.io/SimpleHypergraphs.jl/latest)
 
