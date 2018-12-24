@@ -23,6 +23,6 @@ makedocs(
 )
 
 deploydocs(
-    repo ="https://github.com/pszufe/SimpleHypergraphs.jl.git",
+    repo ="github.com/pszufe/SimpleHypergraphs.jl.git",
 	target="build"
 )
