@@ -1,15 +1,28 @@
 using Documenter
-using SimpleHypergraphs
+
+
+try
+    using SimpleHypergraphs
+catch
+    if !("../src/" in LOAD_PATH)
+	   push!(LOAD_PATH,"../src/")
+	   @info "Added \"../src/\"to the path: $LOAD_PATH "
+	   using SimpleHypergraphs
+    end
+end
+
+
+
 
 makedocs(
     sitename = "SimpleHypergraphs",
-    format = :html,
-    modules = [SimpleHypergraphs]
+    format = Documenter.HTML(),
+    modules = [SimpleHypergraphs],
+	pages = ["index.md", "reference.md"],
+	doctest = true	
 )
 
-# Documenter can also automatically deploy documentation to gh-pages.
-# See "Hosting Documentation" and deploydocs() in the Documenter manual
-# for more information.
-#=deploydocs(
-    repo ="https://github.com/bkamins/SimpleHypergraphs.jl.git"
-)=#
+deploydocs(
+    repo ="https://github.com/pszufe/SimpleHypergraphs.jl.git",
+	target="build"
+)
