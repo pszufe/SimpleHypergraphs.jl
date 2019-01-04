@@ -130,3 +130,13 @@ Returns hyperedges for a given vertex
 * `v_id` : an identifier of a vertex
 """
 @inline gethyperedges(h::Hypergraph, v_id::Int) = h.v2he[v_id]
+
+function add_vertex!(h::Hypergraph{T};hyperedges::Dict{Int,T} = Dict{Int,T}()) where T <: Real
+    push!(h.v2he,hyperedges)
+    length(h.v2he)
+end
+
+function add_hyperedge!(h::Hypergraph{T};vertices::Dict{Int,T} = Dict{Int,T}()) where T <: Real
+    push!(h.he2v,vertices)
+    length(h.he2v)
+end

@@ -43,6 +43,9 @@ Hypergraph info
 size(::Hypergraph)
 getvertices(::Hypergraph, ::Int)
 gethyperedges(::Hypergraph, ::Int)
+
+SimpleHypergraphs.BipartiteView
+shortest_path(::BipartiteView, ::Int, ::Int)
 ```
 
 I/O
