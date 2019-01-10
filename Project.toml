@@ -4,4 +4,5 @@ authors = ["Bogumił Kamiński <bkamins@sgh.waw.pl>", "Przemysław Szufel <pszuf
 version = "0.1.0"
 
 [deps]
+LightGraphs = "093fc24a-ae57-5d10-9952-331d41423f4d"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"

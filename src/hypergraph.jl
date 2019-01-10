@@ -46,26 +46,18 @@ end
 """
     Base.size(h::Hypergraph)
 
-Returns the size of Hypergraph m.
+Returns the size of Hypergraph `h`.
 The result is a tuple of the number of vertices and the number of hyperedges
-
-**Arguments**
-
-* `h` : a hypergraph
 
 """
 Base.size(h::Hypergraph) = (length(h.v2he), length(h.he2v))
 
-
 """
     Base.getindex(h::Hypergraph, idx::Vararg{Int,2})
 
-Returns a value for a given vertex-hyperedge pair or `nothing` if a vertex does not belong to a hyperedge.
+Returns a value for a given vertex-hyperedge pair `idx` for a hypergraph `h`.
+If a vertex does not belong to a hyperedge `nothing` is returned.
 
-**Arguments**
-
-* `h` : a hypergraph
-* `idx` : an index where the first element is vertex and the second is a hyperedge
 """
 @inline function Base.getindex(h::Hypergraph, idx::Vararg{Int,2})
     @boundscheck checkbounds(h, idx...)
@@ -75,12 +67,8 @@ end
 """
     Base.setindex!(h::Hypergraph, ::Nothing, idx::Vararg{Int,2})
 
-Removes a vertex from a given hyperedge
+Removes a vertex from a given hyperedge for a hypergraph `h` and a given vertex-hyperedge pair `idx`.
 
-**Arguments**
-
-* `h` : a hypergraph
-* `idx` : an index where the first element is vertex and the second is a hyperedge
 """
 @inline function Base.setindex!(h::Hypergraph, ::Nothing, idx::Vararg{Int,2})
     @boundscheck checkbounds(h, idx...)
@@ -92,13 +80,9 @@ end
 """
     Base.setindex!(h::Hypergraph, v::Real, idx::Vararg{Int,2})
 
-Adds a vertex to a hyperedge and assigns value to be stored with that assignment.
+Adds a vertex to a hyperedge (represented by indices `idx`) and assigns value
+`v` to be stored with that assignment.
 
-**Arguments**
-
-* `h` : a hypergraph
-* `v` : a value to be stored with vertex-hyperedge assignment
-* `idx` : an index where the first element is vertex and the second is a hyperedge
 """
 @inline function Base.setindex!(h::Hypergraph, v::Real, idx::Vararg{Int,2})
     @boundscheck checkbounds(h, idx...)
@@ -110,23 +94,57 @@ end
 """
     getvertices(h::Hypergraph, he_id::Int)
 
-Returns vertices for a given hyperedge
+Returns vertices from a hypergraph `a` for a given hyperedge `he_id`.
 
-**Arguments**
-
-* `h` : a hypergraph
-* `he_id` : an identifier of a hyperedge
 """
 @inline getvertices(h::Hypergraph, he_id::Int) = h.he2v[he_id]
 
 """
     gethyperedges(h::Hypergraph, v_id::Int)
 
-Returns hyperedges for a given vertex
+Returns hyperedges for a given vertex `v_id` in a hypergraph `h`.
 
-**Arguments**
-
-* `h` : a hypergraph
-* `v_id` : an identifier of a vertex
 """
 @inline gethyperedges(h::Hypergraph, v_id::Int) = h.v2he[v_id]
+
+"""
+    add_vertex!(h::Hypergraph{T};hyperedges::Dict{Int,T} = Dict{Int,T}()) where T <: Real
+
+Adds a vertex to a given hypergraph `h`. Optionally, the vertex can be added
+to existing hyperedges. The `hyperedges` parameter presents a dictionary
+of hyperedge identifiers and values stored at the hyperedges
+
+"""
+function add_vertex!(h::Hypergraph{T};hyperedges::Dict{Int,T} = Dict{Int,T}()) where T <: Real
+    @boundscheck (checkbounds(h,1,k) for k in keys(hyperedges))
+    push!(h.v2he,hyperedges)
+    ix = length(h.v2he)
+    for k in keys(hyperedges)
+        h[ix,k]=hyperedges[k]
+    end
+    ix
+end
+
+"""
+    add_hyperedge!(h::Hypergraph{T};vertices::Dict{Int,T} = Dict{Int,T}()) where T <: Real
+
+Adds a hyperedge to a given hypergraph `h`. Optionally, existing vertices can be added
+to the created hyperedge. The paramater `vertices` represents a dictionary
+of vertex identifiers and values stored at the hyperedges
+
+"""
+function add_hyperedge!(h::Hypergraph{T};vertices::Dict{Int,T} = Dict{Int,T}()) where T <: Real
+    @boundscheck (checkbounds(h,k,1) for k in keys(vertices))
+    push!(h.he2v,vertices)
+    ix = length(h.he2v)
+    for k in keys(vertices)
+        h[k,ix]=vertices[k]
+    end
+    ix
+end
+
+# TODO needs remove_vertex!(h::Hypergraph{T}, v_id::Int)
+
+# TODO needs add_hyperedge!(h::Hypergraph{T}, he_id::Int)
+
+# TODO needs validate_hypergraph!(h::Hypergraph{T})
