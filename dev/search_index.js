@@ -13,7 +13,7 @@ var documenterSearchIndex = {"docs": [
     "page": "SimpleHypergraphs.jl",
     "title": "SimpleHypergraphs.jl",
     "category": "section",
-    "text": "Documentation for SimpleHypergraphs.jl"
+    "text": "Documentation for SimpleHypergraphs.jlFor details please go to the Reference section."
 },
 
 {
@@ -45,7 +45,31 @@ var documenterSearchIndex = {"docs": [
     "page": "Reference",
     "title": "Types",
     "category": "section",
-    "text": "SimpleHypergraphs.Hypergraph"
+    "text": "Hypergraph"
+},
+
+{
+    "location": "reference/#SimpleHypergraphs.add_hyperedge!-Union{Tuple{Hypergraph{T}}, Tuple{T}} where T<:Real",
+    "page": "Reference",
+    "title": "SimpleHypergraphs.add_hyperedge!",
+    "category": "method",
+    "text": "add_hyperedge!(h::Hypergraph{T};vertices::Dict{Int,T} = Dict{Int,T}()) where T <: Real\n\nAdds a hyperedge to a given hypergraph h. Optionally, existing vertices can be added to the created hyperedge. The paramater vertices represents a dictionary of vertex identifiers and values stored at the hyperedges\n\n\n\n\n\n"
+},
+
+{
+    "location": "reference/#SimpleHypergraphs.add_vertex!-Union{Tuple{Hypergraph{T}}, Tuple{T}} where T<:Real",
+    "page": "Reference",
+    "title": "SimpleHypergraphs.add_vertex!",
+    "category": "method",
+    "text": "add_vertex!(h::Hypergraph{T};hyperedges::Dict{Int,T} = Dict{Int,T}()) where T <: Real\n\nAdds a vertex to a given hypergraph h. Optionally, the vertex can be added to existing hyperedges. The hyperedges parameter presents a dictionary of hyperedge identifiers and values stored at the hyperedges\n\n\n\n\n\n"
+},
+
+{
+    "location": "reference/#Manipulating-vertices-and-hyperedges-1",
+    "page": "Reference",
+    "title": "Manipulating vertices and hyperedges",
+    "category": "section",
+    "text": "add_hyperedge!(::Hypergraph{T};::Dict{Int,T}) where T <: Real\nadd_vertex!(::Hypergraph{T};::Dict{Int,T}) where T <: Real"
 },
 
 {
@@ -53,7 +77,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Reference",
     "title": "Base.getindex",
     "category": "method",
-    "text": "Base.getindex(h::Hypergraph, idx::Vararg{Int,2})\n\nReturns a value for a given vertex-hyperedge pair or nothing if a vertex does not belong to a hyperedge.\n\nArguments\n\nh : a hypergraph\nidx : an index where the first element is vertex and the second is a hyperedge\n\n\n\n\n\n"
+    "text": "Base.getindex(h::Hypergraph, idx::Vararg{Int,2})\n\nReturns a value for a given vertex-hyperedge pair idx for a hypergraph h. If a vertex does not belong to a hyperedge nothing is returned.\n\n\n\n\n\n"
 },
 
 {
@@ -61,7 +85,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Reference",
     "title": "Base.setindex!",
     "category": "method",
-    "text": "Base.setindex!(h::Hypergraph, ::Nothing, idx::Vararg{Int,2})\n\nRemoves a vertex from a given hyperedge\n\nArguments\n\nh : a hypergraph\nidx : an index where the first element is vertex and the second is a hyperedge\n\n\n\n\n\n"
+    "text": "Base.setindex!(h::Hypergraph, ::Nothing, idx::Vararg{Int,2})\n\nRemoves a vertex from a given hyperedge for a hypergraph h and a given vertex-hyperedge pair idx.\n\n\n\n\n\n"
 },
 
 {
@@ -69,7 +93,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Reference",
     "title": "Base.setindex!",
     "category": "method",
-    "text": "Base.setindex!(h::Hypergraph, v::Real, idx::Vararg{Int,2})\n\nAdds a vertex to a hyperedge and assigns value to be stored with that assignment.\n\nArguments\n\nh : a hypergraph\nv : a value to be stored with vertex-hyperedge assignment\nidx : an index where the first element is vertex and the second is a hyperedge\n\n\n\n\n\n"
+    "text": "Base.setindex!(h::Hypergraph, v::Real, idx::Vararg{Int,2})\n\nAdds a vertex to a hyperedge (represented by indices idx) and assigns value v to be stored with that assignment.\n\n\n\n\n\n"
 },
 
 {
@@ -85,7 +109,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Reference",
     "title": "Base.size",
     "category": "method",
-    "text": "Base.size(h::Hypergraph)\n\nReturns the size of Hypergraph m. The result is a tuple of the number of vertices and the number of hyperedges\n\nArguments\n\nh : a hypergraph\n\n\n\n\n\n"
+    "text": "Base.size(h::Hypergraph)\n\nReturns the size of Hypergraph h. The result is a tuple of the number of vertices and the number of hyperedges\n\n\n\n\n\n"
 },
 
 {
@@ -93,7 +117,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Reference",
     "title": "SimpleHypergraphs.getvertices",
     "category": "method",
-    "text": "getvertices(h::Hypergraph, he_id::Int)\n\nReturns vertices for a given hyperedge\n\nArguments\n\nh : a hypergraph\nhe_id : an identifier of a hyperedge\n\n\n\n\n\n"
+    "text": "getvertices(h::Hypergraph, he_id::Int)\n\nReturns vertices from a hypergraph a for a given hyperedge he_id.\n\n\n\n\n\n"
 },
 
 {
@@ -101,7 +125,23 @@ var documenterSearchIndex = {"docs": [
     "page": "Reference",
     "title": "SimpleHypergraphs.gethyperedges",
     "category": "method",
-    "text": "gethyperedges(h::Hypergraph, v_id::Int)\n\nReturns hyperedges for a given vertex\n\nArguments\n\nh : a hypergraph\nv_id : an identifier of a vertex\n\n\n\n\n\n"
+    "text": "gethyperedges(h::Hypergraph, v_id::Int)\n\nReturns hyperedges for a given vertex v_id in a hypergraph h.\n\n\n\n\n\n"
+},
+
+{
+    "location": "reference/#SimpleHypergraphs.BipartiteView",
+    "page": "Reference",
+    "title": "SimpleHypergraphs.BipartiteView",
+    "category": "type",
+    "text": "BipartiteView{T<:Real} <: AbstractGraph{Int64}\n\nCreate a bipartite view of a hypergraph h. Note this is a view - changes to the original hypergraph will be automatically reflected in the view.\n\nThe bipartite view of a hypergraph is suitable for processing with the LightGraphs.jl package. Several LightGraphs methods are provided for the compability.\n\n\n\n\n\n"
+},
+
+{
+    "location": "reference/#SimpleHypergraphs.shortest_path-Tuple{BipartiteView,Int64,Int64}",
+    "page": "Reference",
+    "title": "SimpleHypergraphs.shortest_path",
+    "category": "method",
+    "text": "shortest_path(b::BipartiteView,source::Int, target::Int)\n\nFinds a single shortest path in a graph b between vertices source and target. Note that if several paths of the same length exist, only one will be returned.\n\n\n\n\n\n"
 },
 
 {
@@ -109,7 +149,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Reference",
     "title": "Hypergraph info",
     "category": "section",
-    "text": "size(::Hypergraph)\ngetvertices(::Hypergraph, ::Int)\ngethyperedges(::Hypergraph, ::Int)"
+    "text": "size(::Hypergraph)\ngetvertices(::Hypergraph, ::Int)\ngethyperedges(::Hypergraph, ::Int)\n\nBipartiteView\nshortest_path(::BipartiteView, ::Int, ::Int)"
 },
 
 {
@@ -117,7 +157,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Reference",
     "title": "SimpleHypergraphs.hg_save",
     "category": "function",
-    "text": "hg_save(io::IO, h::Hypergraph)\n\nSaves a hypergraph to a stream.\n\nArguments\n\nio : the output stream to be written to\nh : a hypergraph\n\n\n\n\n\nhg_save(fname::AbstractString, h::Hypergraph)\n\nSaves a hypergraph to a file.\n\nArguments\n\nfname : a file name to save to\nh : a hypergraph\n\n\n\n\n\n"
+    "text": "hg_save(io::IO, h::Hypergraph)\n\nSaves a hypergraph h to an output stream io.\n\n\n\n\n\nhg_save(fname::AbstractString, h::Hypergraph)\n\nSaves a hypergraph h to a file fname.\n\n\n\n\n\n"
 },
 
 {
@@ -125,7 +165,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Reference",
     "title": "SimpleHypergraphs.hg_load",
     "category": "function",
-    "text": "hg_load(fname::AbstractString, T::Type{<:Real})\n\nLoads a hypergraph from a stream.\n\nArguments\n\nio : an input stream from which to load the data\nT : type of data in the hypegraph\n\n\n\n\n\nhg_load(fname::AbstractString, T::Type{<:Real})\n\nLoads a hypergraph from a file.\n\nArguments\n\nfname : a file from which to load the data\nT : type of data in the hypegraph\n\n\n\n\n\n"
+    "text": "hg_load(fname::AbstractString, T::Type{<:Real})\n\nLoads a hypergraph from a stream io. The second argument T represents type of data in the hypegraph\n\n\n\n\n\nhg_load(fname::AbstractString, T::Type{<:Real})\n\nLoads a hypergraph from a file fname. The second argument T represents type of data in the hypegraph\n\n\n\n\n\n"
 },
 
 {
