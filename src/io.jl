@@ -4,12 +4,7 @@
 """
     hg_save(io::IO, h::Hypergraph)
 
-Saves a hypergraph to a stream.
-
-**Arguments**
-
-* `io` : the output stream to be written to
-* `h` : a hypergraph
+Saves a hypergraph `h` to an output stream `io`.
 
 """
 function hg_save(io::IO, h::Hypergraph)
@@ -23,12 +18,7 @@ end
 """
     hg_save(fname::AbstractString, h::Hypergraph)
 
-Saves a hypergraph to a file.
-
-**Arguments**
-
-* `fname` : a file name to save to
-* `h` : a hypergraph
+Saves a hypergraph `h` to a file `fname`.
 
 """
 hg_save(fname::AbstractString, h::Hypergraph) =
@@ -37,12 +27,8 @@ hg_save(fname::AbstractString, h::Hypergraph) =
 """
     hg_load(fname::AbstractString, T::Type{<:Real})
 
-Loads a hypergraph from a stream.
-
-**Arguments**
-
-* `io` : an input stream from which to load the data
-* `T` : type of data in the hypegraph
+Loads a hypergraph from a stream `io`. The second argument
+`T` represents type of data in the hypegraph
 
 """
 function hg_load(io::IO, T::Type{<:Real})
@@ -72,12 +58,8 @@ end
 """
     hg_load(fname::AbstractString, T::Type{<:Real})
 
-Loads a hypergraph from a file.
-
-**Arguments**
-
-* `fname` : a file from which to load the data
-* `T` : type of data in the hypegraph
+Loads a hypergraph from a file `fname`. The second argument
+`T` represents type of data in the hypegraph
 
 """
 hg_load(fname::AbstractString, T::Type{<:Real}) =
