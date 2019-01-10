@@ -56,7 +56,6 @@ The result is a tuple of the number of vertices and the number of hyperedges
 """
 Base.size(h::Hypergraph) = (length(h.v2he), length(h.he2v))
 
-
 """
     Base.getindex(h::Hypergraph, idx::Vararg{Int,2})
 
@@ -131,12 +130,50 @@ Returns hyperedges for a given vertex
 """
 @inline gethyperedges(h::Hypergraph, v_id::Int) = h.v2he[v_id]
 
+"""
+    add_vertex!(h::Hypergraph{T};hyperedges::Dict{Int,T} = Dict{Int,T}()) where T <: Real
+
+Adds a vertex to a given hypergraph. Optionally, the vertex can be added
+to existing hyperedges.
+
+**Arguments**
+
+* `h` : a hypergraph
+* `hyperedges` : a dictionary of hyperedge identifiers and values stored at the hyperedges
+"""
 function add_vertex!(h::Hypergraph{T};hyperedges::Dict{Int,T} = Dict{Int,T}()) where T <: Real
+    @boundscheck (checkbounds(h,1,k) for k in keys(hyperedges))
     push!(h.v2he,hyperedges)
-    length(h.v2he)
+    ix = length(h.v2he)
+    for k in keys(hyperedges)
+        h[ix,k]=hyperedges[k]
+    end
+    ix
 end
 
+"""
+    add_hyperedge!(h::Hypergraph{T};vertices::Dict{Int,T} = Dict{Int,T}()) where T <: Real
+
+Adds a hyperedge to a given hypergraph. Optionally, existing vertices can be added
+to the created hyperedge.
+
+**Arguments**
+
+* `h` : a hypergraph
+* `vertices` : a dictionary of vertex identifiers and values stored at the hyperedges
+"""
 function add_hyperedge!(h::Hypergraph{T};vertices::Dict{Int,T} = Dict{Int,T}()) where T <: Real
+    @boundscheck (checkbounds(h,k,1) for k in keys(vertices))
     push!(h.he2v,vertices)
-    length(h.he2v)
+    ix = length(h.he2v)
+    for k in keys(vertices)
+        h[k,ix]=vertices[k]
+    end
+    ix
 end
+
+# TODO needs remove_vertex!(h::Hypergraph{T}, v_id::Int)
+
+# TODO needs add_hyperedge!(h::Hypergraph{T}, he_id::Int)
+
+# TODO needs validate_hypergraph!(h::Hypergraph{T})

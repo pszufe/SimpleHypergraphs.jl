@@ -12,7 +12,14 @@ Types
 -----
 
 ```@docs
-SimpleHypergraphs.Hypergraph
+Hypergraph
+```
+
+Manipulating vertices and hyperedges
+------------------------------------
+```@docs
+add_hyperedge!(::Hypergraph{T};::Dict{Int,T}) where T <: Real
+add_vertex!(::Hypergraph{T};::Dict{Int,T}) where T <: Real
 ```
 
 Hypergraph array getters and setters
@@ -44,7 +51,7 @@ size(::Hypergraph)
 getvertices(::Hypergraph, ::Int)
 gethyperedges(::Hypergraph, ::Int)
 
-SimpleHypergraphs.BipartiteView
+BipartiteView
 shortest_path(::BipartiteView, ::Int, ::Int)
 ```
 

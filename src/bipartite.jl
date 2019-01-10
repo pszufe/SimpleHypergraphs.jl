@@ -1,7 +1,6 @@
 """
     BipartiteView{T<:Real} <: AbstractGraph{Int64}
 
-
 Creates a bipartite view of a hypergraph.
 Note this is a view - changes to the original hypergraph will be automatically reflected in the view.
 
@@ -17,7 +16,7 @@ Construct a bipartite view of a hypergraph for processing with LightGraphs
 * `h` : a hypergraph
 
 """
-struct BipartiteView{T<:Real} <: AbstractGraph{Int64}
+struct BipartiteView{T<:Real} <: AbstractGraph{Int}
     v2he::Vector{Dict{Int,T}}
     he2v::Vector{Dict{Int,T}}
     function BipartiteView{T}(h::Hypergraph{T}) where {T<:Real}
@@ -81,7 +80,7 @@ LightGraphs.is_directed(b::BipartiteView) = false
 """
     shortest_path(g::BipartiteView,source, target)
 
-Finds the shortest path between two vertices
+Finds a single shortest path between two vertices
 
 **Arguments**
 
@@ -89,8 +88,10 @@ Finds the shortest path between two vertices
 * `source` : a starting vertex
 * `target` : a destination vertex
 """
-function shortest_path(g::BipartiteView,source::Int, target::Int)
-    dj = dijkstra_shortest_paths(g, source)
+function shortest_path(b::BipartiteView,source::Int, target::Int)
+    @boundscheck source <= length(b.v2he) || throw(BoundsError(b.v2he, source))
+    @boundscheck target <= length(b.v2he) || throw(BoundsError(b.v2he, target))    
+    dj = dijkstra_shortest_paths(b, source)
     res = enumerate_paths(dj)[target]
-    filter(n -> (n <= length(g.v2he)),res)
+    filter(n -> (n <= length(b.v2he)),res)
 end
