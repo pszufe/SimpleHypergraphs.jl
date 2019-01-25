@@ -81,5 +81,5 @@ function shortest_path(t::TwoSectionView,source::Int, target::Int)
     @boundscheck source <= length(t.h.v2he) || throw(BoundsError(t.h.v2he, source))
     @boundscheck target <= length(t.h.v2he) || throw(BoundsError(t.h.v2he, target))
     dj = dijkstra_shortest_paths(t, source)
-    enumerate_paths(dj)[target]#[1:2:end]
+    enumerate_paths(dj)[target]
 end

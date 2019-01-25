@@ -1,7 +1,7 @@
 using Test, SimpleHypergraphs
 import LightGraphs
 
-h = hg_load("data/test1.hgf", Int)
+h = hg_load("test/data/test1.hgf", Int)
 @test size(h) == (4, 4)
 m = Matrix(h)
 @test m == h
@@ -9,10 +9,10 @@ m = Matrix(h)
             2       3       nothing nothing
             nothing nothing 5       nothing
             nothing nothing 6       nothing]
-mktemp("data") do path, _
+mktemp("test/data") do path, _
     println(path)
     hg_save(path, h)
-    @test read(path, String) == replace(read("data/test1.hgf", String), "\r\n" => "\n")
+    @test read(path, String) == replace(read("test/data/test1.hgf", String), "\r\n" => "\n")
 end
 
 h1 = Hypergraph{Float64}(5,4)
@@ -31,8 +31,6 @@ add_vertex!(h2;hyperedges=Dict(2=>6.5))
 add_hyperedge!(h2;vertices=Dict(2 => 3.5, 4 => 4.5))
 add_hyperedge!(h2;vertices=Dict(3:5 .=> (2.5,4.5,5.5)))
 @test h1 == h2
-
-
 
 b = BipartiteView{Float64}(h1)
 

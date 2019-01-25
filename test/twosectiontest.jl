@@ -33,6 +33,6 @@ h[6,5] = 1
 
 @test LightGraphs.nv(t) == 6
 @test LightGraphs.ne(t) == 8
-@test sort(LightGraphs.outneighbors(t, 5)) == [3,4, 6]
+@test sort(LightGraphs.outneighbors(t, 5)) == [3,4,6]
 
 @test sum(LightGraphs.adjacency_matrix(LightGraphs.SimpleGraph(t))) == 16
