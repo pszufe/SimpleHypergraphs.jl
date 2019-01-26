@@ -34,7 +34,7 @@ add_hyperedge!(h2;vertices=Dict(3:5 .=> (2.5,4.5,5.5)))
 
 
 
-b = BipartiteView{Float64}(h1)
+b = BipartiteView(h1)
 
 @test sum(LightGraphs.adjacency_matrix(LightGraphs.SimpleGraph(b))) == 18
 
@@ -42,7 +42,7 @@ b = BipartiteView{Float64}(h1)
 @test sort(collect(LightGraphs.outneighbors(b,1))) == [6]
 @test sort(collect(LightGraphs.inneighbors(b,9))) == [3,4,5]
 
-# == [4,3,5]
+@test Set(LightGraphs.vertices(b)) == Set(1:LightGraphs.nv(b))
 
 @test shortest_path(b,1,5) == [1,3,5]
 @test LightGraphs.is_weakly_connected(b) == true
