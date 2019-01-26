@@ -6,7 +6,7 @@ Note this is a view - changes to the original hypergraph will be automatically r
 
 **Constructors**
 
-BipartiteView(h::Hypergraph{T}) where {T<:Real}
+BipartiteView(::Hypergraph)
 
 The bipartite view of a hypergraph is suitable for processing with the LightGraphs.jl package.
 Several LightGraphs methods are provided for the compability.
