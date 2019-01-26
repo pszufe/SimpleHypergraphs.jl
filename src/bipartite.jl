@@ -1,8 +1,12 @@
 """
     BipartiteView{T<:Real} <: AbstractGraph{Int64}
 
-Create a bipartite view of a hypergraph `h`.
+Represents a bipartite view of a hypergraph `h`.
 Note this is a view - changes to the original hypergraph will be automatically reflected in the view.
+
+**Constructors**
+
+BipartiteView(h::Hypergraph{T}) where {T<:Real}
 
 The bipartite view of a hypergraph is suitable for processing with the LightGraphs.jl package.
 Several LightGraphs methods are provided for the compability.
@@ -10,15 +14,12 @@ Several LightGraphs methods are provided for the compability.
 """
 struct BipartiteView{T<:Real} <: AbstractGraph{Int}
     h::Hypergraph{T}
-    function BipartiteView{T}(h::Hypergraph{T}) where {T<:Real}
-        new(h)
-    end
 end
 
 
 LightGraphs.nv(b::BipartiteView) = length(b.h.v2he)+length(b.h.he2v)
 
-LightGraphs.vertices(b::BipartiteView) = Base.OneTo(nv(b))
+LightGraphs.vertices(b::BipartiteView) = Base.OneTo(LightGraphs.nv(b))
 
 
 LightGraphs.ne(b::BipartiteView) = 2*sum(length.(b.h.v2he))
@@ -78,8 +79,8 @@ will be returned.
 
 """
 function shortest_path(b::BipartiteView,source::Int, target::Int)
-    @boundscheck source <= length(b.h.v2he) || throw(BoundsError(b.h.v2he, source))
-    @boundscheck target <= length(b.h.v2he) || throw(BoundsError(b.h.v2he, target))
+    checkbounds(b.h.v2he, source)
+	checkbounds(b.h.v2he, target)
     dj = dijkstra_shortest_paths(b, source)
     enumerate_paths(dj)[target][1:2:end]
 end
