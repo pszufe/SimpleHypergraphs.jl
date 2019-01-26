@@ -133,7 +133,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Reference",
     "title": "SimpleHypergraphs.BipartiteView",
     "category": "type",
-    "text": "BipartiteView{T<:Real} <: AbstractGraph{Int64}\n\nCreate a bipartite view of a hypergraph h. Note this is a view - changes to the original hypergraph will be automatically reflected in the view.\n\nThe bipartite view of a hypergraph is suitable for processing with the LightGraphs.jl package. Several LightGraphs methods are provided for the compability.\n\n\n\n\n\n"
+    "text": "BipartiteView{T<:Real} <: AbstractGraph{Int64}\n\nRepresents a bipartite view of a hypergraph h. Note this is a view - changes to the original hypergraph will be automatically reflected in the view.\n\nConstructors\n\nBipartiteView(::Hypergraph)\n\nThe bipartite view of a hypergraph is suitable for processing with the LightGraphs.jl package. Several LightGraphs methods are provided for the compability.\n\n\n\n\n\n"
 },
 
 {
