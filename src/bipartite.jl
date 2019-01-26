@@ -80,7 +80,7 @@ will be returned.
 """
 function shortest_path(b::BipartiteView,source::Int, target::Int)
     checkbounds(b.h.v2he, source)
-	checkbounds(b.h.v2he, target)
+    checkbounds(b.h.v2he, target)
     dj = dijkstra_shortest_paths(b, source)
     enumerate_paths(dj)[target][1:2:end]
 end
