@@ -34,7 +34,7 @@ add_hyperedge!(h2;vertices=Dict(3:5 .=> (2.5,4.5,5.5)))
 
 
 
-b = BipartiteView(h1)
+b = BipartiteView{Float64}(h1)
 
 @test sum(LightGraphs.adjacency_matrix(LightGraphs.SimpleGraph(b))) == 18
 
