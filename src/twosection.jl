@@ -80,9 +80,9 @@ Note that if several paths of the same length exist, only one
 will be returned.
 
 """
-function shortest_path(t::TwoSectionView,source::Int, target::Int)
-    @boundscheck source <= length(t.h.v2he) || throw(BoundsError(t.h.v2he, source))
-    @boundscheck target <= length(t.h.v2he) || throw(BoundsError(t.h.v2he, target))
+function shortest_path(t::TwoSectionView, source::Int, target::Int)
+    checkbounds(t.h.v2he, source)
+    checkbounds(t.h.v2he, target)
     dj = dijkstra_shortest_paths(t, source)
     enumerate_paths(dj)[target]
 end
