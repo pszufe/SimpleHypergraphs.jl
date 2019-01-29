@@ -34,13 +34,12 @@ end
 Returns N(v) (the vertex v is not included in N(v))
 """
 function LightGraphs.all_neighbors(t::TwoSectionView, v::Integer)
-    neighbors = Set()
+    neighbors = Set{Int}()
     for he in keys(t.h.v2he[v])
         union!(neighbors, keys(t.h.he2v[he]))
     end
     delete!(neighbors, v) #remove v from its neighborhood
-    convert(Array{Int64}, collect(neighbors)) #returns the corresponding array
-    #neighbors
+    collect(neighbors) #returns the corresponding array
 end
 
 function LightGraphs.has_edge(t::TwoSectionView, s, d)
