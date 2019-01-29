@@ -46,9 +46,11 @@ function LightGraphs.has_edge(t::TwoSectionView, s, d)
     !isempty(intersect(keys(t.h.v2he[s]), keys(t.h.v2he[d])))
 end
 
-LightGraphs.outneighbors(t::TwoSectionView, v::Integer) = LightGraphs.all_neighbors(t::TwoSectionView, v)
+LightGraphs.outneighbors(t::TwoSectionView, v::Integer) =
+    LightGraphs.all_neighbors(t::TwoSectionView, v)
 
-LightGraphs.inneighbors(t::TwoSectionView, v::Integer) = LightGraphs.all_neighbors(t::TwoSectionView, v)
+LightGraphs.inneighbors(t::TwoSectionView, v::Integer) = 
+    LightGraphs.all_neighbors(t::TwoSectionView, v)
 
 """
     LightGraphs.SimpleGraph(t::TwoSectionView)
