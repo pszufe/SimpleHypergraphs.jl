@@ -53,3 +53,33 @@ h1[5,5] = 1
 h1[6,5] = 1
 
 @test shortest_path(b,1,6) == [1,3,5,6]
+
+
+#TwoSectionView test
+t = TwoSectionView(h1)
+
+@test LightGraphs.nv(t) == 6
+@test LightGraphs.ne(t) == 8
+
+@test sort(LightGraphs.all_neighbors(t, 1)) == [2,3]
+@test sort(LightGraphs.outneighbors(t, 5)) == [3,4,6]
+@test sort(LightGraphs.inneighbors(t, 4)) == [2,3,5]
+@inferred LightGraphs.all_neighbors(t, 1)
+
+@test LightGraphs.has_edge(t, 1, 2) == true
+@test LightGraphs.has_edge(t, 1, 5) == false
+
+@test sum(LightGraphs.adjacency_matrix(LightGraphs.SimpleGraph(t))) == 16
+@test shortest_path(t,1,5) == [1,3,5]
+@test LightGraphs.is_weakly_connected(t) == true
+
+@test SimpleHypergraphs.add_vertex!(h1) == 7
+h1[7,5] = 1
+
+@test shortest_path(t,1,6) == [1,3,5,6]
+
+@test LightGraphs.nv(t) == 7
+@test LightGraphs.ne(t) == 10
+@test sort(LightGraphs.outneighbors(t, 5)) == [3,4,6,7]
+
+@test sum(LightGraphs.adjacency_matrix(LightGraphs.SimpleGraph(t))) == 20
