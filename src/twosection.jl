@@ -20,7 +20,13 @@ LightGraphs.nv(t::TwoSectionView) = length(t.h.v2he)
 
 LightGraphs.vertices(t::TwoSectionView) = Base.OneTo(nv(t))
 
-LightGraphs.ne(t::TwoSectionView)::Int64 = 0.5*sum(length.(t.h.he2v) .* (length.(t.h.he2v) .- 1))
+function LightGraphs.ne(t::TwoSectionView)
+    s = 0
+    for x in t.h.he2v
+        s += length(x) * (length(x) - 1)
+    end
+    div(s, 2)
+end
 
 """
     LightGraphs.all_neighbors(t::TwoSectionView, v::Integer)
