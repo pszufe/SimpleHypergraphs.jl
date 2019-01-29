@@ -5,7 +5,7 @@ using LightGraphs
 export Hypergraph, getvertices, gethyperedges, hg_load, hg_save
 export add_vertex!, add_hyperedge!
 export BipartiteView, shortest_path
-export TwoSectionView, shortest_path
+export TwoSectionView
 
 include("hypergraph.jl")
 include("bipartite.jl")
