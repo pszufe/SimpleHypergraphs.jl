@@ -1,8 +1,12 @@
 """
     TwoSectionView{T<:Real} <: AbstractGraph{Int64}
 
-Create a 2-section view of a hypergraph `h`.
+Represents a 2-section view of a hypergraph `h`.
 Note this is a view - changes to the original hypergraph will be automatically reflected in the view.
+
+**Constructors**
+
+TwoSectionView(::Hypergraph)
 
 The 2-section view of a hypergraph is suitable for processing with the LightGraphs.jl package.
 Several LightGraphs methods are provided for the compability.
@@ -10,9 +14,6 @@ Several LightGraphs methods are provided for the compability.
 """
 struct TwoSectionView{T<:Real} <: AbstractGraph{Int}
     h::Hypergraph{T}
-    function TwoSectionView{T}(h::Hypergraph{T}) where {T<:Real}
-        new(h)
-    end
 end
 
 LightGraphs.nv(t::TwoSectionView) = length(t.h.v2he)
