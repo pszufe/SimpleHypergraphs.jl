@@ -43,10 +43,7 @@ function LightGraphs.all_neighbors(t::TwoSectionView, v::Integer)
 end
 
 function LightGraphs.has_edge(t::TwoSectionView, s, d)
-    he_s = keys(t.h.v2he[s])
-    he_d = keys(t.h.v2he[d])
-
-    !issetequal(intersect(he_s, he_d), Set())
+    !isempty(intersect(keys(t.h.v2he[s]), keys(t.h.v2he[d])))
 end
 
 LightGraphs.outneighbors(t::TwoSectionView, v::Integer) = LightGraphs.all_neighbors(t::TwoSectionView, v)
