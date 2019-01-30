@@ -4,7 +4,7 @@
 
 | **Documentation** | **Build Status** |
 |---------------|--------------|
-|[![][docs-latest-img]][docs-dev-url] | [![Build Status][travis-img]][travis-url][![Coverage Status][codecov-img]][codecov-url] <br/> Linux and macOS [osx-icon] |
+|[![][docs-latest-img]][docs-dev-url] | [![Build Status][travis-img]][travis-url]  [![Coverage Status][codecov-img]][codecov-url] <br/> Linux and macOS |
 
 ## Documentation
 
