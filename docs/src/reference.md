@@ -51,6 +51,9 @@ size(::Hypergraph)
 getvertices(::Hypergraph, ::Int)
 gethyperedges(::Hypergraph, ::Int)
 
+TwoSectionView
+shortest_path(::TwoSectionView, ::Int, ::Int)
+
 BipartiteView
 shortest_path(::BipartiteView, ::Int, ::Int)
 ```
