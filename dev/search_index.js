@@ -145,11 +145,27 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
+    "location": "reference/#SimpleHypergraphs.TwoSectionView",
+    "page": "Reference",
+    "title": "SimpleHypergraphs.TwoSectionView",
+    "category": "type",
+    "text": "TwoSectionView{T<:Real} <: AbstractGraph{Int64}\n\nRepresents a 2-section view of a hypergraph h. Note this is a view - changes to the original hypergraph will be automatically reflected in the view.\n\nConstructors\n\nTwoSectionView(::Hypergraph)\n\nThe 2-section view of a hypergraph is suitable for processing with the LightGraphs.jl package. Several LightGraphs methods are provided for the compability.\n\n\n\n\n\n"
+},
+
+{
+    "location": "reference/#SimpleHypergraphs.shortest_path-Tuple{TwoSectionView,Int64,Int64}",
+    "page": "Reference",
+    "title": "SimpleHypergraphs.shortest_path",
+    "category": "method",
+    "text": "shortest_path(t::TwoSectionView,source::Int, target::Int)\n\nFinds a single shortest path in a graph b between vertices source and target. Note that if several paths of the same length exist, only one will be returned.\n\n\n\n\n\n"
+},
+
+{
     "location": "reference/#Hypergraph-info-1",
     "page": "Reference",
     "title": "Hypergraph info",
     "category": "section",
-    "text": "size(::Hypergraph)\ngetvertices(::Hypergraph, ::Int)\ngethyperedges(::Hypergraph, ::Int)\n\nBipartiteView\nshortest_path(::BipartiteView, ::Int, ::Int)"
+    "text": "size(::Hypergraph)\ngetvertices(::Hypergraph, ::Int)\ngethyperedges(::Hypergraph, ::Int)\n\nBipartiteView\nshortest_path(::BipartiteView, ::Int, ::Int)\n\nTwoSectionView\nshortest_path(::TwoSectionView, ::Int, ::Int)"
 },
 
 {
