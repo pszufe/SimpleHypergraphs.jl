@@ -12,8 +12,13 @@ m = Matrix(h)
 mktemp("data") do path, _
     println(path)
     hg_save(path, h)
-    @test read(path, String) == replace(read("data/test1.hgf", String), "\r\n" => "\n")
-end
+    #@test read(path, String) == replace(read("data/test1.hgf", String), "\r\n" => "\n")
+    @test replace(read(path, String), r"\n*$" => "") ==
+        replace(replace(replace(
+            read("data/test1.hgf", String), "\r\n" => "\n"),
+            r"\"\"\"(?s).*\"\"\"\n" => ""), #remove initial comments
+            r"\n*$" => "") #remove final \n*
+    end
 
 h1 = Hypergraph{Float64}(5,4)
 h1[1:3,1] .= 1.5
