@@ -30,7 +30,7 @@ hg_save(fname::AbstractString, h::Hypergraph) =
 Loads a hypergraph from a stream `io`. The second argument
 `T` represents type of data in the hypegraph
 
-Skips initial comments.
+Skips an initial comment.
 
 """
 function hg_load(io::IO, T::Type{<:Real})
