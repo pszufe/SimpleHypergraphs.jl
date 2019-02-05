@@ -36,7 +36,7 @@ Skips an initial comment.
 function hg_load(io::IO, T::Type{<:Real})
     #l = split(readline(io))
     line = readline(io)
-    if occursin(r"\"\"\".*\"\"\"", line) #single line comment
+    if occursin(r"^\"\"\".*\"\"\"$", line) #single line comment
         line = readline(io)
     elseif startswith(line, "\"\"\"") #multiple lines comment
         line = readline(io)
