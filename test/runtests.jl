@@ -12,32 +12,8 @@ m = Matrix(h)
 mktemp("data") do path, _
     println(path)
     hg_save(path, h)
-
-    loaded_hg = replace(read(path, String), r"\n*$" => "")
-
-    @test loaded_hg ==
-        reduce(replace,
-            ["\r\n"=>"\n",
-            r"^\"\"\"(?s).*\"\"\"\n"=>"", #remove initial comments
-            r"\n*$"=>""], #remove final \n*
-            init=read("data/test1.hgf", String)) #no comments
-
-    @test loaded_hg ==
-        reduce(replace,
-            ["\r\n"=>"\n",
-            r"^\"\"\"(?s).*\"\"\"\n"=>"", #remove initial comments
-            r"\n*$"=>""], #remove final \n*
-            init=read("data/test_singlelinecomment.hgf", String)) #single line comment
-
-    @test loaded_hg ==
-        reduce(replace,
-            ["\r\n"=>"\n",
-            r"^\"\"\"(?s).*\"\"\"\n"=>"", #remove initial comments
-            r"\n*$"=>""], #remove final \n*
-            init=read("data/test_multiplelinescomment.hgf", String)) #multiple lines comment
+    @test read(path, String) == replace(read("data/test1.hgf", String), "\r\n" => "\n")
 end
-
-@test_throws ArgumentError hg_load("data/test_malformedcomment.hgf", Int)
 
 h1 = Hypergraph{Float64}(5,4)
 h1[1:3,1] .= 1.5
