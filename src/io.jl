@@ -34,17 +34,25 @@ Skips an initial comment.
 
 """
 function hg_load(io::IO, T::Type{<:Real})
-    #l = split(readline(io))
     line = readline(io)
-    if occursin(r"^\"\"\".*\"\"\"$", line) #single line comment
-        line = readline(io)
-    elseif startswith(line, "\"\"\"") #multiple lines comment
-        line = readline(io)
-        while !(endswith(line, "\"\"\""))
-            line = readline(io)
+
+    if startswith(line, "\"\"\"")
+      singleline = true
+        while(
+            !( (!singleline && endswith(line, "\"\"\"")) ||
+            (singleline && endswith(line, "\"\"\"") && length(line)>5)
+            ) &&
+            !eof(io)
+            )
+                line = readline(io)
+                singleline = false
         end
-        line = readline(io)
+        if eof(io)
+            throw(ArgumentError("malformed input"))
+        end
+       line = readline(io)
     end
+    
     l = split(line)
     length(l) == 2 || throw(ArgumentError("expected two integers"))
     n, k = parse.(Int, l)
