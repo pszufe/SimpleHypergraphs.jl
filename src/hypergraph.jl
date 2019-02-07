@@ -46,7 +46,8 @@ struct Hypergraph{T,V,E} <: AbstractMatrix{Union{T, Nothing}}
     vs::Vector{V}
     hes::Vector{E}
     Hypergraph{T,V,E}(n, k) where {T<:Real, V, E} =
-        new{T,V,E}([Dict{Int,T}() for i in 1:n], [Dict{Int,T}() for i in 1:k],Vector{V}(undef,n),Vector{E}(undef,k))
+        new{T,V,E}([Dict{Int,T}() for i in 1:n], [Dict{Int,T}() for i in 1:k],
+                          Vector{V}(undef, n), Vector{E}(undef, k))
 end
 
 Hypergraph{T,V}(n, k) where {T<:Real, V} = Hypergraph{T,V,Nothing}(n, k)
