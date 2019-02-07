@@ -18,8 +18,13 @@ Hypergraph
 Manipulating vertices and hyperedges
 ------------------------------------
 ```@docs
-add_hyperedge!(::Hypergraph{T};::Dict{Int,T}) where T <: Real
-add_vertex!(::Hypergraph{T};::Dict{Int,T}) where T <: Real
+
+add_hyperedge!(::Hypergraph{T, V, E}; ::Dict{Int,T}, ::Union{UndefInitializer, E}) where {T <: Real, V, E}
+add_vertex!(::Hypergraph{T, V, E};::Dict{Int,T},::Union{UndefInitializer,V}) where {T <: Real, V, E}
+set_vertex_value!(::Hypergraph{T, V, E}, ::V, ::Int) where {T <: Real, V, E}
+get_vertex_value(::Hypergraph{T, V, E}, ::Int) where {T <: Real, V, E}
+set_hyperedge_value!(::Hypergraph{T, V, E}, ::E, ::Int) where {T <: Real, V, E}
+get_hyperedge_value(::Hypergraph{T, V, E}, ::Int) where {T <: Real, V, E}
 ```
 
 Hypergraph array getters and setters
@@ -33,7 +38,7 @@ h
 
 # output
 
-2×3 Hypergraph{Int64}:
+2×3 Hypergraph{Int64,Nothing,Nothing}:
  nothing  5         5
  nothing   nothing   nothing
 ```
