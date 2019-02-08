@@ -43,11 +43,11 @@ can be stored at hyperedges.
 struct Hypergraph{T,V,E} <: AbstractMatrix{Union{T, Nothing}}
     v2he::Vector{Dict{Int,T}}
     he2v::Vector{Dict{Int,T}}
-    vs::Vector{V}
-    hes::Vector{E}
+    v_meta::Vector{Union{V,Nothing}}
+    he_meta::Vector{Union{E,Nothing}}
     Hypergraph{T,V,E}(n, k) where {T<:Real, V, E} =
         new{T,V,E}([Dict{Int,T}() for i in 1:n], [Dict{Int,T}() for i in 1:k],
-                          Vector{V}(undef, n), Vector{E}(undef, k))
+                          Vector{Union{V,Nothing}}(nothing, n), Vector{Union{E,Nothing}}(nothing, k))
 end
 
 Hypergraph{T,V}(n, k) where {T<:Real, V} = Hypergraph{T,V,Nothing}(n, k)
@@ -95,6 +95,7 @@ end
     Base.setindex!(h::Hypergraph, ::Nothing, idx::Vararg{Int,2})
 
 Removes a vertex from a given hyperedge for a hypergraph `h` and a given vertex-hyperedge pair `idx`.
+Note that trying to remove a vertex from a hyperedge when it is not present will not throw an error.
 
 """
 @inline function Base.setindex!(h::Hypergraph, ::Nothing, idx::Vararg{Int,2})
@@ -135,97 +136,89 @@ Returns hyperedges for a given vertex `v_id` in a hypergraph `h`.
 @inline gethyperedges(h::Hypergraph, v_id::Int) = h.v2he[v_id]
 
 """
-    add_vertex!(h::Hypergraph{T, V, E}; hyperedges::Dict{Int,T} = Dict{Int,T}(), vertex_val::Union{UndefInitializer, V} = undef) where {T <: Real, V, E}
+    add_vertex!(h::Hypergraph{T, V, E}; hyperedges::Dict{Int,T} = Dict{Int,T}(), vertex_meta::Union{V,Nothing} nothing undef) where {T <: Real, V, E}
 
 Adds a vertex to a given hypergraph `h`. Optionally, the vertex can be added
 to existing hyperedges. The `hyperedges` parameter presents a dictionary
 of hyperedge identifiers and values stored at the hyperedges.
-Additionally, a value can be stored with the vertex using the `vertex_val` parameter.
+Additionally, a value can be stored with the vertex using the `vertex_meta` keyword parameter.
 
 """
-function add_vertex!(h::Hypergraph{T, V, E}; hyperedges::Dict{Int,T} = Dict{Int,T}(), vertex_val::Union{UndefInitializer, V} = undef) where {T <: Real, V, E}
+function add_vertex!(h::Hypergraph{T, V, E}; hyperedges::Dict{Int,T} = Dict{Int,T}(), vertex_meta::Union{V, Nothing} = nothing) where {T <: Real, V, E}
     @boundscheck (checkbounds(h,1,k) for k in keys(hyperedges))
     push!(h.v2he,hyperedges)
     ix = length(h.v2he)
     for k in keys(hyperedges)
         h[ix,k]=hyperedges[k]
     end
-    if vertex_val == undef
-        resize!(h.vs, length(h.vs)+1)
-    else
-        push!(h.vs, vertex_val)
-    end
+    push!(h.v_meta, vertex_meta)
     ix
 end
 
 """
-    add_hyperedge!(h::Hypergraph{T, V, E}; vertices::Dict{Int,T} = Dict{Int,T}(), hyperedge_val::Union{UndefInitializer, E}=undef) where {T <: Real, V, E}
+    add_hyperedge!(h::Hypergraph{T, V, E}; vertices::Dict{Int,T} = Dict{Int,T}(), hyperedge_meta::Union{E,Nothing}=nothing) where {T <: Real, V, E}
 
 Adds a hyperedge to a given hypergraph `h`. Optionally, existing vertices can be added
 to the created hyperedge. The paramater `vertices` represents a dictionary
 of vertex identifiers and values stored at the hyperedges.
-Additionally, a value can be stored with the hyperedge using the `hyperedge_val` parameter.
+Additionally, a value can be stored with the hyperedge using the `hyperedge_meta` keyword parameter.
 
 """
-function add_hyperedge!(h::Hypergraph{T, V, E}; vertices::Dict{Int,T} = Dict{Int,T}(), hyperedge_val::Union{UndefInitializer, E}=undef) where {T <: Real, V, E}
+function add_hyperedge!(h::Hypergraph{T, V, E}; vertices::Dict{Int,T} = Dict{Int,T}(), hyperedge_meta::Union{E,Nothing}=nothing) where {T <: Real, V, E}
     @boundscheck (checkbounds(h,k,1) for k in keys(vertices))
     push!(h.he2v,vertices)
     ix = length(h.he2v)
     for k in keys(vertices)
         h[k,ix]=vertices[k]
     end
-    if hyperedge_val == undef
-        resize!(h.hes, length(h.hes)+1)
-    else
-        push!(h.hes, hyperedge_val)
-    end
+    push!(h.he_meta, hyperedge_meta)
     ix
 end
 
 """
-    set_vertex_value!(h::Hypergraph{T, V, E}, new_value::V, id::Int) where {T <: Real, V, E}
+    set_vertex_meta!(h::Hypergraph{T, V, E}, new_value::Union{V,Nothing}, id::Int) where {T <: Real, V, E}
 
-Sets a new value `new_value` for the vertex `id` in the hypegraph `h`.
+Sets a new meta value `new_value` for the vertex `id` in the hypegraph `h`.
 
 """
-function set_vertex_value!(h::Hypergraph{T, V, E}, new_value::V, id::Int) where {T <: Real, V, E}
-    @boundscheck checkbounds(h.vs, id)
-    h.vs[id] = new_value
-    h.vs
+function set_vertex_meta!(h::Hypergraph{T, V, E}, new_value::Union{V,Nothing}, id::Int) where {T <: Real, V, E}
+    checkbounds(h.v_meta, id)
+    h.v_meta[id] = new_value
+    h.v_meta
 end
 
 """
-    get_vertex_value(h::Hypergraph{T, V, E}, id::Int) where {T <: Real, V, E}
+    get_vertex_meta(h::Hypergraph{T, V, E}, id::Int) where {T <: Real, V, E}
 
-Returns a value stored at the vertex `id` in the hypergraph `h`.
+Returns a meta value stored at the vertex `id` in the hypergraph `h`.
 
 """
-function get_vertex_value(h::Hypergraph{T, V, E}, id::Int) where {T <: Real, V, E}
-    @boundscheck checkbounds(h.vs, id)
-    h.vs[id]
+function get_vertex_meta(h::Hypergraph{T, V, E}, id::Int) where {T <: Real, V, E}
+    checkbounds(h.v_meta, id)
+    h.v_meta[id]
 end
 
 """
-    set_hyperedge_value!(h::Hypergraph{T, V, E}, new_value::E, id::Int) where {T <: Real, V, E}
+    set_hyperedge_meta!(h::Hypergraph{T, V, E}, new_value::Union{E,Nothing}, id::Int) where {T <: Real, V, E}
 
-Sets a new value `new_value` for the hyperedge `id` in the hypegraph `h`.
+Sets a new meta value `new_value` for the hyperedge `id` in the hypegraph `h`.
 
 """
-function set_hyperedge_value!(h::Hypergraph{T, V, E}, new_value::E, id::Int) where {T <: Real, V, E}
-    @boundscheck checkbounds(h.hes, id)
-    h.hes[id] = new_value
-    h.hes
+function set_hyperedge_meta!(h::Hypergraph{T, V, E}, new_value::Union{E,Nothing}, id::Int) where {T <: Real, V, E}
+    checkbounds(h.he_meta, id)
+    h.he_meta[id] = new_value
+    h.he_meta
 end
 
 """
-    get_hyperedge_value(h::Hypergraph{T, V, E}, id::Int) where {T <: Real, V, E}
+    get_hyperedge_meta(h::Hypergraph{T, V, E}, id::Int) where {T <: Real, V, E}
 
-Returns a value stored at the hyperedge `id` in the hypergraph `h`.
+Returns a meta value stored at the hyperedge `id` in the hypergraph `h`.
 
 """
-function get_hyperedge_value(h::Hypergraph{T, V, E}, id::Int) where {T <: Real, V, E}
-    @boundscheck checkbounds(h.hes, id)
-    h.hes[id]
+function get_hyperedge_meta(h::Hypergraph{T, V, E}, id::Int) where {T <: Real, V, E}
+    checkbounds(h.he_meta, id)
+    h.he_meta[id]
 end
 
 

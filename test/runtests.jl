@@ -43,18 +43,18 @@ h1[5,2] = 6.5
     @test getindex(h1,3,1) == 1.5
 
     h3 = Hypergraph{Float64,String,Nothing}(1,1)
-    @test add_vertex!(h3,vertex_val="test") == 2
-    @test set_vertex_value!(h3,"t",1) == ["t","test"]
-    @test get_vertex_value(h3,2) == "test"
-    @test get_hyperedge_value(h3,1) == nothing
-    @test_throws BoundsError get_hyperedge_value(h3,2)
+    @test add_vertex!(h3,vertex_meta="test") == 2
+    @test set_vertex_meta!(h3,"t",1) == ["t","test"]
+    @test get_vertex_meta(h3,2) == "test"
+    @test get_hyperedge_meta(h3,1) == nothing
+    @test_throws BoundsError get_hyperedge_meta(h3,2)
 
     h4 = Hypergraph{Float64,Nothing,String}(1,1)
-    @test add_hyperedge!(h4,hyperedge_val="test") == 2
-    @test set_hyperedge_value!(h4,"t",1) == ["t","test"]
-    @test get_hyperedge_value(h4,2) == "test"
-    @test get_vertex_value(h4,1) == nothing
-    @test_throws BoundsError get_vertex_value(h4,2)
+    @test add_hyperedge!(h4,hyperedge_meta="test") == 2
+    @test set_hyperedge_meta!(h4,"t",1) == ["t","test"]
+    @test get_hyperedge_meta(h4,2) == "test"
+    @test get_vertex_meta(h4,1) == nothing
+    @test_throws BoundsError get_vertex_meta(h4,2)
 end;
 
 @testset "SimpleHypergraphs BipartiteView " begin

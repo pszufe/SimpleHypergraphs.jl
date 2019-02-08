@@ -19,12 +19,12 @@ Manipulating vertices and hyperedges
 ------------------------------------
 ```@docs
 
-add_hyperedge!(::Hypergraph{T, V, E}; ::Dict{Int,T}, ::Union{UndefInitializer, E}) where {T <: Real, V, E}
-add_vertex!(::Hypergraph{T, V, E};::Dict{Int,T},::Union{UndefInitializer,V}) where {T <: Real, V, E}
-set_vertex_value!(::Hypergraph{T, V, E}, ::V, ::Int) where {T <: Real, V, E}
-get_vertex_value(::Hypergraph{T, V, E}, ::Int) where {T <: Real, V, E}
-set_hyperedge_value!(::Hypergraph{T, V, E}, ::E, ::Int) where {T <: Real, V, E}
-get_hyperedge_value(::Hypergraph{T, V, E}, ::Int) where {T <: Real, V, E}
+add_hyperedge!(::Hypergraph{T, V, E}; ::Dict{Int,T}, ::Union{E,Nothing} ) where {T <: Real, V, E}
+add_vertex!(::Hypergraph{T, V, E};::Dict{Int,T},::Union{V,Nothing} ) where {T <: Real, V, E}
+set_vertex_meta!(::Hypergraph{T, V, E}, ::Union{V,Nothing}, ::Int) where {T <: Real, V, E}
+get_vertex_meta(::Hypergraph{T, V, E}, ::Int) where {T <: Real, V, E}
+set_hyperedge_meta!(::Hypergraph{T, V, E}, ::Union{E,Nothing}, ::Int) where {T <: Real, V, E}
+get_hyperedge_meta(::Hypergraph{T, V, E}, ::Int) where {T <: Real, V, E}
 ```
 
 Hypergraph array getters and setters
