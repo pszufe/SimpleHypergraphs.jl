@@ -137,7 +137,7 @@ Returns hyperedges for a given vertex `v_id` in a hypergraph `h`.
 
 """
     add_vertex!(h::Hypergraph{T, V, E}; hyperedges::Dict{Int,T} = Dict{Int,T}(),
-        vertex_meta::Union{V,Nothing} nothing undef) where {T <: Real, V, E}
+                vertex_meta::Union{V,Nothing} nothing undef) where {T <: Real, V, E}
 
 Adds a vertex to a given hypergraph `h`. Optionally, the vertex can be added
 to existing hyperedges. The `hyperedges` parameter presents a dictionary
@@ -146,8 +146,7 @@ Additionally, a value can be stored with the vertex using the `vertex_meta` keyw
 
 """
 function add_vertex!(h::Hypergraph{T, V, E}; hyperedges::Dict{Int,T} = Dict{Int,T}(),
-    vertex_meta::Union{V, Nothing} = nothing) where {T <: Real, V, E}
-
+                     vertex_meta::Union{V, Nothing} = nothing) where {T <: Real, V, E}
     @boundscheck (checkbounds(h,1,k) for k in keys(hyperedges))
     push!(h.v2he,hyperedges)
     ix = length(h.v2he)
@@ -160,7 +159,7 @@ end
 
 """
     add_hyperedge!(h::Hypergraph{T, V, E}; vertices::Dict{Int,T} = Dict{Int,T}(),
-        hyperedge_meta::Union{E,Nothing}=nothing) where {T <: Real, V, E}
+                   hyperedge_meta::Union{E,Nothing}=nothing) where {T <: Real, V, E}
 
 Adds a hyperedge to a given hypergraph `h`. Optionally, existing vertices can be added
 to the created hyperedge. The paramater `vertices` represents a dictionary
@@ -169,8 +168,7 @@ Additionally, a value can be stored with the hyperedge using the `hyperedge_meta
 
 """
 function add_hyperedge!(h::Hypergraph{T, V, E}; vertices::Dict{Int,T} = Dict{Int,T}(),
-    hyperedge_meta::Union{E,Nothing}=nothing) where {T <: Real, V, E}
-
+                        hyperedge_meta::Union{E,Nothing}=nothing) where {T <: Real, V, E}
     @boundscheck (checkbounds(h,k,1) for k in keys(vertices))
     push!(h.he2v,vertices)
     ix = length(h.he2v)
