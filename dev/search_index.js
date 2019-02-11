@@ -213,7 +213,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Reference",
     "title": "SimpleHypergraphs.hg_load",
     "category": "function",
-    "text": "hg_load(fname::AbstractString, T::Type{<:Real})\n\nLoads a hypergraph from a stream io. The second argument T represents type of data in the hypegraph\n\n\n\n\n\nhg_load(fname::AbstractString, T::Type{<:Real})\n\nLoads a hypergraph from a file fname. The second argument T represents type of data in the hypegraph\n\n\n\n\n\n"
+    "text": "hg_load(fname::AbstractString, T::Type{<:Real})\n\nLoads a hypergraph from a stream io. The second argument T represents type of data in the hypegraph.\n\nSkips an initial comment.\n\n\n\n\n\nhg_load(fname::AbstractString, T::Type{<:Real})\n\nLoads a hypergraph from a file fname. The second argument T represents type of data in the hypegraph\n\n\n\n\n\n"
 },
 
 {
