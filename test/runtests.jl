@@ -24,8 +24,32 @@ h1[5,2] = 6.5
     mktemp("data") do path, _
         println(path)
         hg_save(path, h)
-        @test read(path, String) == replace(read("data/test1.hgf", String), "\r\n" => "\n")
+
+        loaded_hg = replace(read(path, String), r"\n*$" => "")
+
+        @test loaded_hg ==
+            reduce(replace,
+                ["\r\n"=>"\n",
+                r"^\"\"\"(?s).*\"\"\"\n"=>"", #remove initial comments
+                r"\n*$"=>""], #remove final \n*
+                init=read("data/test1.hgf", String)) #no comments
+
+        @test loaded_hg ==
+            reduce(replace,
+                ["\r\n"=>"\n",
+                r"^\"\"\"(?s).*\"\"\"\n"=>"", #remove initial comments
+                r"\n*$"=>""], #remove final \n*
+                init=read("data/test_singlelinecomment.hgf", String)) #single line comment
+
+        @test loaded_hg ==
+            reduce(replace,
+                ["\r\n"=>"\n",
+                r"^\"\"\"(?s).*\"\"\"\n"=>"", #remove initial comments
+                r"\n*$"=>""], #remove final \n*
+                init=read("data/test_multiplelinescomment.hgf", String)) #multiple lines comment
     end
+
+    @test_throws ArgumentError hg_load("data/test_malformedcomment.hgf", Int)
 
     h2 = Hypergraph{Float64}(0,0)
     for i in 1:4 add_vertex!(h2) end

@@ -28,11 +28,32 @@ hg_save(fname::AbstractString, h::Hypergraph) =
     hg_load(fname::AbstractString, T::Type{<:Real})
 
 Loads a hypergraph from a stream `io`. The second argument
-`T` represents type of data in the hypegraph
+`T` represents type of data in the hypegraph.
+
+Skips an initial comment.
 
 """
 function hg_load(io::IO, T::Type{<:Real})
-    l = split(readline(io))
+    line = readline(io)
+
+    if startswith(line, "\"\"\"")
+      singleline = true
+        while(
+            !( (!singleline && endswith(line, "\"\"\"")) ||
+            (singleline && endswith(line, "\"\"\"") && length(line)>5)
+            ) &&
+            !eof(io)
+            )
+                line = readline(io)
+                singleline = false
+        end
+        if eof(io)
+            throw(ArgumentError("malformed input"))
+        end
+       line = readline(io)
+    end
+    
+    l = split(line)
     length(l) == 2 || throw(ArgumentError("expected two integers"))
     n, k = parse.(Int, l)
     h = Hypergraph{T}(n, k)
