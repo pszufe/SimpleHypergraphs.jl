@@ -9,6 +9,7 @@
 ## Documentation
 
 - [**DEV**][docs-dev-url] &mdash; **documentation of the most recently tagged version.**
+- [tutorial](https://nbviewer.jupyter.org/github/pszufe/SimpleHypergraphs.jl/blob/examples/examples/basics/Basics.ipynb) - for a quick start with the library see our Jupyter Notebook tutorial on main library functionality
 
 [docs-latest-img]: https://img.shields.io/badge/docs-latest-blue.svg
 [docs-dev-url]: https://pszufe.github.io/SimpleHypergraphs.jl/latest
