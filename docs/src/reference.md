@@ -56,6 +56,11 @@ size(::Hypergraph)
 getvertices(::Hypergraph, ::Int)
 gethyperedges(::Hypergraph, ::Int)
 
+modularity(::Hypergraph, ::Vector{Vector{Int}})
+modularity(::Hypergraph)
+function findmodularity(::Hypergraph, ::Int, ::Int)
+
+
 BipartiteView
 shortest_path(::BipartiteView, ::Int, ::Int)
 
