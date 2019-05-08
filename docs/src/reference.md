@@ -58,7 +58,7 @@ gethyperedges(::Hypergraph, ::Int)
 
 modularity(::Hypergraph, ::Vector{Vector{Int}})
 modularity(::Hypergraph)
-function findmodularity(::Hypergraph, ::Int, ::Int)
+findmodularity(::Hypergraph, ::Int, ::Int)
 
 
 BipartiteView
