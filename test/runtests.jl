@@ -2,10 +2,6 @@ using Test, SimpleHypergraphs
 using Random
 import LightGraphs
 
-
-
-
-
 h1 = Hypergraph{Float64}(5,4)
 h1[1:3,1] .= 1.5
 h1[3,4] = 2.5
@@ -149,15 +145,13 @@ end;
             hg[i] = true
         end
     end
-    
-    @test findmodularity(hg,3,100) == 
+
+    @test findmodularity(hg,3,100) ==
          (bp = [[3, 6], [1, 2, 4, 5, 8, 10], [7, 9]], bm = 0.2340529955954218)
     @test modularity(hg,  [Int.(1:10)]) == -0.01312130272633727
     @test modularity(hg)  == modularity(hg,  [Int.(1:10)])
-    @test modularity(hg)  == modularity(hg,  randompartitioning(hg, 1))
+    @test modularity(hg)  == modularity(hg,  randompartition(hg, 1))
     Random.seed!(1234);
-    @test randompartitioning(hg, 2) == [[1, 5, 6, 7, 9], [2, 3, 4, 8, 10]]
-    
+    @test randompartition(hg, 2) == [[1, 5, 6, 7, 9], [2, 3, 4, 8, 10]]
+
 end;
-
-
