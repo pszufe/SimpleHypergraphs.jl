@@ -60,7 +60,7 @@ Returns a `NamedTuple` where the field `bp` contains partition
 and the field `bm` contains the modularity value for that partition.
 """
 function findmodularity(hg::Hypergraph, n::Int, reps::Int)::NamedTuple{(:bp, :bm),Tuple{Vector{Vector{Int}}, Float64}}
-    bp = Vector{Vector{Int}}([[]])
+    bp = [Int[]]
     bm = -Inf
     for i in 1:reps
         p = Vector{Vector{Int}}([[]])
