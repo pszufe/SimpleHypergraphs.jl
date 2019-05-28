@@ -23,7 +23,9 @@ end
 
 Calculates the modularity of a hypergraph `hg` for a given `partition`.
 """
-function modularity(hg::Hypergraph, partition::Vector{Vector{Int}})
+@inline function modularity(hg::Hypergraph, partition::Vector{Vector{Int}})
+    @boundscheck sum(length.(partition)) == size(hg, 1)
+    @boundscheck sort!(union(partition...)) == axes(hg, 1)
     hes = [length(hg.he2v[i]) for i in axes(hg, 2)]
     max_hes = maximum(hes)
     Ed = zeros(Int, max_hes)
