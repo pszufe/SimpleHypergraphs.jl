@@ -5,7 +5,11 @@ Generates a random partition for vertices of a hypergraph `hg` into `n` subsets.
 """
 randompartition(hg::Hypergraph, n::Int) = randompartition(size(hg, 1), n)
 
+"""
+    randompartition(hg::Hypergraph, n::Int)::Vector{Vector{Int}}
 
+Generates a random partition for graph having `N` vertices into `n` subsets.
+"""
 function randompartition(N::Int, n::Int)
     res = [Int[] for i in 1:n]
     for i in 1:N
@@ -13,22 +17,6 @@ function randompartition(N::Int, n::Int)
     end
     res
 end
-
-function modularity_old(hg::Hypergraph, partition::Vector{Vector{Int}})
-    @assert sum(length.(partition)) == size(hg, 1)
-    @assert sort!(union(partition...)) == axes(hg, 1)
-    hes = [count(==(true), hg[:, i]) for i in axes(hg, 2)]
-    Ed = Dict{Int,Int}()
-    for i in 2:maximum(hes)
-        Ed[i] = count(==(i), hes)
-    end
-    deg(hg, i) = count(==(true), hg[i, :])
-    volV = 2*size(hg,2)
-    volP = [sum(deg(hg, i) for i in p) for p in partition]
-    eP = [count(i->issubset(findall(==(true), hg[:,i]), p)*any(==(true),hg[:,i]), axes(hg,2)) for p in partition]
-    (sum(eP) - sum(Ed[d]*sum((v/volV)^d for v in volP) for d in keys(Ed))) / size(hg, 2)
-end
-
 
 """
     modularity(hg::Hypergraph, partition::Vector{Vector{Int}})
@@ -55,7 +43,7 @@ end
 """
     modularity(hg::Hypergraph)
 
-Calculates the modularity of a hypergraph `hg`.
+Calculates the modularity of a hypergraph `hg` assuming a single partition.
 """
 modularity(hg::Hypergraph) = modularity(hg, [collect(1:size(hg, 1))])
 
