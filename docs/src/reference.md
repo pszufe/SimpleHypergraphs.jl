@@ -53,12 +53,19 @@ Hypergraph info
 ---------------
 ```@docs
 size(::Hypergraph)
+nv(::Hypergraph)
+nhe(::Hypergraph)
 getvertices(::Hypergraph, ::Int)
 gethyperedges(::Hypergraph, ::Int)
 
 modularity(::Hypergraph, ::Vector{Vector{Int}})
-modularity(::Hypergraph)
-findmodularity(::Hypergraph, ::Int, ::Int)
+modularity(::Hypergraph, ::Vector{Set{Int}})
+
+
+AbstractCommunityFinder
+CFModularityRandom
+
+findcommunities(::Hypergraph, ::CFModularityRandom)
 
 
 BipartiteView

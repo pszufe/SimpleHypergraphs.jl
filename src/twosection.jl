@@ -16,10 +16,17 @@ struct TwoSectionView{T<:Real} <: AbstractGraph{Int}
     h::Hypergraph{T}
 end
 
+"""
+  Return the number of vertices in 2-section view `t` of a hypergraph.
+"""
 LightGraphs.nv(t::TwoSectionView) = length(t.h.v2he)
+
 
 LightGraphs.vertices(t::TwoSectionView) = Base.OneTo(nv(t))
 
+"""
+  Return the number of edges in 2-section view `t` of a hypergraph.
+"""
 function LightGraphs.ne(t::TwoSectionView)
     s = 0
     for x in t.h.he2v

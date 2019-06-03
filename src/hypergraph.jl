@@ -77,7 +77,7 @@ Returns the size of Hypergraph `h`.
 The result is a tuple of the number of vertices and the number of hyperedges
 
 """
-Base.size(h::Hypergraph) = (length(h.v2he), length(h.he2v))
+Base.size(h::Hypergraph) = (nhv(h), nhe(h))
 
 """
     Base.getindex(h::Hypergraph, idx::Vararg{Int,2})
@@ -226,6 +226,27 @@ function get_hyperedge_meta(h::Hypergraph{T, V, E}, id::Int) where {T <: Real, V
     checkbounds(h.he_meta, id)
     h.he_meta[id]
 end
+
+"""
+    nhe(h::Hypergraph{T, V, E}) where {T <: Real, V, E}
+
+Return the number of hyperedges in the hypergraph `h`.
+"""
+function nhe(h::Hypergraph{T, V, E}) where {T <: Real, V, E}
+    length(h.he2v)
+end
+
+
+
+"""
+    nhv(h::Hypergraph{T, V, E}) where {T <: Real, V, E}
+
+Return the number of vertices in the hypergraph `h`.
+"""
+function nhv(h::Hypergraph{T, V, E}) where {T <: Real, V, E}
+    length(h.v2he)
+end
+
 
 
 # TODO needs remove_vertex!(h::Hypergraph{T}, v_id::Int)
