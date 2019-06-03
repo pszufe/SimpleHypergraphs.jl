@@ -15,6 +15,8 @@ h1[5,2] = 6.5
 
     h = hg_load("data/test1.hgf", Int)
     @test size(h) == (4, 4)
+    @test nhv(h) == 4
+    @test nhe(h) == 4
     m = Matrix(h)
     @test m == h
     @test h == [1       nothing 4       nothing
@@ -137,21 +139,45 @@ end;
 end;
 
 
-@testset "SimpleHypergraphs Modularity" begin
-    Random.seed!(1234)
+
+@testset "SimpleHypergraphs Modularity    " begin
+    Random.seed!(1234);
     hg = Hypergraph{Bool}(10, 12)
     for i in eachindex(hg)
         if rand() < 0.2
             hg[i] = true
         end
     end
-
-    @test findmodularity(hg,3,100) ==
-         (bp = [[3, 6], [1, 2, 4, 5, 8, 10], [7, 9]], bm = 0.2340529955954218)
-    @test modularity(hg,  [Int.(1:10)]) == -0.01312130272633727
-    @test modularity(hg)  == modularity(hg,  [Int.(1:10)])
-    @test modularity(hg)  == modularity(hg,  randompartition(hg, 1))
+    
+    cfmr = CFModularityRandom(3,10000)
+    
+    @test findcommunities(hg,cfmr) ==
+         (bp = Set.([[4, 5, 9], [1, 3, 6, 7], [2, 8, 10]]), bm = 0.21505688117829677)
+    @test modularity(hg,  Set.([1:10])) == 0.0
     Random.seed!(1234);
-    @test randompartition(hg, 2) == [[1, 5, 6, 7, 9], [2, 3, 4, 8, 10]]
+    @test randompartition(hg, 2) == Set.([[1, 5, 6, 7, 9], [2, 3, 4, 8, 10]])
+
+    hh = Hypergraph{Bool}(7,4)
+    hh[1,1] = true
+    hh[2,1:2] .= true
+    hh[3,1:3] .= true
+    hh[4,4] = true
+    hh[5:6,3] .= true
+    @test nhv(hh) == 7
+    @test nhe(hh) == 4
+
+    @test modularity(hh,Set.([[1,2,3],[4],[5],[6],[7]])) ≈ 223/972
+    @test modularity(hh,Set.([[1,2,3],[4,5,6,7]])) ≈ 14/72
+    @test modularity(hh,Set.([[1,2,3,5,6],[4,7]])) ≈ 16/81
+    @test modularity(hh,Set.([[1,2,3,5,6],[4],[7]])) ≈ 16/81
+    @test modularity(hh, Set.([1:nhv(hh)])) == 0.0
+    ha = SimpleHypergraphs.HypergraphAggs(hh)
+    @test ha.hes == [3, 2, 3, 1]
+    @test ha.max_hes == 3
+    @test ha.deg_vs == [1, 2, 3, 1, 1, 1, 0]
+    @test ha.volV == 9
+    @test modularity(hh, Set.([[1,2,3],[4],[5],[6],[7]]), ha) ≈ 223/972
+    cfmr = CFModularityRandom(2,10000)
+    @test findcommunities(hh,cfmr).bm ≈ 16/81
 
 end;

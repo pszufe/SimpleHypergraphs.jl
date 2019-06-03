@@ -17,11 +17,16 @@ struct BipartiteView{T<:Real} <: AbstractGraph{Int}
 end
 
 
+"""
+  Return the number of vertices in a bipartite view `b` of a hypergraph.
+"""
 LightGraphs.nv(b::BipartiteView) = length(b.h.v2he)+length(b.h.he2v)
 
 LightGraphs.vertices(b::BipartiteView) = Base.OneTo(LightGraphs.nv(b))
 
-
+"""
+  Return the number of edges in a bipartite view `b` of a hypergraph.
+"""
 LightGraphs.ne(b::BipartiteView) = 2*sum(length.(b.h.v2he))
 
 function LightGraphs.all_neighbors(b::BipartiteView, v::Integer)
