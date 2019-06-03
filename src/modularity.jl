@@ -1,4 +1,5 @@
 """
+
     randompartition(h::Hypergraph, n::Int)::Vector{Set{Int}}
 
 Generates a random partition for vertices of a hypergraph `h` into `n` subsets.
@@ -19,6 +20,7 @@ function randompartition(N::Int, n::Int)
 end
 
 """
+
 HypergraphAggs(h::Hypergraph)
 
     Precomputes vertex and edge basic stats for a hypergraph.
@@ -57,10 +59,12 @@ the precomputed aggregates `ha`.
     volP_volV = [sum(ha.deg_vs[i] for i in p)/ha.volV for p in partition]
     eP = [count(i-> ha.hes[i]>0 && (keys(h.he2v[i]) ⊆ p), 1:nhe(h)) for p in partition]
     (sum(eP) - sum( ha.Ed[d]*sum(volP_volV.^d) for d in 1:ha.max_hes)) / nhe(h)
+
 end
 
 
 """
+
     modularity(h::Hypergraph, partition::Vector{Set{Int}})
 
 Calculates the strict modularity of a hypergraph `h` for a given `partition`.
@@ -108,6 +112,7 @@ one that was randomly found will be returned.
 Returns a `NamedTuple` where the field `bp` contains partition
 and the field `bm` contains the modularity value for that partition.
 """
+
 function findcommunities(h::Hypergraph, method::CFModularityRandom)::NamedTuple{(:bp, :bm),Tuple{Vector{Set{Int}}, Float64}}
     bp = [Int[]]
     bm = -Inf

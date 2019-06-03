@@ -58,7 +58,6 @@ nhe(::Hypergraph)
 getvertices(::Hypergraph, ::Int)
 gethyperedges(::Hypergraph, ::Int)
 
-
 modularity(::Hypergraph, ::Vector{Set{Int}})
 
 modularity(::Hypergraph, ::SimpleHypergraphs.HypergraphAggs, ::Vector{Set{Int}})

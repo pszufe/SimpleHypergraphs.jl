@@ -139,6 +139,7 @@ end;
 end;
 
 
+
 @testset "SimpleHypergraphs Modularity    " begin
     Random.seed!(1234);
     hg = Hypergraph{Bool}(10, 12)
@@ -179,4 +180,5 @@ end;
     @test modularity(hh, ha, Set.([[1,2,3],[4],[5],[6],[7]])) ≈ 223/972
     cfmr = CFModularityRandom(2,10000)
     @test findcommunities(hh,cfmr).bm ≈ 16/81
+
 end;
