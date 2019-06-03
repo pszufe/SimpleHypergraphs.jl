@@ -1,12 +1,12 @@
 """
-    randompartition(h::Hypergraph, n::Int)::Vector{Vector{Int}}
+    randompartition(h::Hypergraph, n::Int)::Vector{Set{Int}}
 
 Generates a random partition for vertices of a hypergraph `h` into `n` subsets.
 """
 randompartition(h::Hypergraph, n::Int) = randompartition(nhv(h), n)
 
 """
-    randompartition(h::Hypergraph, n::Int)::Vector{Vector{Int}}
+    randompartition(h::Hypergraph, n::Int)::Vector{Set{Int}}
 
 Generates a random partition for graph having `N` vertices into `n` subsets.
 """
@@ -19,9 +19,9 @@ function randompartition(N::Int, n::Int)
 end
 
 """
-HypergraphAggs
+HypergraphAggs(h::Hypergraph)
 
-    Precomputed vertex and edge basic stats for a hypergraph.
+    Precomputes vertex and edge basic stats for a hypergraph.
     The stats are being used for efficiency reasons by community search algorithms.
 """
 struct HypergraphAggs
@@ -46,9 +46,10 @@ struct HypergraphAggs
 end
 
 """
-    modularity(h::Hypergraph, partition::Vector{Set{Int}})
+    modularity(h::Hypergraph, ha::HypergraphAggs, partition::Vector{Set{Int}})
 
-Calculates the modularity of a hypergraph `h` for a given `partition`.
+Calculates the strict modularity of a hypergraph `h` for a given `partition` using 
+the precomputed aggregates `ha`.
 """
 @inline function modularity(h::Hypergraph, ha::HypergraphAggs, partition::Vector{Set{Int}})
     @boundscheck sum(length.(partition)) == nhv(h)
@@ -62,7 +63,7 @@ end
 """
     modularity(h::Hypergraph, partition::Vector{Set{Int}})
 
-Calculates the modularity of a hypergraph `h` for a given `partition`.
+Calculates the strict modularity of a hypergraph `h` for a given `partition`.
 """
 @inline function modularity(h::Hypergraph, partition::Vector{Set{Int}})
     @boundscheck sum(length.(partition)) == nhv(h)

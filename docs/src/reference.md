@@ -53,14 +53,15 @@ Hypergraph info
 ---------------
 ```@docs
 size(::Hypergraph)
-nv(::Hypergraph)
+nhv(::Hypergraph)
 nhe(::Hypergraph)
 getvertices(::Hypergraph, ::Int)
 gethyperedges(::Hypergraph, ::Int)
 
-modularity(::Hypergraph, ::Vector{Vector{Int}})
+
 modularity(::Hypergraph, ::Vector{Set{Int}})
 
+modularity(::Hypergraph, ::SimpleHypergraphs.HypergraphAggs, ::Vector{Set{Int}})
 
 AbstractCommunityFinder
 CFModularityRandom
