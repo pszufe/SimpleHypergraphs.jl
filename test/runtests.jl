@@ -148,9 +148,8 @@ end;
             hg[i] = true
         end
     end
-   
-    cfmr = CFModularityRandom(3,10000)   
     
+    cfmr = CFModularityRandom(3,10000)
     
     @test findcommunities(hg,cfmr) ==
          (bp = Set.([[4, 5, 9], [1, 3, 6, 7], [2, 8, 10]]), bm = 0.21505688117829677)
@@ -171,13 +170,13 @@ end;
     @test modularity(hh,Set.([[1,2,3],[4,5,6,7]])) ≈ 14/72
     @test modularity(hh,Set.([[1,2,3,5,6],[4,7]])) ≈ 16/81
     @test modularity(hh,Set.([[1,2,3,5,6],[4],[7]])) ≈ 16/81
-    @test modularity(hh, Set.([1:nhv(hh)])) == 0.0    
+    @test modularity(hh, Set.([1:nhv(hh)])) == 0.0
     ha = SimpleHypergraphs.HypergraphAggs(hh)
     @test ha.hes == [3, 2, 3, 1]
     @test ha.max_hes == 3
     @test ha.deg_vs == [1, 2, 3, 1, 1, 1, 0]
     @test ha.volV == 9
-    @test modularity(hh, ha, Set.([[1,2,3],[4],[5],[6],[7]])) ≈ 223/972
+    @test modularity(hh, Set.([[1,2,3],[4],[5],[6],[7]]), ha) ≈ 223/972
     cfmr = CFModularityRandom(2,10000)
     @test findcommunities(hh,cfmr).bm ≈ 16/81
 
