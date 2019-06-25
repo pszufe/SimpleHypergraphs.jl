@@ -50,6 +50,7 @@ function LightGraphs.all_neighbors(t::TwoSectionView, v::Integer)
 end
 
 function LightGraphs.has_edge(t::TwoSectionView, s, d)
+    s == d && return false
     !isempty(intersect(keys(t.h.v2he[s]), keys(t.h.v2he[d])))
 end
 

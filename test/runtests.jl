@@ -136,6 +136,11 @@ end;
 
     @test sum(LightGraphs.adjacency_matrix(LightGraphs.SimpleGraph(t))) == 20
 
+    Random.seed!(0);
+    g = LightGraphs.erdos_renyi(8, 0.3)
+    h_from_g = Hypergraph(g)
+    @assert LightGraphs.adjacency_matrix(g) == LightGraphs.adjacency_matrix(TwoSectionView(h_from_g))
+    @assert minimum([sum((h_from_g .== true)[:,n]) for n in 1:6] .== 2)
 end;
 
 

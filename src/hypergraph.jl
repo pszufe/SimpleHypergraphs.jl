@@ -30,6 +30,11 @@ In the matrix representation rows are vertices and columns are hyperedges.
 Optionally, values of type `V` can be stored at vertices and values of type `E`
 can be stored at hyperedges.
 
+    Hypergraph(g::LightGraphs.Graph)
+
+Constructs a hypergraph of degree 2 by making a deep copy of LightGraphs.Graph
+
+
 **Arguments**
 
 * `T` : type of weight values stored in the hypergraph
@@ -68,6 +73,19 @@ end
 function Hypergraph(m::AbstractMatrix{Union{T, Nothing}}) where {T<:Real}
     Hypergraph{Nothing, Nothing}(m)
 end
+
+
+function Hypergraph(g::LightGraphs.Graph)
+    h = Hypergraph{Bool}(maximum(vertices(g)), ne(g))
+    e = 0
+    for edge in edges(g)
+        e+=1
+        h[edge.src,e] = true
+        h[edge.dst,e] = true
+    end
+    h
+end
+
 
 
 """
