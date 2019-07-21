@@ -141,6 +141,9 @@ end;
     h_from_g = Hypergraph(g)
     @assert LightGraphs.adjacency_matrix(g) == LightGraphs.adjacency_matrix(TwoSectionView(h_from_g))
     @assert minimum([sum((h_from_g .== true)[:,n]) for n in 1:6] .== 2)
+    @assert LightGraphs.modularity(g,[1,1,2,2,3,3,4,4]) ≈ modularity(h_from_g, Set.([[1,2],[3,4],[5,6],[7,8]]))
+    
+    @assert LightGraphs.SimpleGraphs.fadj(g) == LightGraphs.SimpleGraphs.fadj(TwoSectionView(h_from_g))
 end;
 
 
