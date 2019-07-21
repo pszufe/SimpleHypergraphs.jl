@@ -1,5 +1,5 @@
 """
-    TwoSectionView{T<:Real} <: AbstractGraph{Int64}
+    TwoSectionView{T<:Real} <: LightGraphs.SimpleGraphs.AbstractSimpleGraph{Int64}
 
 Represents a 2-section view of a hypergraph `h`.
 Note this is a view - changes to the original hypergraph will be automatically reflected in the view.
@@ -12,7 +12,7 @@ The 2-section view of a hypergraph is suitable for processing with the LightGrap
 Several LightGraphs methods are provided for the compability.
 
 """
-struct TwoSectionView{T<:Real} <: AbstractGraph{Int}
+struct TwoSectionView{T<:Real} <: LightGraphs.SimpleGraphs.AbstractSimpleGraph{Int}
     h::Hypergraph{T}
 end
 
@@ -96,3 +96,23 @@ function shortest_path(t::TwoSectionView, source::Int, target::Int)
     dj = dijkstra_shortest_paths(t, source)
     enumerate_paths(dj)[target]
 end
+
+"""
+    LightGraphs.SimpleGraphs.fadj(t::TwoSectionView)
+    
+Generates an adjency list for this view of a hypergraph. 
+"""
+function LightGraphs.SimpleGraphs.fadj(t::TwoSectionView)
+    res = [Vector{Int}() for _ in 1:LightGraphs.nv(t)]
+    for he in t.h.he2v
+        vs = collect(keys(he))
+        if length(vs) > 1
+            for i in 1:length(vs)
+                append!(res[vs[i]], vs[1:end .!= i])
+            end
+        end
+    end
+    sort!.(res)
+end
+LightGraphs.SimpleGraphs.fadj(t::TwoSectionView, v::Integer) = LightGraphs.all_neighbors(t,v)
+LightGraphs.edges(t::TwoSectionView) = LightGraphs.SimpleGraphs.SimpleEdgeIter(t)

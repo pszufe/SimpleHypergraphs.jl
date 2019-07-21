@@ -55,6 +55,10 @@ struct Hypergraph{T,V,E} <: AbstractMatrix{Union{T, Nothing}}
                           Vector{Union{V,Nothing}}(nothing, n), Vector{Union{E,Nothing}}(nothing, k))
 end
 
+
+
+
+
 Hypergraph{T,V}(n, k) where {T<:Real, V} = Hypergraph{T,V,Nothing}(n, k)
 Hypergraph{T}(n, k) where {T<:Real} =  Hypergraph{T,Nothing,Nothing}(n, k)
 
@@ -155,7 +159,7 @@ Returns hyperedges for a given vertex `v_id` in a hypergraph `h`.
 
 """
     add_vertex!(h::Hypergraph{T, V, E}; hyperedges::Dict{Int,T} = Dict{Int,T}(),
-                vertex_meta::Union{V,Nothing} nothing undef) where {T <: Real, V, E}
+                vertex_meta::Union{V,Nothing} = nothing) where {T <: Real, V, E}
 
 Adds a vertex to a given hypergraph `h`. Optionally, the vertex can be added
 to existing hyperedges. The `hyperedges` parameter presents a dictionary
@@ -174,6 +178,34 @@ function add_vertex!(h::Hypergraph{T, V, E}; hyperedges::Dict{Int,T} = Dict{Int,
     push!(h.v_meta, vertex_meta)
     ix
 end
+
+"""
+    remove_vertex!(h::Hypergraph, v::Int)
+    
+Removes the vertex `v` from a given hypergraph `h`.
+Note that running this function will cause reordering of vertices in the hypergraph: 
+the vertex `v` will replaced by the last vertex 
+of the hypergraph and the list of vertices will be shrunk. 
+"""
+function remove_vertex!(h::Hypergraph, v::Int)
+    n = nhv(h)
+    if v < n
+        h.v2he[v] = h.v2he[n]
+        h.v_meta[v] = h.v_meta[n]
+    end
+    
+    for hv in h.he2v
+        if v < n && haskey(hv, n)
+            hv[v] = hv[n]
+            delete!(hv, n)
+        else
+            delete!(hv, v)
+        end
+    end
+    resize!(h.v2he, length(h.v2he) - 1)    
+    h
+end
+
 
 """
     add_hyperedge!(h::Hypergraph{T, V, E}; vertices::Dict{Int,T} = Dict{Int,T}(),
@@ -267,8 +299,8 @@ end
 
 
 
-# TODO needs remove_vertex!(h::Hypergraph{T}, v_id::Int)
 
 # TODO needs add_hyperedge!(h::Hypergraph{T}, he_id::Int)
 
 # TODO needs validate_hypergraph!(h::Hypergraph{T})
+
