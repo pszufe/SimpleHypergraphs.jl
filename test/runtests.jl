@@ -81,6 +81,12 @@ h1[5,2] = 6.5
     @test get_hyperedge_meta(h4,2) == "test"
     @test get_vertex_meta(h4,1) == nothing
     @test_throws BoundsError get_vertex_meta(h4,2)
+    
+    h1_0 = deepcopy(h1)
+    @test add_vertex!(h1_0) == 6
+    h1_0[6,:] = h1_0[5,:]
+    @test remove_vertex!(h1_0,5) == h1
+    
 end;
 
 @testset "SimpleHypergraphs BipartiteView " begin
@@ -97,18 +103,20 @@ end;
     @test shortest_path(b,1,5) == [1,3,5]
     @test LightGraphs.is_weakly_connected(b) == true
 
+    
     @test SimpleHypergraphs.add_vertex!(h1) == 6
     @test add_hyperedge!(h1) == 5
     h1[5,5] = 1
     h1[6,5] = 1
 
     @test shortest_path(b,1,6) == [1,3,5,6]
-
 end;
 
 @testset "SimpleHypergraphs TwoSectionView" begin
 
     t = TwoSectionView(h1)
+    
+    @test LightGraphs.is_directed(t) == false
 
     @test LightGraphs.nv(t) == 6
     @test LightGraphs.ne(t) == 8
@@ -139,11 +147,11 @@ end;
     Random.seed!(0);
     g = LightGraphs.erdos_renyi(8, 0.3)
     h_from_g = Hypergraph(g)
-    @assert LightGraphs.adjacency_matrix(g) == LightGraphs.adjacency_matrix(TwoSectionView(h_from_g))
-    @assert minimum([sum((h_from_g .== true)[:,n]) for n in 1:6] .== 2)
-    @assert LightGraphs.modularity(g,[1,1,2,2,3,3,4,4]) ≈ modularity(h_from_g, Set.([[1,2],[3,4],[5,6],[7,8]]))
+    @test LightGraphs.adjacency_matrix(g) == LightGraphs.adjacency_matrix(TwoSectionView(h_from_g))
+    @test minimum([sum((h_from_g .== true)[:,n]) for n in 1:6] .== 2)
+    @test LightGraphs.modularity(g,[1,1,2,2,3,3,4,4]) ≈ modularity(h_from_g, Set.([[1,2],[3,4],[5,6],[7,8]]))
     
-    @assert LightGraphs.SimpleGraphs.fadj(g) == LightGraphs.SimpleGraphs.fadj(TwoSectionView(h_from_g))
+    @test LightGraphs.SimpleGraphs.fadj(g) == LightGraphs.SimpleGraphs.fadj(TwoSectionView(h_from_g))
 end;
 
 

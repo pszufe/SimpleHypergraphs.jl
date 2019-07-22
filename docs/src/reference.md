@@ -8,8 +8,8 @@ DocTestSetup = quote
 end
 ```
 
-Types
------
+Creating a hypergraph
+---------------------
 
 ```@docs
 Hypergraph
@@ -25,6 +25,7 @@ set_vertex_meta!(::Hypergraph{T, V, E}, ::Union{V,Nothing}, ::Int) where {T <: R
 get_vertex_meta(::Hypergraph{T, V, E}, ::Int) where {T <: Real, V, E}
 set_hyperedge_meta!(::Hypergraph{T, V, E}, ::Union{E,Nothing}, ::Int) where {T <: Real, V, E}
 get_hyperedge_meta(::Hypergraph{T, V, E}, ::Int) where {T <: Real, V, E}
+remove_vertex!(::Hypergraph, ::Int)
 ```
 
 Hypergraph array getters and setters
@@ -49,6 +50,22 @@ setindex!(::Hypergraph, ::Nothing, ::Vararg{Int,2})
 setindex!(::Hypergraph, ::Real, ::Vararg{Int,2})
 ```
 
+Hypergraph representation as LightGraphs' simple graphs
+-------------------------------------------------------
+
+The goal of those methods is to provide a way to manipulate a hypergraph using 
+the methods from the [LightGraphs.jl](https://github.com/JuliaGraphs/LightGraphs.jl) library. 
+This has been achieved by providing types that are subtypes of the
+`LightGraphs.SimpleGraphs.AbstractSimpleGraph{Int}` type along with appropiate methods. 
+
+```@docs
+BipartiteView
+shortest_path(::BipartiteView, ::Int, ::Int)
+
+TwoSectionView
+shortest_path(::TwoSectionView, ::Int, ::Int)
+```
+
 Hypergraph info
 ---------------
 ```@docs
@@ -60,18 +77,15 @@ gethyperedges(::Hypergraph, ::Int)
 
 modularity(::Hypergraph, ::Vector{Set{Int}}, ::SimpleHypergraphs.HypergraphAggs)
 
+SimpleHypergraphs.HypergraphAggs
+
+randompartition(::Int64,::Int64)
+randompartition(::Hypergraph,::Int64)
+
 AbstractCommunityFinder
 CFModularityRandom
 
-
 findcommunities(::Hypergraph, ::CFModularityRandom)
-
-
-BipartiteView
-shortest_path(::BipartiteView, ::Int, ::Int)
-
-TwoSectionView
-shortest_path(::TwoSectionView, ::Int, ::Int)
 ```
 
 I/O
@@ -84,3 +98,4 @@ hg_load
 ```@meta
 DocTestSetup = nothing
 ```
+
