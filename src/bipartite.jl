@@ -1,5 +1,5 @@
 """
-    BipartiteView{T<:Real} <: AbstractGraph{Int64}
+    BipartiteView{T<:Real} <: LightGraphs.SimpleGraphs.AbstractSimpleGraph{Int}
 
 Represents a bipartite view of a hypergraph `h`.
 Note this is a view - changes to the original hypergraph will be automatically reflected in the view.
@@ -12,7 +12,7 @@ The bipartite view of a hypergraph is suitable for processing with the LightGrap
 Several LightGraphs methods are provided for the compability.
 
 """
-struct BipartiteView{T<:Real} <: AbstractGraph{Int}
+struct BipartiteView{T<:Real} <: LightGraphs.SimpleGraphs.AbstractSimpleGraph{Int}
     h::Hypergraph{T}
 end
 
@@ -27,14 +27,14 @@ LightGraphs.vertices(b::BipartiteView) = Base.OneTo(LightGraphs.nv(b))
 """
   Return the number of edges in a bipartite view `b` of a hypergraph.
 """
-LightGraphs.ne(b::BipartiteView) = 2*sum(length.(b.h.v2he))
+LightGraphs.ne(b::BipartiteView) = sum(length.(b.h.v2he))
 
 function LightGraphs.all_neighbors(b::BipartiteView, v::Integer)
     n1 = length(b.h.v2he)
     if v <= n1
       n1 .+ keys(b.h.v2he[v])
     else
-      keys(b.h.he2v[v-n1])
+      collect(keys(b.h.he2v[v-n1]))
     end
 end
 
@@ -89,3 +89,24 @@ function shortest_path(b::BipartiteView,source::Int, target::Int)
     dj = dijkstra_shortest_paths(b, source)
     enumerate_paths(dj)[target][1:2:end]
 end
+
+"""
+    LightGraphs.SimpleGraphs.fadj(b::BipartiteView)
+    
+Generates an adjency list for this view of a hypergraph. 
+"""
+function LightGraphs.SimpleGraphs.fadj(b::BipartiteView)
+    res = Vector{Vector{Int}}(undef, LightGraphs.nv(b))
+    
+    h_nv = length(b.h.v2he)
+    for i in 1:h_nv
+       res[i] = h_nv .+ sort!(collect(keys(b.h.v2he[i])))
+    end
+    for i in 1:length(b.h.he2v) 
+        res[i+h_nv] = sort!(collect(keys(b.h.he2v[i])))
+    end
+    res
+end
+
+LightGraphs.SimpleGraphs.fadj(b::BipartiteView, v::Integer) = LightGraphs.all_neighbors(b,v)
+LightGraphs.edges(b::BipartiteView) = LightGraphs.SimpleGraphs.SimpleEdgeIter(b)

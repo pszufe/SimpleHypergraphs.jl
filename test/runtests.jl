@@ -90,7 +90,8 @@ h1[5,2] = 6.5
 end;
 
 @testset "SimpleHypergraphs BipartiteView " begin
-    b = BipartiteView(h1)
+    h2 = deepcopy(h1)
+    b = BipartiteView(h2)
 
     @test sum(LightGraphs.adjacency_matrix(LightGraphs.SimpleGraph(b))) == 18
 
@@ -104,15 +105,29 @@ end;
     @test LightGraphs.is_weakly_connected(b) == true
 
     
-    @test SimpleHypergraphs.add_vertex!(h1) == 6
-    @test add_hyperedge!(h1) == 5
-    h1[5,5] = 1
-    h1[6,5] = 1
+    @test add_vertex!(h2) == 6
+    @test add_hyperedge!(h2) == 5
+    h2[5,5] = 1
+    h2[6,5] = 1
 
     @test shortest_path(b,1,6) == [1,3,5,6]
+    
+    bipartite_graph = LightGraphs.SimpleGraph(b)
+
+    @test LightGraphs.SimpleGraphs.fadj(bipartite_graph)==LightGraphs.SimpleGraphs.fadj(b)
+    @test LightGraphs.nv(b) == 11
+    @test LightGraphs.ne(b) == 11
+
+    @test sort!(LightGraphs.SimpleGraphs.fadj(b,1)) == [7]
+    @test sort!(LightGraphs.SimpleGraphs.fadj(b,2)) == [7,9]    
 end;
 
 @testset "SimpleHypergraphs TwoSectionView" begin
+
+    add_vertex!(h1)
+    add_hyperedge!(h1)
+    h1[5,5] = 1
+    h1[6,5] = 1
 
     t = TwoSectionView(h1)
     
@@ -150,8 +165,7 @@ end;
     @test LightGraphs.adjacency_matrix(g) == LightGraphs.adjacency_matrix(TwoSectionView(h_from_g))
     @test minimum([sum((h_from_g .== true)[:,n]) for n in 1:6] .== 2)
     @test LightGraphs.modularity(g,[1,1,2,2,3,3,4,4]) ≈ modularity(h_from_g, Set.([[1,2],[3,4],[5,6],[7,8]]))
-    
-    @test LightGraphs.SimpleGraphs.fadj(g) == LightGraphs.SimpleGraphs.fadj(TwoSectionView(h_from_g))
+    @test LightGraphs.SimpleGraphs.fadj(g) == LightGraphs.SimpleGraphs.fadj(TwoSectionView(h_from_g))  
 end;
 
 
@@ -195,5 +209,5 @@ end;
     @test modularity(hh, Set.([[1,2,3],[4],[5],[6],[7]]), ha) ≈ 223/972
     cfmr = CFModularityRandom(2,10000)
     @test findcommunities(hh,cfmr).bm ≈ 16/81
-
+    
 end;
