@@ -1,11 +1,3 @@
-# We support two-way mapping as in different problems both might be needed.
-# In the matrix representation rows are vertices and columns are hyperedges
-# n is number of vertices and k is number of hyperedges
-# if he[vertex, hyperedge] returns nothing this means that the vertex
-# is not present in the hyperedge
-# if he[vertex, hyperedge] returns a real number it is a weight
-# of the vertex in this hyperedge
-
 """
     Hypergraph{T} <: AbstractMatrix{Union{T, Nothing}}
 
@@ -34,7 +26,6 @@ can be stored at hyperedges.
 
 Constructs a hypergraph of degree 2 by making a deep copy of LightGraphs.Graph
 
-
 **Arguments**
 
 * `T` : type of weight values stored in the hypergraph
@@ -43,7 +34,6 @@ Constructs a hypergraph of degree 2 by making a deep copy of LightGraphs.Graph
 * `n` : number of vertices
 * `k` : number of hyperedges
 * `m` : a matrix representation rows are vertices and columns are hyperedges
-
 """
 struct Hypergraph{T,V,E} <: AbstractMatrix{Union{T, Nothing}}
     v2he::Vector{Dict{Int,T}}
@@ -51,17 +41,14 @@ struct Hypergraph{T,V,E} <: AbstractMatrix{Union{T, Nothing}}
     v_meta::Vector{Union{V,Nothing}}
     he_meta::Vector{Union{E,Nothing}}
     Hypergraph{T,V,E}(n, k) where {T<:Real, V, E} =
-        new{T,V,E}([Dict{Int,T}() for i in 1:n], [Dict{Int,T}() for i in 1:k],
-                          Vector{Union{V,Nothing}}(nothing, n), Vector{Union{E,Nothing}}(nothing, k))
+        new{T,V,E}([Dict{Int,T}() for i in 1:n],
+                   [Dict{Int,T}() for i in 1:k],
+                   Vector{Union{V,Nothing}}(nothing, n),
+                   Vector{Union{E,Nothing}}(nothing, k))
 end
-
-
-
-
 
 Hypergraph{T,V}(n, k) where {T<:Real, V} = Hypergraph{T,V,Nothing}(n, k)
 Hypergraph{T}(n, k) where {T<:Real} =  Hypergraph{T,Nothing,Nothing}(n, k)
-
 
 function Hypergraph{V, E}(m::AbstractMatrix{Union{T, Nothing}}) where {T<:Real, V, E}
     n, k = size(m)
@@ -70,14 +57,10 @@ function Hypergraph{V, E}(m::AbstractMatrix{Union{T, Nothing}}) where {T<:Real, 
     h
 end
 
-function Hypergraph{V}(m::AbstractMatrix{Union{T, Nothing}}) where {T<:Real, V}
+Hypergraph{V}(m::AbstractMatrix{Union{T, Nothing}}) where {T<:Real, V} =
     Hypergraph{V, Nothing}(m)
-end
-
-function Hypergraph(m::AbstractMatrix{Union{T, Nothing}}) where {T<:Real}
+Hypergraph(m::AbstractMatrix{Union{T, Nothing}}) where {T<:Real} =
     Hypergraph{Nothing, Nothing}(m)
-end
-
 
 function Hypergraph(g::LightGraphs.Graph)
     h = Hypergraph{Bool}(maximum(vertices(g)), ne(g))
@@ -89,8 +72,6 @@ function Hypergraph(g::LightGraphs.Graph)
     end
     h
 end
-
-
 
 """
     Base.size(h::Hypergraph)
@@ -181,11 +162,11 @@ end
 
 """
     remove_vertex!(h::Hypergraph, v::Int)
-    
+
 Removes the vertex `v` from a given hypergraph `h`.
-Note that running this function will cause reordering of vertices in the hypergraph: 
-the vertex `v` will replaced by the last vertex 
-of the hypergraph and the list of vertices will be shrunk. 
+Note that running this function will cause reordering of vertices in the hypergraph:
+the vertex `v` will replaced by the last vertex
+of the hypergraph and the list of vertices will be shrunk.
 """
 function remove_vertex!(h::Hypergraph, v::Int)
     n = nhv(h)
@@ -193,7 +174,7 @@ function remove_vertex!(h::Hypergraph, v::Int)
         h.v2he[v] = h.v2he[n]
         h.v_meta[v] = h.v_meta[n]
     end
-    
+
     for hv in h.he2v
         if v < n && haskey(hv, n)
             hv[v] = hv[n]
@@ -202,10 +183,9 @@ function remove_vertex!(h::Hypergraph, v::Int)
             delete!(hv, v)
         end
     end
-    resize!(h.v2he, length(h.v2he) - 1)    
+    resize!(h.v2he, length(h.v2he) - 1)
     h
 end
-
 
 """
     add_hyperedge!(h::Hypergraph{T, V, E}; vertices::Dict{Int,T} = Dict{Int,T}(),
@@ -286,8 +266,6 @@ function nhe(h::Hypergraph{T, V, E}) where {T <: Real, V, E}
     length(h.he2v)
 end
 
-
-
 """
     nhv(h::Hypergraph{T, V, E}) where {T <: Real, V, E}
 
@@ -297,10 +275,4 @@ function nhv(h::Hypergraph{T, V, E}) where {T <: Real, V, E}
     length(h.v2he)
 end
 
-
-
-
-# TODO needs add_hyperedge!(h::Hypergraph{T}, he_id::Int)
-
 # TODO needs validate_hypergraph!(h::Hypergraph{T})
-
