@@ -83,7 +83,7 @@ LightGraphs.is_directed(t::TwoSectionView{T}) where T = false
 
 LightGraphs.is_directed(::Type{TwoSectionView{T}}) where T = false
 
-Base.eltype(::TwoSectionView{T}) where T = T
+Base.eltype(::TwoSectionView{T}) where T = Int
 
 
 """
