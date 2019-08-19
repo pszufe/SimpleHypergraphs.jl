@@ -54,6 +54,10 @@ function LightGraphs.has_edge(t::TwoSectionView, s, d)
     !isempty(intersect(keys(t.h.v2he[s]), keys(t.h.v2he[d])))
 end
 
+function LightGraphs.has_vertex(t::TwoSectionView, v::Integer) 
+   return v >= 1 && v <= LightGraphs.nv(t) 
+end
+
 LightGraphs.outneighbors(t::TwoSectionView, v::Integer) =
     LightGraphs.all_neighbors(t::TwoSectionView, v)
 
@@ -121,3 +125,8 @@ function LightGraphs.SimpleGraphs.fadj(t::TwoSectionView)
 end
 LightGraphs.SimpleGraphs.fadj(t::TwoSectionView, v::Integer) = LightGraphs.all_neighbors(t,v)
 LightGraphs.edges(t::TwoSectionView) = LightGraphs.SimpleGraphs.SimpleEdgeIter(t)
+
+LightGraphs.edgetype(t::TwoSectionView{T}) where T = LightGraphs.SimpleGraphs.SimpleEdge{Int}
+
+LightGraphs.zero(t::TwoSectionView{T}) where T = TwoSectionView(Hypergraph{T}(0,0))
+LightGraphs.zero(::Type{TwoSectionView{T}}) where T = TwoSectionView(Hypergraph{T}(0,0))
