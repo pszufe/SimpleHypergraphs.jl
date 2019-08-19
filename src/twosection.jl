@@ -54,9 +54,8 @@ function LightGraphs.has_edge(t::TwoSectionView, s, d)
     !isempty(intersect(keys(t.h.v2he[s]), keys(t.h.v2he[d])))
 end
 
-function LightGraphs.has_vertex(t::TwoSectionView, v::Integer) 
-   return v >= 1 && v <= LightGraphs.nv(t) 
-end
+
+LightGraphs.has_vertex(t::TwoSectionView, v::Integer) = 1 <= v <= LightGraphs.nv(t) 
 
 LightGraphs.outneighbors(t::TwoSectionView, v::Integer) =
     LightGraphs.all_neighbors(t::TwoSectionView, v)

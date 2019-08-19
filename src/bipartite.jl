@@ -47,9 +47,8 @@ function LightGraphs.has_edge(b::BipartiteView, s, d)
     end
 end
 
-function LightGraphs.has_vertex(b::BipartiteView, v::Integer) 
-   return v >= 1 && v <= LightGraphs.nv(b) 
-end
+LightGraphs.has_vertex(b::BipartiteView, v::Integer) = 1 <= v <= LightGraphs.nv(b) 
+
 
 LightGraphs.outneighbors(b::BipartiteView, v::Integer) = LightGraphs.all_neighbors(b::BipartiteView, v)
 
