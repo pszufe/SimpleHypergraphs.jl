@@ -47,6 +47,8 @@ function LightGraphs.has_edge(b::BipartiteView, s, d)
     end
 end
 
+LightGraphs.has_vertex(b::BipartiteView, v::Integer) = 1 <= v <= LightGraphs.nv(b) 
+
 
 LightGraphs.outneighbors(b::BipartiteView, v::Integer) = LightGraphs.all_neighbors(b::BipartiteView, v)
 
@@ -72,7 +74,11 @@ end
 
 
 
-LightGraphs.is_directed(b::BipartiteView) = false
+LightGraphs.is_directed(b::BipartiteView{T}) where T = false
+
+LightGraphs.is_directed(::Type{BipartiteView{T}}) where T = false
+
+Base.eltype(::BipartiteView{T}) where T = Int
 
 """
     shortest_path(b::BipartiteView,source::Int, target::Int)
@@ -110,3 +116,8 @@ end
 
 LightGraphs.SimpleGraphs.fadj(b::BipartiteView, v::Integer) = LightGraphs.all_neighbors(b,v)
 LightGraphs.edges(b::BipartiteView) = LightGraphs.SimpleGraphs.SimpleEdgeIter(b)
+
+LightGraphs.edgetype(b::BipartiteView{T}) where T = LightGraphs.SimpleGraphs.SimpleEdge{Int}
+
+LightGraphs.zero(t::BipartiteView{T}) where T = BipartiteView(Hypergraph{T}(0,0))
+LightGraphs.zero(::Type{BipartiteView{T}}) where T = BipartiteView(Hypergraph{T}(0,0))

@@ -91,7 +91,19 @@ end;
 
 @testset "SimpleHypergraphs BipartiteView " begin
     h2 = deepcopy(h1)
+    
+    @test LightGraphs.nv(LightGraphs.zero(BipartiteView{Int})) == 0 
+    
     b = BipartiteView(h2)
+    @test LightGraphs.edgetype(b) == LightGraphs.SimpleGraphs.SimpleEdge{Int}
+    @test LightGraphs.has_vertex(b, 0) == false
+    @test LightGraphs.has_vertex(b, 1) == true
+    @test LightGraphs.nv(LightGraphs.zero(b)) == 0
+    
+    @test LightGraphs.is_directed(b) == false
+    @test LightGraphs.is_directed(typeof(b)) == false
+    @test LightGraphs.eltype(b) == Int
+    
 
     @test sum(LightGraphs.adjacency_matrix(LightGraphs.SimpleGraph(b))) == 18
 
@@ -123,15 +135,23 @@ end;
 end;
 
 @testset "SimpleHypergraphs TwoSectionView" begin
-
+    
     add_vertex!(h1)
     add_hyperedge!(h1)
     h1[5,5] = 1
     h1[6,5] = 1
 
+    @test LightGraphs.nv(LightGraphs.zero(TwoSectionView{Int})) == 0 
+    
     t = TwoSectionView(h1)
+    @test LightGraphs.edgetype(t) == LightGraphs.SimpleGraphs.SimpleEdge{Int}
+    @test LightGraphs.has_vertex(t, 0) == false
+    @test LightGraphs.has_vertex(t, 1) == true
+    @test LightGraphs.nv(LightGraphs.zero(t)) == 0
     
     @test LightGraphs.is_directed(t) == false
+    @test LightGraphs.is_directed(typeof(t)) == false
+    @test LightGraphs.eltype(t) == Int
 
     @test LightGraphs.nv(t) == 6
     @test LightGraphs.ne(t) == 8

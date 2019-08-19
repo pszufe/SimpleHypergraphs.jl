@@ -54,6 +54,9 @@ function LightGraphs.has_edge(t::TwoSectionView, s, d)
     !isempty(intersect(keys(t.h.v2he[s]), keys(t.h.v2he[d])))
 end
 
+
+LightGraphs.has_vertex(t::TwoSectionView, v::Integer) = 1 <= v <= LightGraphs.nv(t) 
+
 LightGraphs.outneighbors(t::TwoSectionView, v::Integer) =
     LightGraphs.all_neighbors(t::TwoSectionView, v)
 
@@ -79,7 +82,12 @@ function LightGraphs.SimpleGraph(t::TwoSectionView)
     g
 end
 
-LightGraphs.is_directed(t::TwoSectionView) = false
+LightGraphs.is_directed(t::TwoSectionView{T}) where T = false
+
+LightGraphs.is_directed(::Type{TwoSectionView{T}}) where T = false
+
+Base.eltype(::TwoSectionView{T}) where T = Int
+
 
 """
     shortest_path(t::TwoSectionView,source::Int, target::Int)
@@ -116,3 +124,8 @@ function LightGraphs.SimpleGraphs.fadj(t::TwoSectionView)
 end
 LightGraphs.SimpleGraphs.fadj(t::TwoSectionView, v::Integer) = LightGraphs.all_neighbors(t,v)
 LightGraphs.edges(t::TwoSectionView) = LightGraphs.SimpleGraphs.SimpleEdgeIter(t)
+
+LightGraphs.edgetype(t::TwoSectionView{T}) where T = LightGraphs.SimpleGraphs.SimpleEdge{Int}
+
+LightGraphs.zero(t::TwoSectionView{T}) where T = TwoSectionView(Hypergraph{T}(0,0))
+LightGraphs.zero(::Type{TwoSectionView{T}}) where T = TwoSectionView(Hypergraph{T}(0,0))
