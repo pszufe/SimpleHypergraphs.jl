@@ -30,7 +30,7 @@ LightGraphs.vertices(t::TwoSectionView) = Base.OneTo(nv(t))
 function LightGraphs.ne(t::TwoSectionView)
     s = 0
     for x in t.h.he2v
-        s += length(x) * (length(x) - 1) 
+        s += length(x) * (length(x) - 1)
     end
     div(s, 2)
 end
