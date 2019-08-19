@@ -30,7 +30,7 @@ LightGraphs.vertices(t::TwoSectionView) = Base.OneTo(nv(t))
 function LightGraphs.ne(t::TwoSectionView)
     s = 0
     for x in t.h.he2v
-        s += length(x) * (length(x) - 1)
+       s += length(x) * (length(x) - 1) 
     end
     div(s, 2)
 end
@@ -79,7 +79,12 @@ function LightGraphs.SimpleGraph(t::TwoSectionView)
     g
 end
 
-LightGraphs.is_directed(t::TwoSectionView) = false
+LightGraphs.is_directed(t::TwoSectionView{T}) where T = false
+
+LightGraphs.is_directed(::Type{TwoSectionView{T}}) where T = false
+
+Base.eltype(::TwoSectionView{T}) where T = T
+
 
 """
     shortest_path(t::TwoSectionView,source::Int, target::Int)

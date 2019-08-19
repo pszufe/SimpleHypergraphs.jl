@@ -72,7 +72,11 @@ end
 
 
 
-LightGraphs.is_directed(b::BipartiteView) = false
+LightGraphs.is_directed(b::BipartiteView{T}) where T = false
+
+LightGraphs.is_directed(::Type{BipartiteView{T}}) where T = false
+
+Base.eltype(::BipartiteView{T}) where T = T
 
 """
     shortest_path(b::BipartiteView,source::Int, target::Int)

@@ -92,6 +92,11 @@ end;
 @testset "SimpleHypergraphs BipartiteView " begin
     h2 = deepcopy(h1)
     b = BipartiteView(h2)
+    
+    @test LightGraphs.is_directed(b) == false
+    @test LightGraphs.is_directed(typeof(b)) == false
+    @test LightGraphs.eltype(b) == Float64
+    
 
     @test sum(LightGraphs.adjacency_matrix(LightGraphs.SimpleGraph(b))) == 18
 
@@ -132,6 +137,8 @@ end;
     t = TwoSectionView(h1)
     
     @test LightGraphs.is_directed(t) == false
+    @test LightGraphs.is_directed(typeof(t)) == false
+    @test LightGraphs.eltype(t) == Float64
 
     @test LightGraphs.nv(t) == 6
     @test LightGraphs.ne(t) == 8
