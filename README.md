@@ -8,8 +8,7 @@
 
 ## Documentation
 
-
-- [tutorial](https://nbviewer.jupyter.org/github/pszufe/SimpleHypergraphs.jl/blob/master/examples/basics/Basics.ipynb) - for a quick start with the library see our Jupyter Notebook tutorial on main library functionality
+- [tutorial](https://nbviewer.jupyter.org/github/pszufe/SimpleHypergraphs.jl/blob/master/examples/basics/Basics.ipynb) &mdash; for a quick start with the library see our Jupyter Notebook tutorial on main library functionality.
 - [**STABLE**][docs-stable-url] &mdash; **documentation of the most recently tagged version.**
 - [**DEV**][docs-dev-url] &mdash; **documentation of the development version.**
 
