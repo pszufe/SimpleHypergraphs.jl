@@ -11,7 +11,7 @@ h1[5,4] = 5.5
 h1[5,2] = 6.5
 
 
-@testset "SimpleHypergraphs Hypergraph    " begin
+@testset "SimpleHypergraphs Hypergraph      " begin
 
     h = hg_load("data/test1.hgf", Int)
     @test size(h) == (4, 4)
@@ -89,7 +89,7 @@ h1[5,2] = 6.5
     
 end;
 
-@testset "SimpleHypergraphs BipartiteView " begin
+@testset "SimpleHypergraphs BipartiteView   " begin
     h2 = deepcopy(h1)
     
     @test LightGraphs.nv(LightGraphs.zero(BipartiteView{Int})) == 0 
@@ -134,7 +134,7 @@ end;
     @test sort!(LightGraphs.SimpleGraphs.fadj(b,2)) == [7,9]    
 end;
 
-@testset "SimpleHypergraphs TwoSectionView" begin
+@testset "SimpleHypergraphs TwoSectionView  " begin
     
     ht = Hypergraph{Float64}(3,3)
     ht[1:2,1:2] .= 2.
@@ -194,7 +194,7 @@ end;
 
 
 
-@testset "SimpleHypergraphs Modularity    " begin
+@testset "SimpleHypergraphs Modularity      " begin
     Random.seed!(1234);
     hg = Hypergraph{Bool}(10, 12)
     for i in eachindex(hg)
@@ -244,3 +244,20 @@ end;
 
 
 end;
+                                     #
+@testset "SimpleHypergraphs randomized tests" begin
+    Random.seed!(0)
+    N = 100
+    res = Vector{Bool}(undef, N)
+    for i in 1:N
+        m1 = CFModularityCNMLike(100)
+        m2 = CFModularityRandom(2,100)
+        r = rand([repeat([nothing],6)..., true], 12, 8)
+        hh = Hypergraph(r)
+        bm1 = findcommunities(hh, m1).bm
+        bm2 = findcommunities(hh, m2).bm
+        res[i] = (bm1 > bm2)
+    end
+    @test sum(res) >= N*0.80
+end
+    

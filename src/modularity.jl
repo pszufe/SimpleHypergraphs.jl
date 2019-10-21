@@ -29,7 +29,7 @@ struct HypergraphAggs
     max_hes::Int
     Ed::Vector{Int}
     deg_vs::Vector{Int}
-    volV::Int    
+    volV::Int
     HypergraphAggs(h::Hypergraph) = begin
         hes = [length(h.he2v[i]) for i in 1:nhe(h)]
         max_hes = maximum(hes)
@@ -46,14 +46,15 @@ struct HypergraphAggs
 end
 
 """
-    LightGraphs.modularity(h::Hypergraph, partition::Vector{Set{Int}}, 
+    LightGraphs.modularity(h::Hypergraph, partition::Vector{Set{Int}},
 ha::HypergraphAggs=HypergraphAggs(h))
 
-Calculates the strict modularity of a hypergraph `h` for a given `partition` using 
+Calculates the strict modularity of a hypergraph `h` for a given `partition` using
 the precomputed aggregates `ha`.
 """
-@inline function LightGraphs.modularity(h::Hypergraph, partition::Vector{Set{Int}}, 
-ha::HypergraphAggs=HypergraphAggs(h))
+@inline function LightGraphs.modularity(h::Hypergraph, partition::Vector{Set{Int}},
+        ha::HypergraphAggs=HypergraphAggs(h))
+        
     @boundscheck sum(length.(partition)) == nhv(h)
     @boundscheck union(partition...) == Set(1:nhv(h))
     volP_volV = [sum(ha.deg_vs[i] for i in p)/ha.volV for p in partition]
@@ -131,7 +132,12 @@ end
     CFModularityCNMLike(n::Int, reps::Int) <: AbstractCommunityFinder
 
 Represents a CNM-Like algorithm for finding communities. 
-In the algorithm we start with a partition where each node is in its own part. Then in each step, we randomly select a hyperedge.  Subsequently we consider merging each set of that parts it touches. We actually merge the parts if the new best modularity is at least as high as the modularity from the previous step. The algortithm iterates through `reps` of repetitions. 
+In the algorithm we start with a partition where each node is in its own part.
+Then in each step, we randomly select a hyperedge.
+Subsequently, we consider merging each set of that parts it touches.
+We actually merge the parts if the new best modularity is at least as high
+as the modularity from the previous step.
+The algortithm iterates through `reps` of repetitions.
 
 For more information see `Algorithm 1` at:
 Clustering via Hypergraph Modularity (submitted to Plos ONE), auhtors:
@@ -146,7 +152,11 @@ end
     findcommunities(h::Hypergraph, method::CFModularityCNMLike)
 
 Iterates a CNM-Like algorithm for finding communities. 
-In the algorithm we start with a partition where each node is in its own part. Then in each step, we randomly select a hyperedge.  Subsequently we consider merging each set of that parts it touches. We actually merge the parts if the new best modularity is at least as high as the modularity from the previous step. 
+In the algorithm we start with a partition where each node is in its own part.
+Then in each step, we randomly select a hyperedge.  
+Subsequently, we consider merging each set of that parts it touches. 
+We actually merge the parts if the new best modularity is at least as high
+as the modularity from the previous step. 
 
 Returns a `NamedTuple` where the field `bp` contains partition
 and the field `bm` contains the modularity value for that partition,
@@ -154,8 +164,9 @@ finally, the fiel `mod_history` represents modularities achieved
 in subsequent steps of the algorithm.
 
 For more information see `Algorithm 1` at:
-Clustering via Hypergraph Modularity (submitted to Plos ONE), auhtors:
-Bogumil Kaminski, Valerie Poulin, Pawel Pralat, Przemyslaw Szufel, Francois Theberge
+Clustering via Hypergraph Modularity (submitted to Plos ONE), authors:
+Bogumil Kaminski, Valerie Poulin, Pawel Pralat, Przemyslaw Szufel, 
+Francois Theberge.
 
 """
 function findcommunities(h::Hypergraph, method::CFModularityCNMLike)
@@ -166,6 +177,9 @@ function findcommunities(h::Hypergraph, method::CFModularityCNMLike)
     for rep in 1:method.reps
         he = rand(1:nhe(h))
         vers = collect(keys(getvertices(h, he)))
+        if length(vers) == 0
+            continue
+        end;
         c = deepcopy(comms)
         i0 = find_first(c, vers)
         max_i = length(c)

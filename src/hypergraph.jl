@@ -6,17 +6,26 @@ A hypergraph storing information about vertices and hyperedges.
 **Constructors**
 
     Hypergraph{T}(n,k) where {T<:Real}
-    Hypergraph{T,V}(n, k; v_meta=Vector{Union{V,Nothing}}(nothing, n)) where {T<:Real, V}
-    Hypergraph{T,V,E}(n, k; v_meta=Vector{Union{V,Nothing}}(nothing, n), he_meta=Vector{Union{E,Nothing}}(nothing, k)) where {T<:Real, V, E}
+    Hypergraph{T,V}(n, k;
+        v_meta=Vector{Union{V,Nothing}}(nothing, n)
+        ) where {T<:Real, V}
+    Hypergraph{T,V,E}(n, k;
+        v_meta=Vector{Union{V,Nothing}}(nothing, n),
+        he_meta=Vector{Union{E,Nothing}}(nothing, k)
+        ) where {T<:Real, V, E}
 
 Construct a hypergraph with a given number of vertices and hyperedges.
 Optionally, values of type `V` can be stored at vertices and values of type `E`
 can be stored at hyperedges.
 
     Hypergraph(m::AbstractMatrix{Union{T, Nothing}}) where {T<:Real}
-    Hypergraph{V}(m::AbstractMatrix{Union{T, Nothing}}; v_meta=Vector{Union{V,Nothing}}(nothing, size(m,1))) where {T<:Real, V}
-    Hypergraph{V, E}(m::AbstractMatrix{Union{T, Nothing}}; v_meta=Vector{Union{V,Nothing}}(nothing, size(m,1)), he_meta=Vector{Union{E,Nothing}}(nothing, size(m,2))) where 
-{T<:Real, V, E}
+    Hypergraph{V}(m::AbstractMatrix{Union{T, Nothing}};
+        v_meta=Vector{Union{V,Nothing}}(nothing, size(m,1))
+        ) where {T<:Real, V}
+    Hypergraph{V, E}(m::AbstractMatrix{Union{T, Nothing}};
+        v_meta=Vector{Union{V,Nothing}}(nothing, size(m,1)),
+        he_meta=Vector{Union{E,Nothing}}(nothing, size(m,2))
+        ) where {T<:Real, V, E}
 
 Construct a hypergraph using its matrix representation.
 In the matrix representation rows are vertices and columns are hyperedges.
@@ -41,12 +50,13 @@ struct Hypergraph{T,V,E} <: AbstractMatrix{Union{T, Nothing}}
     he2v::Vector{Dict{Int,T}}
     v_meta::Vector{Union{V,Nothing}}
     he_meta::Vector{Union{E,Nothing}}
-    Hypergraph{T,V,E}(n, k, 
-                   v_meta=Vector{Union{V,Nothing}}(nothing, n), 
-                   he_meta=Vector{Union{E,Nothing}}(nothing, k)
-                   ) where {T<:Real, V, E} =
-        new{T,V,E}([Dict{Int,T}() for i in 1:n],[Dict{Int,T}() for i in 1:k],
-                  v_meta, he_meta)
+    Hypergraph{T,V,E}(n, k,
+            v_meta=Vector{Union{V,Nothing}}(nothing, n),
+            he_meta=Vector{Union{E,Nothing}}(nothing, k)
+            ) where {T<:Real, V, E} =
+        new{T,V,E}(
+            [Dict{Int,T}() for i in 1:n],[Dict{Int,T}() for i in 1:k],
+            v_meta, he_meta)
 end
 
 
@@ -56,17 +66,17 @@ Hypergraph{T,V}(n, k;
               v_meta=Vector{Union{V,Nothing}}(nothing, size(m,1))
              ) where {T<:Real, V} = Hypergraph{T,V,Nothing}(n, k; v_meta=v_meta)
 
-function Hypergraph{V, E}(m::AbstractMatrix{Union{T, Nothing}}; 
-                        v_meta=Vector{Union{V,Nothing}}(nothing, size(m,1)), 
+function Hypergraph{V, E}(m::AbstractMatrix{Union{T, Nothing}};
+                        v_meta=Vector{Union{V,Nothing}}(nothing, size(m,1)),
                         he_meta=Vector{Union{E,Nothing}}(nothing, size(m,2))
                         ) where {T<:Real, V, E}
     n, k = size(m)
     h = Hypergraph{T, V, E}(n, k, v_meta, he_meta)
-    h .= m    
+    h .= m
     h
 end
 
-Hypergraph{V}(m::AbstractMatrix{Union{T, Nothing}}; 
+Hypergraph{V}(m::AbstractMatrix{Union{T, Nothing}};
             v_meta=Vector{Union{V,Nothing}}(nothing, size(m,1))) where {T<:Real, V} =
     Hypergraph{V, Nothing}(m; v_meta=v_meta)
 Hypergraph(m::AbstractMatrix{Union{T, Nothing}}) where {T<:Real} =
