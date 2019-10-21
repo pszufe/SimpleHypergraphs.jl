@@ -238,7 +238,7 @@ end;
     Random.seed!(1234);
     cnm = CFModularityCNMLike(100)
     @test cnm.reps == 100
-    @test findcommunities(hh, CFModularityRandom(4,10000)).bm == findcommunities(hh, cnm).bm
+    @test findcommunities(hh, CFModularityRandom(4,10000)).bm ≈ findcommunities(hh, cnm).bm
     Random.seed!(0);
     @test findcommunities(hh, cnm).bm ≈ 223/972
 
