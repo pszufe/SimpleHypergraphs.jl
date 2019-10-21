@@ -132,12 +132,32 @@ end
 
 Represents a CNM-Like algorithm for finding communities. 
 In the algorithm we start with a partition where each node is in its own part. Then in each step, we randomly select a hyperedge.  Subsequently we consider merging each set of that parts it touches. We actually merge the parts if the new best modularity is at least as high as the modularity from the previous step. The algortithm iterates through `reps` of repetitions. 
+
+For more information see `Algorithm 1` at:
+Clustering via Hypergraph Modularity (submitted to Plos ONE), auhtors:
+Bogumil Kaminski, Valerie Poulin, Pawel Pralat, Przemyslaw Szufel, Francois Theberge
     
 """
 struct CFModularityCNMLike <: AbstractCommunityFinder
     reps::Int
 end
 
+"""
+    findcommunities(h::Hypergraph, method::CFModularityCNMLike)
+
+Iterates a CNM-Like algorithm for finding communities. 
+In the algorithm we start with a partition where each node is in its own part. Then in each step, we randomly select a hyperedge.  Subsequently we consider merging each set of that parts it touches. We actually merge the parts if the new best modularity is at least as high as the modularity from the previous step. 
+
+Returns a `NamedTuple` where the field `bp` contains partition
+and the field `bm` contains the modularity value for that partition,
+finally, the fiel `mod_history` represents modularities achieved 
+in subsequent steps of the algorithm.
+
+For more information see `Algorithm 1` at:
+Clustering via Hypergraph Modularity (submitted to Plos ONE), auhtors:
+Bogumil Kaminski, Valerie Poulin, Pawel Pralat, Przemyslaw Szufel, Francois Theberge
+
+"""
 function findcommunities(h::Hypergraph, method::CFModularityCNMLike)
     ha = HypergraphAggs(h)
     best_modularity = 0
