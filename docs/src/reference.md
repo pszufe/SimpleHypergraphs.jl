@@ -84,8 +84,10 @@ randompartition(::Hypergraph,::Int64)
 
 AbstractCommunityFinder
 CFModularityRandom
+CFModularityCNMLike
 
 findcommunities(::Hypergraph, ::CFModularityRandom)
+findcommunities(::Hypergraph, ::CFModularityCNMLike)
 ```
 
 I/O

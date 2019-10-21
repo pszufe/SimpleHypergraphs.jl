@@ -29,7 +29,7 @@ struct HypergraphAggs
     max_hes::Int
     Ed::Vector{Int}
     deg_vs::Vector{Int}
-    volV::Int    
+    volV::Int
     HypergraphAggs(h::Hypergraph) = begin
         hes = [length(h.he2v[i]) for i in 1:nhe(h)]
         max_hes = maximum(hes)
@@ -46,12 +46,15 @@ struct HypergraphAggs
 end
 
 """
-    modularity(h::Hypergraph, partition::Vector{Set{Int}}, ha::HypergraphAggs=HypergraphAggs(h))
+    LightGraphs.modularity(h::Hypergraph, partition::Vector{Set{Int}},
+ha::HypergraphAggs=HypergraphAggs(h))
 
-Calculates the strict modularity of a hypergraph `h` for a given `partition` using 
+Calculates the strict modularity of a hypergraph `h` for a given `partition` using
 the precomputed aggregates `ha`.
 """
-@inline function modularity(h::Hypergraph, partition::Vector{Set{Int}}, ha::HypergraphAggs=HypergraphAggs(h))
+@inline function LightGraphs.modularity(h::Hypergraph, partition::Vector{Set{Int}},
+        ha::HypergraphAggs=HypergraphAggs(h))
+        
     @boundscheck sum(length.(partition)) == nhv(h)
     @boundscheck union(partition...) == Set(1:nhv(h))
     volP_volV = [sum(ha.deg_vs[i] for i in p)/ha.volV for p in partition]
@@ -112,3 +115,91 @@ function findcommunities(h::Hypergraph, method::CFModularityRandom)
     end
     (bp=bp, bm=bm)
 end
+
+
+function find_first(c::Array{Set{Int}}, vals)
+    for i in 1:length(c)
+        for v in vals
+            v in c[i] && return i
+        end
+    end
+    throw("None of values in $vals found")
+end
+
+
+
+"""
+    CFModularityCNMLike(n::Int, reps::Int) <: AbstractCommunityFinder
+
+Represents a CNM-Like algorithm for finding communities. 
+In the algorithm we start with a partition where each node is in its own part.
+Then in each step, we randomly select a hyperedge.
+Subsequently, we consider merging each set of that parts it touches.
+We actually merge the parts if the new best modularity is at least as high
+as the modularity from the previous step.
+The algortithm iterates through `reps` of repetitions.
+
+For more information see `Algorithm 1` at:
+Clustering via Hypergraph Modularity (submitted to Plos ONE), auhtors:
+Bogumil Kaminski, Valerie Poulin, Pawel Pralat, Przemyslaw Szufel, Francois Theberge
+    
+"""
+struct CFModularityCNMLike <: AbstractCommunityFinder
+    reps::Int
+end
+
+"""
+    findcommunities(h::Hypergraph, method::CFModularityCNMLike)
+
+Iterates a CNM-Like algorithm for finding communities. 
+In the algorithm we start with a partition where each node is in its own part.
+Then in each step, we randomly select a hyperedge.  
+Subsequently, we consider merging each set of that parts it touches. 
+We actually merge the parts if the new best modularity is at least as high
+as the modularity from the previous step. 
+
+Returns a `NamedTuple` where the field `bp` contains partition
+and the field `bm` contains the modularity value for that partition,
+finally, the fiel `mod_history` represents modularities achieved 
+in subsequent steps of the algorithm.
+
+For more information see `Algorithm 1` at:
+Clustering via Hypergraph Modularity (submitted to Plos ONE), authors:
+Bogumil Kaminski, Valerie Poulin, Pawel Pralat, Przemyslaw Szufel, 
+Francois Theberge.
+
+"""
+function findcommunities(h::Hypergraph, method::CFModularityCNMLike)
+    ha = HypergraphAggs(h)
+    best_modularity = 0
+    comms = [Set(i) for i in 1:nhv(h)]
+    mod_history = Vector{Float64}(undef, method.reps)
+    for rep in 1:method.reps
+        he = rand(1:nhe(h))
+        vers = collect(keys(getvertices(h, he)))
+        if length(vers) == 0
+            continue
+        end;
+        c = deepcopy(comms)
+        i0 = find_first(c, vers)
+        max_i = length(c)
+        i_cur = i0
+        while i_cur < max_i
+            i_cur += 1
+            if length(intersect(c[i_cur],vers)) > 0
+                union!(c[i0], c[i_cur])
+                c[i_cur]=c[max_i]
+                max_i += -1
+            end
+        end
+        resize!(c,max_i)
+        m = modularity(h, c, ha)
+        if m > best_modularity
+            best_modularity = m
+            comms = c
+        end
+        mod_history[rep] = best_modularity
+    end
+    return (bm=best_modularity, bp=comms, mod_history=mod_history)
+end
+

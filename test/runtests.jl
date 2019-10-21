@@ -11,7 +11,7 @@ h1[5,4] = 5.5
 h1[5,2] = 6.5
 
 
-@testset "SimpleHypergraphs Hypergraph    " begin
+@testset "SimpleHypergraphs Hypergraph      " begin
 
     h = hg_load("data/test1.hgf", Int)
     @test size(h) == (4, 4)
@@ -69,14 +69,14 @@ h1[5,2] = 6.5
     @test getindex(h1,3,1) == 1.5
 
     h3 = Hypergraph{Float64,String,Nothing}(1,1)
-    @test add_vertex!(h3,vertex_meta="test") == 2
+    @test add_vertex!(h3;v_meta="test") == 2
     @test set_vertex_meta!(h3,"t",1) == ["t","test"]
     @test get_vertex_meta(h3,2) == "test"
     @test get_hyperedge_meta(h3,1) == nothing
     @test_throws BoundsError get_hyperedge_meta(h3,2)
 
     h4 = Hypergraph{Float64,Nothing,String}(1,1)
-    @test add_hyperedge!(h4,hyperedge_meta="test") == 2
+    @test add_hyperedge!(h4;he_meta="test") == 2
     @test set_hyperedge_meta!(h4,"t",1) == ["t","test"]
     @test get_hyperedge_meta(h4,2) == "test"
     @test get_vertex_meta(h4,1) == nothing
@@ -89,7 +89,7 @@ h1[5,2] = 6.5
     
 end;
 
-@testset "SimpleHypergraphs BipartiteView " begin
+@testset "SimpleHypergraphs BipartiteView   " begin
     h2 = deepcopy(h1)
     
     @test LightGraphs.nv(LightGraphs.zero(BipartiteView{Int})) == 0 
@@ -134,7 +134,11 @@ end;
     @test sort!(LightGraphs.SimpleGraphs.fadj(b,2)) == [7,9]    
 end;
 
-@testset "SimpleHypergraphs TwoSectionView" begin
+@testset "SimpleHypergraphs TwoSectionView  " begin
+    
+    ht = Hypergraph{Float64}(3,3)
+    ht[1:2,1:2] .= 2.
+    ht[:, 3] .= 2.
     
     add_vertex!(h1)
     add_hyperedge!(h1)
@@ -190,7 +194,7 @@ end;
 
 
 
-@testset "SimpleHypergraphs Modularity    " begin
+@testset "SimpleHypergraphs Modularity      " begin
     Random.seed!(1234);
     hg = Hypergraph{Bool}(10, 12)
     for i in eachindex(hg)
@@ -228,6 +232,32 @@ end;
     @test ha.volV == 9
     @test modularity(hh, Set.([[1,2,3],[4],[5],[6],[7]]), ha) ≈ 223/972
     cfmr = CFModularityRandom(2,10000)
+    @test cfmr.n==2 
+    @test cfmr.reps == 10000
     @test findcommunities(hh,cfmr).bm ≈ 16/81
-    
+    Random.seed!(1234);
+    cnm = CFModularityCNMLike(100)
+    @test cnm.reps == 100
+    @test findcommunities(hh, CFModularityRandom(4,10000)).bm == findcommunities(hh, cnm).bm
+    Random.seed!(0);
+    @test findcommunities(hh, cnm).bm ≈ 223/972
+
+
 end;
+                                     #
+@testset "SimpleHypergraphs randomized tests" begin
+    Random.seed!(0)
+    N = 100
+    res = Vector{Bool}(undef, N)
+    for i in 1:N
+        m1 = CFModularityCNMLike(100)
+        m2 = CFModularityRandom(2,100)
+        r = rand([repeat([nothing],6)..., true], 12, 8)
+        hh = Hypergraph(r)
+        bm1 = findcommunities(hh, m1).bm
+        bm2 = findcommunities(hh, m2).bm
+        res[i] = (bm1 > bm2)
+    end
+    @test sum(res) >= N*0.80
+end
+    

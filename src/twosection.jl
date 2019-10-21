@@ -2,7 +2,12 @@
     TwoSectionView{T<:Real} <: LightGraphs.SimpleGraphs.AbstractSimpleGraph{Int64}
 
 Represents a 2-section view of a hypergraph `h`.
-Note this is a view - changes to the original hypergraph will be automatically reflected in the view.
+Note (1) this is a view - changes to the original hypergraph will be automatically reflected in the view.
+
+Note (2) The view will only work correctly for hypergraphs not having overlapping hyperedges.
+To check whether a graph has overlapping edges try `has_overlapping_hedges(h)` - for such graph 
+you need to fully materialize it rather than use a view. 
+This can be achieved via the `get_twosection_adjacency_mx(h)` method.
 
 **Constructors**
 
@@ -14,6 +19,22 @@ Several LightGraphs methods are provided for the compability.
 """
 struct TwoSectionView{T<:Real} <: LightGraphs.SimpleGraphs.AbstractSimpleGraph{Int}
     h::Hypergraph{T}
+    TwoSectionView(h::Hypergraph{T}) where { T <: Real } = begin 
+        has_overlapping_hedges(h) && error("A two section view can be created only for a graph with non overlapping edges")
+        new{T}(h)
+    end
+end
+
+"""
+    has_overlapping_hedges(h::Hypergraph{T}) where { T <: Real } 
+    
+Checks whether a hypergraph has hyperedges connecting the same pairs of vertices.
+Such hypergraph cannot be presented as a two section view
+"""
+
+function has_overlapping_hedges(h::Hypergraph{T}) where { T <: Real } 
+    minimum(size(h)) == 0 && return false
+    maximum(get_twosection_adjacency_mx(h;replace_weights=1)) > 1 
 end
 
 """
@@ -129,3 +150,24 @@ LightGraphs.edgetype(t::TwoSectionView{T}) where T = LightGraphs.SimpleGraphs.Si
 
 LightGraphs.zero(t::TwoSectionView{T}) where T = TwoSectionView(Hypergraph{T}(0,0))
 LightGraphs.zero(::Type{TwoSectionView{T}}) where T = TwoSectionView(Hypergraph{T}(0,0))
+
+"""
+    get_twosection_adjacency_mx(h::Hypergraph{T,V,E}; count_self_loops::Bool=false, replace_weights::Union{Nothing,Real}=nothing ) where {T<:Real, V, E}
+    
+    Returns an adjacency matrix for a two section view of a hypergraph `h`.
+    If the 
+"""
+function get_twosection_adjacency_mx(h::Hypergraph{T,V,E}; count_self_loops::Bool=false, replace_weights::Union{Nothing,Real}=nothing ) where {T<:Real, V, E}
+    mx = zeros(replace_weights==nothing ? T : typeof(replace_weights), nhv(h), nhv(h))
+    for he in 1:nhe(h)
+        for v1 in keys(h.he2v[he])
+            for v2 in keys(h.he2v[he])
+                v1 == v2 && !count_self_loops && continue
+                mx[v1,v2] += replace_weights==nothing ? h.he2v[he][v1] : replace_weights
+            end
+        end
+    end
+    mx
+end
+
+
