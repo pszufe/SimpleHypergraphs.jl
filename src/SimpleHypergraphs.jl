@@ -11,7 +11,8 @@ export TwoSectionView
 
 export nhv, nhe
 export modularity, randompartition
-export AbstractCommunityFinder, CFModularityRandom, findcommunities
+export AbstractCommunityFinder, CFModularityRandom, CFModularityCNMLike
+export findcommunities
 
 
 

@@ -6,16 +6,17 @@ A hypergraph storing information about vertices and hyperedges.
 **Constructors**
 
     Hypergraph{T}(n,k) where {T<:Real}
-    Hypergraph{T,V}(n, k) where {T<:Real, V}
-    Hypergraph{T,V,E}(n, k) where {T<:Real, V, E}
+    Hypergraph{T,V}(n, k; v_meta=Vector{Union{V,Nothing}}(nothing, n)) where {T<:Real, V}
+    Hypergraph{T,V,E}(n, k; v_meta=Vector{Union{V,Nothing}}(nothing, n), he_meta=Vector{Union{E,Nothing}}(nothing, k)) where {T<:Real, V, E}
 
 Construct a hypergraph with a given number of vertices and hyperedges.
 Optionally, values of type `V` can be stored at vertices and values of type `E`
 can be stored at hyperedges.
 
     Hypergraph(m::AbstractMatrix{Union{T, Nothing}}) where {T<:Real}
-    Hypergraph{V}(m::AbstractMatrix{Union{T, Nothing}}) where {T<:Real, V}
-    Hypergraph{V, E}(m::AbstractMatrix{Union{T, Nothing}}) where {T<:Real, V, E}
+    Hypergraph{V}(m::AbstractMatrix{Union{T, Nothing}}; v_meta=Vector{Union{V,Nothing}}(nothing, size(m,1))) where {T<:Real, V}
+    Hypergraph{V, E}(m::AbstractMatrix{Union{T, Nothing}}; v_meta=Vector{Union{V,Nothing}}(nothing, size(m,1)), he_meta=Vector{Union{E,Nothing}}(nothing, size(m,2))) where 
+{T<:Real, V, E}
 
 Construct a hypergraph using its matrix representation.
 In the matrix representation rows are vertices and columns are hyperedges.
@@ -40,25 +41,34 @@ struct Hypergraph{T,V,E} <: AbstractMatrix{Union{T, Nothing}}
     he2v::Vector{Dict{Int,T}}
     v_meta::Vector{Union{V,Nothing}}
     he_meta::Vector{Union{E,Nothing}}
-    Hypergraph{T,V,E}(n, k) where {T<:Real, V, E} =
-        new{T,V,E}([Dict{Int,T}() for i in 1:n],
-                   [Dict{Int,T}() for i in 1:k],
-                   Vector{Union{V,Nothing}}(nothing, n),
-                   Vector{Union{E,Nothing}}(nothing, k))
+    Hypergraph{T,V,E}(n, k, 
+                   v_meta=Vector{Union{V,Nothing}}(nothing, n), 
+                   he_meta=Vector{Union{E,Nothing}}(nothing, k)
+                   ) where {T<:Real, V, E} =
+        new{T,V,E}([Dict{Int,T}() for i in 1:n],[Dict{Int,T}() for i in 1:k],
+                  v_meta, he_meta)
 end
 
-Hypergraph{T,V}(n, k) where {T<:Real, V} = Hypergraph{T,V,Nothing}(n, k)
+
 Hypergraph{T}(n, k) where {T<:Real} =  Hypergraph{T,Nothing,Nothing}(n, k)
 
-function Hypergraph{V, E}(m::AbstractMatrix{Union{T, Nothing}}) where {T<:Real, V, E}
+Hypergraph{T,V}(n, k;
+              v_meta=Vector{Union{V,Nothing}}(nothing, size(m,1))
+             ) where {T<:Real, V} = Hypergraph{T,V,Nothing}(n, k; v_meta=v_meta)
+
+function Hypergraph{V, E}(m::AbstractMatrix{Union{T, Nothing}}; 
+                        v_meta=Vector{Union{V,Nothing}}(nothing, size(m,1)), 
+                        he_meta=Vector{Union{E,Nothing}}(nothing, size(m,2))
+                        ) where {T<:Real, V, E}
     n, k = size(m)
-    h = Hypergraph{T, V, E}(n,k)
-    h .= m
+    h = Hypergraph{T, V, E}(n, k, v_meta, he_meta)
+    h .= m    
     h
 end
 
-Hypergraph{V}(m::AbstractMatrix{Union{T, Nothing}}) where {T<:Real, V} =
-    Hypergraph{V, Nothing}(m)
+Hypergraph{V}(m::AbstractMatrix{Union{T, Nothing}}; 
+            v_meta=Vector{Union{V,Nothing}}(nothing, size(m,1))) where {T<:Real, V} =
+    Hypergraph{V, Nothing}(m; v_meta=v_meta)
 Hypergraph(m::AbstractMatrix{Union{T, Nothing}}) where {T<:Real} =
     Hypergraph{Nothing, Nothing}(m)
 
@@ -140,23 +150,23 @@ Returns hyperedges for a given vertex `v_id` in a hypergraph `h`.
 
 """
     add_vertex!(h::Hypergraph{T, V, E}; hyperedges::Dict{Int,T} = Dict{Int,T}(),
-                vertex_meta::Union{V,Nothing} = nothing) where {T <: Real, V, E}
+                v_meta::Union{V,Nothing} = nothing) where {T <: Real, V, E}
 
 Adds a vertex to a given hypergraph `h`. Optionally, the vertex can be added
 to existing hyperedges. The `hyperedges` parameter presents a dictionary
 of hyperedge identifiers and values stored at the hyperedges.
-Additionally, a value can be stored with the vertex using the `vertex_meta` keyword parameter.
+Additionally, a value can be stored with the vertex using the `v_meta` keyword parameter.
 
 """
 function add_vertex!(h::Hypergraph{T, V, E}; hyperedges::Dict{Int,T} = Dict{Int,T}(),
-                     vertex_meta::Union{V, Nothing} = nothing) where {T <: Real, V, E}
+                     v_meta::Union{V, Nothing} = nothing) where {T <: Real, V, E}
     @boundscheck (checkbounds(h,1,k) for k in keys(hyperedges))
     push!(h.v2he,hyperedges)
     ix = length(h.v2he)
     for k in keys(hyperedges)
         h[ix,k]=hyperedges[k]
     end
-    push!(h.v_meta, vertex_meta)
+    push!(h.v_meta, v_meta)
     ix
 end
 
@@ -189,23 +199,23 @@ end
 
 """
     add_hyperedge!(h::Hypergraph{T, V, E}; vertices::Dict{Int,T} = Dict{Int,T}(),
-                   hyperedge_meta::Union{E,Nothing}=nothing) where {T <: Real, V, E}
+                   he_meta::Union{E,Nothing}=nothing) where {T <: Real, V, E}
 
 Adds a hyperedge to a given hypergraph `h`. Optionally, existing vertices can be added
 to the created hyperedge. The paramater `vertices` represents a dictionary
 of vertex identifiers and values stored at the hyperedges.
-Additionally, a value can be stored with the hyperedge using the `hyperedge_meta` keyword parameter.
+Additionally, a value can be stored with the hyperedge using the `he_meta` keyword parameter.
 
 """
 function add_hyperedge!(h::Hypergraph{T, V, E}; vertices::Dict{Int,T} = Dict{Int,T}(),
-                        hyperedge_meta::Union{E,Nothing}=nothing) where {T <: Real, V, E}
+                        he_meta::Union{E,Nothing}=nothing) where {T <: Real, V, E}
     @boundscheck (checkbounds(h,k,1) for k in keys(vertices))
     push!(h.he2v,vertices)
     ix = length(h.he2v)
     for k in keys(vertices)
         h[k,ix]=vertices[k]
     end
-    push!(h.he_meta, hyperedge_meta)
+    push!(h.he_meta, he_meta)
     ix
 end
 
