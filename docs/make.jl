@@ -1,7 +1,7 @@
 using Documenter
 using Pkg
 
-endswith(pwd(), "SimpleHypergraphs.jl") && Pkg.activate(".")
+#endswith(pwd(), "SimpleHypergraphs.jl") && Pkg.activate(".")
 
 try
     using SimpleHypergraphs
