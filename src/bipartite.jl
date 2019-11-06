@@ -47,7 +47,7 @@ function LightGraphs.has_edge(b::BipartiteView, s, d)
     end
 end
 
-LightGraphs.has_vertex(b::BipartiteView, v::Integer) = 1 <= v <= LightGraphs.nv(b) 
+LightGraphs.has_vertex(b::BipartiteView, v::Integer) = 1 <= v <= LightGraphs.nv(b)
 
 
 LightGraphs.outneighbors(b::BipartiteView, v::Integer) = LightGraphs.all_neighbors(b::BipartiteView, v)
@@ -71,8 +71,6 @@ function LightGraphs.SimpleGraph(b::BipartiteView)
     end
     g
 end
-
-
 
 LightGraphs.is_directed(b::BipartiteView{T}) where T = false
 
@@ -98,17 +96,17 @@ end
 
 """
     LightGraphs.SimpleGraphs.fadj(b::BipartiteView)
-    
-Generates an adjency list for this view of a hypergraph. 
+
+Generates an adjency list for this view of a hypergraph.
 """
 function LightGraphs.SimpleGraphs.fadj(b::BipartiteView)
     res = Vector{Vector{Int}}(undef, LightGraphs.nv(b))
-    
+
     h_nv = length(b.h.v2he)
     for i in 1:h_nv
        res[i] = h_nv .+ sort!(collect(keys(b.h.v2he[i])))
     end
-    for i in 1:length(b.h.he2v) 
+    for i in 1:length(b.h.he2v)
         res[i+h_nv] = sort!(collect(keys(b.h.he2v[i])))
     end
     res
