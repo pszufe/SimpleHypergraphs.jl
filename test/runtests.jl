@@ -98,6 +98,7 @@ end;
     @test LightGraphs.edgetype(b) == LightGraphs.SimpleGraphs.SimpleEdge{Int}
     @test LightGraphs.has_vertex(b, 0) == false
     @test LightGraphs.has_vertex(b, 1) == true
+    @test LightGraphs.has_edge(b, 1, 1) == false
     @test LightGraphs.nv(LightGraphs.zero(b)) == 0
     
     @test LightGraphs.is_directed(b) == false
