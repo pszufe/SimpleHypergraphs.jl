@@ -5,8 +5,8 @@ Represents a 2-section view of a hypergraph `h`.
 Note (1) this is a view - changes to the original hypergraph will be automatically reflected in the view.
 
 Note (2) The view will only work correctly for hypergraphs not having overlapping hyperedges.
-To check whether a graph has overlapping edges try `has_overlapping_hedges(h)` - for such graph 
-you need to fully materialize it rather than use a view. 
+To check whether a graph has overlapping edges try `has_overlapping_hedges(h)` - for such graph
+you need to fully materialize it rather than use a view.
 This can be achieved via the `get_twosection_adjacency_mx(h)` method.
 
 **Constructors**
@@ -19,22 +19,22 @@ Several LightGraphs methods are provided for the compability.
 """
 struct TwoSectionView{T<:Real} <: LightGraphs.SimpleGraphs.AbstractSimpleGraph{Int}
     h::Hypergraph{T}
-    TwoSectionView(h::Hypergraph{T}) where { T <: Real } = begin 
+    TwoSectionView(h::Hypergraph{T}) where { T <: Real } = begin
         has_overlapping_hedges(h) && error("A two section view can be created only for a graph with non overlapping edges")
         new{T}(h)
     end
 end
 
 """
-    has_overlapping_hedges(h::Hypergraph{T}) where { T <: Real } 
-    
+    has_overlapping_hedges(h::Hypergraph{T}) where { T <: Real }
+
 Checks whether a hypergraph has hyperedges connecting the same pairs of vertices.
 Such hypergraph cannot be presented as a two section view
 """
 
-function has_overlapping_hedges(h::Hypergraph{T}) where { T <: Real } 
+function has_overlapping_hedges(h::Hypergraph{T}) where { T <: Real }
     minimum(size(h)) == 0 && return false
-    maximum(get_twosection_adjacency_mx(h;replace_weights=1)) > 1 
+    maximum(get_twosection_adjacency_mx(h;replace_weights=1)) > 1
 end
 
 """
@@ -76,12 +76,12 @@ function LightGraphs.has_edge(t::TwoSectionView, s, d)
 end
 
 
-LightGraphs.has_vertex(t::TwoSectionView, v::Integer) = 1 <= v <= LightGraphs.nv(t) 
+LightGraphs.has_vertex(t::TwoSectionView, v::Integer) = 1 <= v <= LightGraphs.nv(t)
 
 LightGraphs.outneighbors(t::TwoSectionView, v::Integer) =
     LightGraphs.all_neighbors(t::TwoSectionView, v)
 
-LightGraphs.inneighbors(t::TwoSectionView, v::Integer) = 
+LightGraphs.inneighbors(t::TwoSectionView, v::Integer) =
     LightGraphs.all_neighbors(t::TwoSectionView, v)
 
 """
@@ -128,8 +128,8 @@ end
 
 """
     LightGraphs.SimpleGraphs.fadj(t::TwoSectionView)
-    
-Generates an adjency list for this view of a hypergraph. 
+
+Generates an adjency list for this view of a hypergraph.
 """
 function LightGraphs.SimpleGraphs.fadj(t::TwoSectionView)
     res = [Vector{Int}() for _ in 1:LightGraphs.nv(t)]
@@ -152,12 +152,14 @@ LightGraphs.zero(t::TwoSectionView{T}) where T = TwoSectionView(Hypergraph{T}(0,
 LightGraphs.zero(::Type{TwoSectionView{T}}) where T = TwoSectionView(Hypergraph{T}(0,0))
 
 """
-    get_twosection_adjacency_mx(h::Hypergraph{T,V,E}; count_self_loops::Bool=false, replace_weights::Union{Nothing,Real}=nothing ) where {T<:Real, V, E}
-    
+    get_twosection_adjacency_mx(h::Hypergraph{T,V,E}; count_self_loops::Bool=false,
+                                replace_weights::Union{Nothing,Real}=nothing ) where {T<:Real, V, E}
+
     Returns an adjacency matrix for a two section view of a hypergraph `h`.
-    If the 
+    If the
 """
-function get_twosection_adjacency_mx(h::Hypergraph{T,V,E}; count_self_loops::Bool=false, replace_weights::Union{Nothing,Real}=nothing ) where {T<:Real, V, E}
+function get_twosection_adjacency_mx(h::Hypergraph{T,V,E}; count_self_loops::Bool=false,
+                                     replace_weights::Union{Nothing,Real}=nothing ) where {T<:Real, V, E}
     mx = zeros(replace_weights==nothing ? T : typeof(replace_weights), nhv(h), nhv(h))
     for he in 1:nhe(h)
         for v1 in keys(h.he2v[he])
@@ -169,5 +171,3 @@ function get_twosection_adjacency_mx(h::Hypergraph{T,V,E}; count_self_loops::Boo
     end
     mx
 end
-
-
