@@ -13,6 +13,7 @@ export nhv, nhe
 export modularity, randompartition
 export AbstractCommunityFinder, CFModularityRandom, CFModularityCNMLike
 export findcommunities
+export get_connected_components
 
 
 

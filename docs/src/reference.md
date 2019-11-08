@@ -53,10 +53,10 @@ setindex!(::Hypergraph, ::Real, ::Vararg{Int,2})
 Hypergraph representation as LightGraphs' simple graphs
 -------------------------------------------------------
 
-The goal of those methods is to provide a way to manipulate a hypergraph using 
-the methods from the [LightGraphs.jl](https://github.com/JuliaGraphs/LightGraphs.jl) library. 
+The goal of those methods is to provide a way to manipulate a hypergraph using
+the methods from the [LightGraphs.jl](https://github.com/JuliaGraphs/LightGraphs.jl) library.
 This has been achieved by providing types that are subtypes of the
-`LightGraphs.SimpleGraphs.AbstractSimpleGraph{Int}` type along with appropiate methods. 
+`LightGraphs.SimpleGraphs.AbstractSimpleGraph{Int}` type along with appropiate methods.
 
 ```@docs
 BipartiteView
@@ -74,6 +74,7 @@ nhv(::Hypergraph)
 nhe(::Hypergraph)
 getvertices(::Hypergraph, ::Int)
 gethyperedges(::Hypergraph, ::Int)
+get_connected_components(::Hypergraphs)
 
 modularity(::Hypergraph, ::Vector{Set{Int}}, ::SimpleHypergraphs.HypergraphAggs)
 
@@ -100,4 +101,3 @@ hg_load
 ```@meta
 DocTestSetup = nothing
 ```
-
