@@ -268,6 +268,7 @@ end
     filter!.(<=(size(h1, 1)), cc)
     filter!(!isempty, cc)
 
-    @test sort!(sort!.(cc)) == sort!(sort!.(SimpleHypergraphs.get_connected_components(h1)))
-
+    cc2 = SimpleHypergraphs.get_connected_components(h1)
+    @test sort!(sort!.(cc)) == sort!(sort!.(cc2))
+    typeof(cc2) == Array{Array{Int64,1},1}
 end

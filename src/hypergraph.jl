@@ -296,32 +296,33 @@ function nhv(h::Hypergraph{T, V, E}) where {T <: Real, V, E}
 end
 
 """
-    nhv(h::Hypergraph{T, V, E}) where {T <: Real, V, E}
+    get_connected_components(h::Hypergraph)
 
-Find connected components in the hypergraph `h`.
+Return the array of connected components in the hypergraph `h`
+(array of vectors of vertices).
 """
-function walk!(h, s, i, visited)
-        visited[i] && return
-        visited[i] = true
-        push!(s, i)
-        for he in keys(gethyperedges(h, i))
-                for j in keys(getvertices(h, he))
-                        walk!(h, s, j, visited)
-                end
-        end
+function _walk!(h::Hypergraph, s, i, visited)
+    visited[i] && return
+    visited[i] = true
+    push!(s, i)
+    for he in keys(gethyperedges(h, i))
+        for j in keys(getvertices(h, he))
+            _walk!(h, s, j, visited)
+    end
+    end
 end
 
-function get_connected_components(h)
-        visited = falses(nhv(h))
-        cc = Vector{Int}[]
+function get_connected_components(h::Hypergraph)
+    visited = falses(nhv(h))
+    cc = Vector{Int}[]
         for i in 1:nhv(h)
-                if !visited[i]
-                        s = Int[]
-                        walk!(h, s, i, visited)
-                        push!(cc, s)
-                end
+            if !visited[i]
+                s = Int[]
+                _walk!(h, s, i, visited)
+                push!(cc, s)
         end
-        cc
+    end
+    cc
 end
 
 # TODO needs validate_hypergraph!(h::Hypergraph{T})

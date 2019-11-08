@@ -74,7 +74,7 @@ nhv(::Hypergraph)
 nhe(::Hypergraph)
 getvertices(::Hypergraph, ::Int)
 gethyperedges(::Hypergraph, ::Int)
-get_connected_components(::Hypergraphs)
+get_connected_components(::Hypergraph)
 
 modularity(::Hypergraph, ::Vector{Set{Int}}, ::SimpleHypergraphs.HypergraphAggs)
 
