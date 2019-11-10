@@ -296,9 +296,9 @@ function nhv(h::Hypergraph{T, V, E}) where {T <: Real, V, E}
 end
 
 """
-    _walk!(h::Hypergraph)
+    _walk!(h::Hypergraph, s::Vector{Int}, i::Vector{Int}, visited::Vector{Bool})
 
-An auxiliary function for finding connected components in the hypergraph `h`.
+Return the list of neighbors of a given vertex (an auxiliary function for get_connected_components).
 """
 function _walk!(h::Hypergraph, s::Vector{Int}, i::Vector{Int}, visited::Vector{Bool})
     visited[i] && return
