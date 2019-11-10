@@ -296,12 +296,11 @@ function nhv(h::Hypergraph{T, V, E}) where {T <: Real, V, E}
 end
 
 """
-    get_connected_components(h::Hypergraph)
+    _walk!(h::Hypergraph)
 
-Return the array of connected components in the hypergraph `h`
-(array of vectors of vertices).
+An auxiliary function for finding connected components in the hypergraph `h`.
 """
-function _walk!(h::Hypergraph, s, i, visited)
+function _walk!(h::Hypergraph, s::Vector{Int}, i::Vector{Int}, visited::Vector{Bool})
     visited[i] && return
     visited[i] = true
     push!(s, i)
@@ -312,6 +311,12 @@ function _walk!(h::Hypergraph, s, i, visited)
     end
 end
 
+"""
+    get_connected_components(h::Hypergraph)
+
+Return the array of connected components in the hypergraph `h`
+(array of vectors of vertices).
+"""
 function get_connected_components(h::Hypergraph)
     visited = falses(nhv(h))
     cc = Vector{Int}[]
