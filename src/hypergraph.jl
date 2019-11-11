@@ -307,7 +307,7 @@ function _walk!(h::Hypergraph, s::AbstractVector{Int}, i::Int, visited::Abstract
     for he in keys(gethyperedges(h, i))
         for j in keys(getvertices(h, he))
             _walk!(h, s, j, visited)
-    end
+        end
     end
 end
 
