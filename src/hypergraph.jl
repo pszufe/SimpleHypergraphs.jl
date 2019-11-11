@@ -300,7 +300,7 @@ end
 
 Return the list of neighbors of a given vertex (an auxiliary function for get_connected_components).
 """
-function _walk!(h::Hypergraph, s::Vector{Int}, i::Vector{Int}, visited::Vector{Bool})
+function _walk!(h::Hypergraph, s::AbstractVector{Int}, i::Int, visited::AbstractVector{Bool})
     visited[i] && return
     visited[i] = true
     push!(s, i)
