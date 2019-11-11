@@ -314,7 +314,7 @@ end
 """
     get_connected_components(h::Hypergraph)
 
-Return the array of connected components in the hypergraph `h`
+Return an array of connected components in the hypergraph `h`
 (array of vectors of vertices).
 """
 function get_connected_components(h::Hypergraph)
