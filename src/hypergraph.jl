@@ -298,7 +298,7 @@ end
 """
     _walk!(h::Hypergraph, s::AbstractVector{Int}, i::Int, visited::AbstractVector{Bool})
 
-Return the list of neighbors of a given vertex (an auxiliary function for get_connected_components).
+Return the list of neighbors of a given vertex (an auxiliary function for `get_connected_components`).
 """
 function _walk!(h::Hypergraph, s::AbstractVector{Int}, i::Int, visited::AbstractVector{Bool})
     visited[i] && return
