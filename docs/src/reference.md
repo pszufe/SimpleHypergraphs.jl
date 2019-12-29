@@ -34,7 +34,7 @@ Hypergraph array getters and setters
 Normally you work with a hypergraph via array setters, for example the code below craete an Hypergraph and add vertex one to hyperedges 2 and 3 with weight 5:
 ```jldoctest
 h = Hypergraph{Int64}(2,3);
-h[1, 2:3] .= 5;  
+h[1, 2:3] .= 5;
 h
 
 # output
@@ -53,10 +53,10 @@ setindex!(::Hypergraph, ::Real, ::Vararg{Int,2})
 Hypergraph representation as LightGraphs' simple graphs
 -------------------------------------------------------
 
-The goal of those methods is to provide a way to manipulate a hypergraph using 
-the methods from the [LightGraphs.jl](https://github.com/JuliaGraphs/LightGraphs.jl) library. 
+The goal of those methods is to provide a way to manipulate a hypergraph using
+the methods from the [LightGraphs.jl](https://github.com/JuliaGraphs/LightGraphs.jl) library.
 This has been achieved by providing types that are subtypes of the
-`LightGraphs.SimpleGraphs.AbstractSimpleGraph{Int}` type along with appropiate methods. 
+`LightGraphs.SimpleGraphs.AbstractSimpleGraph{Int}` type along with appropiate methods.
 
 ```@docs
 BipartiteView
@@ -76,6 +76,8 @@ getvertices(::Hypergraph, ::Int)
 gethyperedges(::Hypergraph, ::Int)
 
 modularity(::Hypergraph, ::Vector{Set{Int}}, ::SimpleHypergraphs.HypergraphAggs)
+
+random_walk(::Hypergraph, ::Int; heselect::Function, vselect::Function)
 
 SimpleHypergraphs.HypergraphAggs
 

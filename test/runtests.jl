@@ -81,30 +81,30 @@ h1[5,2] = 6.5
     @test get_hyperedge_meta(h4,2) == "test"
     @test get_vertex_meta(h4,1) == nothing
     @test_throws BoundsError get_vertex_meta(h4,2)
-    
+
     h1_0 = deepcopy(h1)
     @test add_vertex!(h1_0) == 6
     h1_0[6,:] = h1_0[5,:]
     @test remove_vertex!(h1_0,5) == h1
-    
+
 end;
 
 @testset "SimpleHypergraphs BipartiteView   " begin
     h2 = deepcopy(h1)
-    
-    @test LightGraphs.nv(LightGraphs.zero(BipartiteView{Int})) == 0 
-    
+
+    @test LightGraphs.nv(LightGraphs.zero(BipartiteView{Int})) == 0
+
     b = BipartiteView(h2)
     @test LightGraphs.edgetype(b) == LightGraphs.SimpleGraphs.SimpleEdge{Int}
     @test LightGraphs.has_vertex(b, 0) == false
     @test LightGraphs.has_vertex(b, 1) == true
     @test LightGraphs.has_edge(b, 1, 1) == false
     @test LightGraphs.nv(LightGraphs.zero(b)) == 0
-    
+
     @test LightGraphs.is_directed(b) == false
     @test LightGraphs.is_directed(typeof(b)) == false
     @test LightGraphs.eltype(b) == Int
-    
+
 
     @test sum(LightGraphs.adjacency_matrix(LightGraphs.SimpleGraph(b))) == 18
 
@@ -117,14 +117,14 @@ end;
     @test shortest_path(b,1,5) == [1,3,5]
     @test LightGraphs.is_weakly_connected(b) == true
 
-    
+
     @test add_vertex!(h2) == 6
     @test add_hyperedge!(h2) == 5
     h2[5,5] = 1
     h2[6,5] = 1
 
     @test shortest_path(b,1,6) == [1,3,5,6]
-    
+
     bipartite_graph = LightGraphs.SimpleGraph(b)
 
     @test LightGraphs.SimpleGraphs.fadj(bipartite_graph)==LightGraphs.SimpleGraphs.fadj(b)
@@ -132,28 +132,28 @@ end;
     @test LightGraphs.ne(b) == 11
 
     @test sort!(LightGraphs.SimpleGraphs.fadj(b,1)) == [7]
-    @test sort!(LightGraphs.SimpleGraphs.fadj(b,2)) == [7,9]    
+    @test sort!(LightGraphs.SimpleGraphs.fadj(b,2)) == [7,9]
 end;
 
 @testset "SimpleHypergraphs TwoSectionView  " begin
-    
+
     ht = Hypergraph{Float64}(3,3)
     ht[1:2,1:2] .= 2.
     ht[:, 3] .= 2.
-    
+
     add_vertex!(h1)
     add_hyperedge!(h1)
     h1[5,5] = 1
     h1[6,5] = 1
 
-    @test LightGraphs.nv(LightGraphs.zero(TwoSectionView{Int})) == 0 
-    
+    @test LightGraphs.nv(LightGraphs.zero(TwoSectionView{Int})) == 0
+
     t = TwoSectionView(h1)
     @test LightGraphs.edgetype(t) == LightGraphs.SimpleGraphs.SimpleEdge{Int}
     @test LightGraphs.has_vertex(t, 0) == false
     @test LightGraphs.has_vertex(t, 1) == true
     @test LightGraphs.nv(LightGraphs.zero(t)) == 0
-    
+
     @test LightGraphs.is_directed(t) == false
     @test LightGraphs.is_directed(typeof(t)) == false
     @test LightGraphs.eltype(t) == Int
@@ -190,7 +190,7 @@ end;
     @test LightGraphs.adjacency_matrix(g) == LightGraphs.adjacency_matrix(TwoSectionView(h_from_g))
     @test minimum([sum((h_from_g .== true)[:,n]) for n in 1:6] .== 2)
     @test LightGraphs.modularity(g,[1,1,2,2,3,3,4,4]) ≈ modularity(h_from_g, Set.([[1,2],[3,4],[5,6],[7,8]]))
-    @test LightGraphs.SimpleGraphs.fadj(g) == LightGraphs.SimpleGraphs.fadj(TwoSectionView(h_from_g))  
+    @test LightGraphs.SimpleGraphs.fadj(g) == LightGraphs.SimpleGraphs.fadj(TwoSectionView(h_from_g))
 end;
 
 
@@ -203,9 +203,9 @@ end;
             hg[i] = true
         end
     end
-    
+
     cfmr = CFModularityRandom(3,10000)
-    
+
     @test findcommunities(hg,cfmr) ==
          (bp = Set.([[4, 5, 9], [1, 3, 6, 7], [2, 8, 10]]), bm = 0.21505688117829677)
     @test modularity(hg,  Set.([1:10])) == 0.0
@@ -233,7 +233,7 @@ end;
     @test ha.volV == 9
     @test modularity(hh, Set.([[1,2,3],[4],[5],[6],[7]]), ha) ≈ 223/972
     cfmr = CFModularityRandom(2,10000)
-    @test cfmr.n==2 
+    @test cfmr.n==2
     @test cfmr.reps == 10000
     @test findcommunities(hh,cfmr).bm ≈ 16/81
     Random.seed!(1234);
@@ -261,4 +261,26 @@ end;
     end
     @test sum(res) >= N*0.80
 end
-    
+
+@testset "randomwalk" begin
+    h1 = Hypergraph{Float64}(5,4)
+    h1[1:3,1] .= 1.5
+    h1[3,4] = 2.5
+    h1[2,3] = 3.5
+    h1[4,3:4] .= 4.5
+    h1[5,4] = 5.5
+    h1[5,2] = 6.5
+    # randomized, unseeded tests
+    w1 = countmap([random_walk(h1, 1) for _ in 1:10^6])
+    @test keys(w1) == Set([1,2,3])
+    @test -(extrema(values(w1))...) > -10000
+    w2 = countmap([random_walk(h1, 2) for _ in 1:10^6])
+    @test keys(w2) == Set([1,2,3,4])
+    @test abs((w2[2]-w2[4]) - w2[1]) < 10000
+    @test abs(w2[1]-w2[3]) < 10000
+    w5 = countmap([random_walk(h1, 5) for _ in 1:10^6])
+    @test keys(w5) == Set([3,4,5])
+    @test abs(w5[3]-w5[4]) < 10000
+    @test abs(w5[5]-w5[4]-500000) < 10000
+    @test_throws ArgumentError random_walk(h1, 0)
+end
