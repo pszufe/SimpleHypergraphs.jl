@@ -297,12 +297,12 @@ end
 
 function _default_heselect(h::Hypergraph, v::Int)
     hes = gethyperedges(h, v)
-    collect(keys(hes)), ones(length(hes))
+    sort!(collect(keys(hes))), ones(length(hes))
 end
 
 function _default_vselect(h::Hypergraph, he::Int)
     vs = getvertices(h, he)
-    collect(keys(vs)), ones(length(vs))
+    sort!(collect(keys(vs))), ones(length(vs))
 end
 
 """
