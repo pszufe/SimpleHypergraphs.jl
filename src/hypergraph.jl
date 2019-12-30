@@ -295,4 +295,38 @@ function nhv(h::Hypergraph{T, V, E}) where {T <: Real, V, E}
     length(h.v2he)
 end
 
+function _default_heselect(h::Hypergraph, v::Int)
+    hes = gethyperedges(h, v)
+    sort!(collect(keys(hes))), ones(length(hes))
+end
+
+function _default_vselect(h::Hypergraph, he::Int)
+    vs = getvertices(h, he)
+    sort!(collect(keys(vs))), ones(length(vs))
+end
+
+"""
+    random_walk(h::Hypergraph, start::Int; heselect::Function, vselect::Function)
+
+Return a next vertex visited in assuming a random walk starting from vertex `start`.
+First a hyperedge is sampled with weights proportional to `heselect` function
+(by default each hyperedge is sampled with the same probability).
+Next a vertex within hyperedge is with weights proportional to `vselect` function
+(by default each vertex, including the source, is sampled with the same probability).
+
+`heselect` and `vselect` functions take two arguments a `Hypergraph` and respectively
+a vertex identifier or a hyperedge identifier. The return values of both functions
+should be respectively a list of hyperedges or vertices and their weights.
+"""
+
+function random_walk(h::Hypergraph, start::Int;
+                     heselect::Function=_default_heselect,
+                     vselect::Function=_default_vselect)
+    1 <= start <= nhv(h) || throw(ArgumentError("invalid start vertex index"))
+    hes, hew = heselect(h, start)
+    he = sample(hes, Weights(hew))
+    ves, vw = vselect(h, he)
+    return sample(ves, Weights(vw))
+end
+
 # TODO needs validate_hypergraph!(h::Hypergraph{T})
