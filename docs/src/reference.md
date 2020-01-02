@@ -77,6 +77,7 @@ gethyperedges(::Hypergraph, ::Int)
 get_connected_components(::Hypergraph)
 
 modularity(::Hypergraph, ::Vector{Set{Int}}, ::SimpleHypergraphs.HypergraphAggs)
+random_walk(::Hypergraph, ::Int; heselect::Function, vselect::Function)
 
 SimpleHypergraphs.HypergraphAggs
 
