@@ -1,4 +1,4 @@
-using Test, SimpleHypergraphs
+using Test, SimpleHypergraphs, StatsBase
 using Random
 import LightGraphs
 

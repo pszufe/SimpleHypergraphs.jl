@@ -1,6 +1,7 @@
 module SimpleHypergraphs
 
 using LightGraphs
+using StatsBase
 
 export Hypergraph, getvertices, gethyperedges, hg_load, hg_save
 export add_vertex!, add_hyperedge!, remove_vertex!
@@ -15,6 +16,7 @@ export AbstractCommunityFinder, CFModularityRandom, CFModularityCNMLike
 export findcommunities
 export random_walk
 export get_connected_components
+
 
 include("hypergraph.jl")
 include("bipartite.jl")

@@ -34,7 +34,7 @@ Hypergraph array getters and setters
 Normally you work with a hypergraph via array setters, for example the code below craete an Hypergraph and add vertex one to hyperedges 2 and 3 with weight 5:
 ```jldoctest
 h = Hypergraph{Int64}(2,3);
-h[1, 2:3] .= 5;  
+h[1, 2:3] .= 5;
 h
 
 # output
@@ -77,6 +77,8 @@ gethyperedges(::Hypergraph, ::Int)
 get_connected_components(::Hypergraph)
 
 modularity(::Hypergraph, ::Vector{Set{Int}}, ::SimpleHypergraphs.HypergraphAggs)
+random_walk(::Hypergraph, ::Int; heselect::Function, vselect::Function)
+
 random_walk(::Hypergraph, ::Int; heselect::Function, vselect::Function)
 
 SimpleHypergraphs.HypergraphAggs
