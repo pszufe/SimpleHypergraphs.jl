@@ -262,13 +262,36 @@ end;
     @test sum(res) >= N*0.80
 end
 
+@testset "randomwalk" begin
+    h1 = Hypergraph{Float64}(5,4)
+    h1[1:3,1] .= 1.5
+    h1[3,4] = 2.5
+    h1[2,3] = 3.5
+    h1[4,3:4] .= 4.5
+    h1[5,4] = 5.5
+    h1[5,2] = 6.5
+    # randomized, unseeded tests
+    w1 = countmap([random_walk(h1, 1) for _ in 1:10^6])
+    @test keys(w1) == Set([1,2,3])
+    @test -(extrema(values(w1))...) > -10000
+    w2 = countmap([random_walk(h1, 2) for _ in 1:10^6])
+    @test keys(w2) == Set([1,2,3,4])
+    @test abs((w2[2]-w2[4]) - w2[1]) < 10000
+    @test abs(w2[1]-w2[3]) < 10000
+    w5 = countmap([random_walk(h1, 5) for _ in 1:10^6])
+    @test keys(w5) == Set([3,4,5])
+    @test abs(w5[3]-w5[4]) < 10000
+    @test abs(w5[5]-w5[4]-500000) < 10000
+    @test_throws ArgumentError random_walk(h1, 0)
+end
+
 @testset "SimpleHypergraphs connected components" begin
     bip = LightGraphs.SimpleGraph(BipartiteView(h1))
     cc = LightGraphs.connected_components(bip)
-    filter!.(<=(size(h1, 1)), cc)
+    filter!.(x -> x <= nhv(h1), cc)
     filter!(!isempty, cc)
 
     cc2 = SimpleHypergraphs.get_connected_components(h1)
     @test sort!(sort!.(cc)) == sort!(sort!.(cc2))
-    typeof(cc2) == Array{Array{Int64,1},1}
+    @test typeof(cc2) == Vector{Vector{Int}}
 end

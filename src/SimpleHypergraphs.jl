@@ -13,9 +13,8 @@ export nhv, nhe
 export modularity, randompartition
 export AbstractCommunityFinder, CFModularityRandom, CFModularityCNMLike
 export findcommunities
+export random_walk
 export get_connected_components
-
-
 
 include("hypergraph.jl")
 include("bipartite.jl")
