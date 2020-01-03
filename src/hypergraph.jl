@@ -83,7 +83,7 @@ Hypergraph{V}(m::AbstractMatrix{Union{T, Nothing}};
     Hypergraph{V, Nothing}(m; v_meta=v_meta)
 
 Hypergraph(m::AbstractMatrix{Union{T, Nothing}}) where {T<:Real} =
-    Hypergraph{Nothing, Nothing}(m)
+    Hypergraph{T, Nothing}(m)
 
 function Hypergraph(g::LightGraphs.Graph)
     h = Hypergraph{Bool}(maximum(vertices(g)), ne(g))

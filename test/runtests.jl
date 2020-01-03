@@ -64,8 +64,8 @@ h1[5,2] = 6.5
     m = Matrix(h1)
     @test  m == Matrix(h2)
     @test h1 == Hypergraph(m)
-    @test h1 == Hypergraph{Nothing}(m)
-    @test h1 == Hypergraph{Nothing, Nothing}(m)
+    @test h1 == Hypergraph{Float64}(m)
+    @test h1 == Hypergraph{Float64, Nothing}(m)
     @test getindex(h1,3,1) == 1.5
 
     h3 = Hypergraph{Float64,String,Nothing}(1,1)
