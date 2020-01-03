@@ -284,3 +284,14 @@ end
     @test abs(w5[5]-w5[4]-500000) < 10000
     @test_throws ArgumentError random_walk(h1, 0)
 end
+
+@testset "SimpleHypergraphs connected components" begin
+    bip = LightGraphs.SimpleGraph(BipartiteView(h1))
+    cc = LightGraphs.connected_components(bip)
+    filter!.(x -> x <= nhv(h1), cc)
+    filter!(!isempty, cc)
+
+    cc2 = SimpleHypergraphs.get_connected_components(h1)
+    @test sort!(sort!.(cc)) == sort!(sort!.(cc2))
+    @test typeof(cc2) == Vector{Vector{Int}}
+end

@@ -329,4 +329,40 @@ function random_walk(h::Hypergraph, start::Int;
     return sample(ves, Weights(vw))
 end
 
+"""
+    _walk!(h::Hypergraph, s::AbstractVector{Int}, i::Int, visited::AbstractVector{Bool})
+
+Appends the list of neighbors `s` of a given vertex `i` (an auxiliary function for `get_connected_components`).
+"""
+function _walk!(h::Hypergraph, s::AbstractVector{Int}, i::Int, visited::AbstractVector{Bool})
+    visited[i] && return
+    visited[i] = true
+    push!(s, i)
+    for he in keys(gethyperedges(h, i))
+        for j in keys(getvertices(h, he))
+            _walk!(h, s, j, visited)
+        end
+    end
+end
+
+"""
+    get_connected_components(h::Hypergraph)
+
+Return an array of connected components in the hypergraph `h`
+(array of vectors of vertices) using recurrence.
+"""
+function get_connected_components(h::Hypergraph)
+    visited = falses(nhv(h))
+    cc = Vector{Int}[]
+        for i in 1:nhv(h)
+            if !visited[i]
+                s = Int[]
+                _walk!(h, s, i, visited)
+                push!(cc, s)
+        end
+    end
+    cc
+end
+
+# TODO find connected components without recurrence
 # TODO needs validate_hypergraph!(h::Hypergraph{T})

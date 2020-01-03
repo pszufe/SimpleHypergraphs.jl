@@ -74,8 +74,10 @@ nhv(::Hypergraph)
 nhe(::Hypergraph)
 getvertices(::Hypergraph, ::Int)
 gethyperedges(::Hypergraph, ::Int)
+get_connected_components(::Hypergraph)
 
 modularity(::Hypergraph, ::Vector{Set{Int}}, ::SimpleHypergraphs.HypergraphAggs)
+random_walk(::Hypergraph, ::Int; heselect::Function, vselect::Function)
 
 random_walk(::Hypergraph, ::Int; heselect::Function, vselect::Function)
 
@@ -102,4 +104,3 @@ hg_load
 ```@meta
 DocTestSetup = nothing
 ```
-
