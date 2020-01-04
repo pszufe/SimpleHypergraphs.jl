@@ -4,6 +4,7 @@ authors = ["Bogumił Kamiński <bkamins@sgh.waw.pl>", "Przemysław Szufel <pszuf
 version = "0.1.6"
 
 [deps]
+DataStructures = "864edb3b-99cc-5e75-8d2d-829cb0a9cfe8"
 LightGraphs = "093fc24a-ae57-5d10-9952-331d41423f4d"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
@@ -11,5 +12,5 @@ Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [compat]
 LightGraphs = "^1.1.0"
-julia = "1.0.0"
 StatsBase = "0.32"
+julia = "1.0.0"

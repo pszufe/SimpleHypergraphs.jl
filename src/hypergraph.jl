@@ -13,35 +13,50 @@ A hypergraph storing information about vertices and hyperedges.
         v_meta=Vector{Union{V,Nothing}}(nothing, n),
         he_meta=Vector{Union{E,Nothing}}(nothing, k)
         ) where {T<:Real, V, E}
+    Hypergraph{T,V,E,D}(n::Integer, k::Integer,
+        v_meta=Vector{Union{V,Nothing}}(nothing, n),
+        he_meta=Vector{Union{E,Nothing}}(nothing, k)
+        ) where {T<:Real,V,E,D<:AbstractDict{Int,T}}
 
 Construct a hypergraph with a given number of vertices and hyperedges.
 Optionally, values of type `V` can be stored at vertices and values of type `E`
-can be stored at hyperedges.
+can be stored at hyperedges. By default the hypegraph uses a `Dict{Int,T}` for
+the internal data storage, however a different dictionary such as `SortedDict`
+to ensure result replicability can be used (e.g. when doing stochastic
+simulations on hypergraphs).
 
     Hypergraph(m::AbstractMatrix{Union{T, Nothing}}) where {T<:Real}
-    Hypergraph{V}(m::AbstractMatrix{Union{T, Nothing}};
+    Hypergraph{T, V}(m::AbstractMatrix{Union{T, Nothing}};
         v_meta=Vector{Union{V,Nothing}}(nothing, size(m,1))
         ) where {T<:Real, V}
-    Hypergraph{V, E}(m::AbstractMatrix{Union{T, Nothing}};
+    Hypergraph{T, V, E}(m::AbstractMatrix{Union{T, Nothing}};
         v_meta=Vector{Union{V,Nothing}}(nothing, size(m,1)),
         he_meta=Vector{Union{E,Nothing}}(nothing, size(m,2))
         ) where {T<:Real, V, E}
+    Hypergraph{T, V, E, D}(m::AbstractMatrix{Union{T, Nothing}};
+        v_meta=Vector{Union{V,Nothing}}(nothing, size(m,1)),
+        he_meta=Vector{Union{E,Nothing}}(nothing, size(m,2))
+        ) where {T<:Real, V, E, D<:AbstractDict{Int,T}}
 
 Construct a hypergraph using its matrix representation.
 In the matrix representation rows are vertices and columns are hyperedges.
 Optionally, values of type `V` can be stored at vertices and values of type `E`
-can be stored at hyperedges.
+can be stored at hyperedges. By default the hypegraph uses a `Dict{Int,T}` for
+the internal data storage, however a different dictionary such as `SortedDict`
+to ensure result replicability can be used (e.g. when doing stochastic
+simulations on hypergraphs).
 
     Hypergraph(g::LightGraphs.Graph)
 
-Constructs a hypergraph of degree 2 by making a deep copy of LightGraphs.Graph
+Constructs a hypergraph of degree 2 by making a deep copy of LightGraphs.Graph.
+A `SortedDict` will be used for internal data storage of the hypergraph.
 
 **Arguments**
 
-* `T` : type of weight values stored in the hypergraph
+* `T` : type of weight values stored in the hypergraph's adjacency matrix
 * `V` : type of values stored in the vertices of the hypergraph
 * `E` : type of values stored in the edges of the hypergraph
-* `D` : dictionary for storing values the default is `Dict`, however for several cases using `SortedDict` will only guarantee replicability
+* `D` : dictionary for storing values the default is `Dict{Int, T}`
 * `n` : number of vertices
 * `k` : number of hyperedges
 * `m` : a matrix representation rows are vertices and columns are hyperedges
@@ -63,30 +78,48 @@ end
 
 Hypergraph{T,V,E}(n::Integer, k::Integer) where {T<:Real, V, E} = Hypergraph{T,V,E,Dict{Int,T}}(n, k)
 
+Hypergraph{T,V}(n::Integer, k::Integer) where {T<:Real, V, E} = Hypergraph{T,V,Nothing,Dict{Int,T}}(n, k)
 
 Hypergraph{T}(n::Integer, k::Integer) where {T<:Real} =  Hypergraph{T,Nothing,Nothing,Dict{Int,T}}(n, k)
 
+Hypergraph(n::Integer, k::Integer) =  Hypergraph{Bool,Nothing,Nothing,Dict{Int,Bool}}(n, k)
 
-function Hypergraph{V, E}(m::AbstractMatrix{Union{T, Nothing}};
-                        v_meta=Vector{Union{V,Nothing}}(nothing, size(m,1)),
-                        he_meta=Vector{Union{E,Nothing}}(nothing, size(m,2))
-                        ) where {V<:Any,E<:Any,T<:Real}
+function Hypergraph{T,V,E,D}(m::AbstractMatrix{Union{T, Nothing}};
+                        v_meta::Vector{Union{Nothing,V}}=Vector{Union{Nothing,V}}(nothing, size(m,1)),
+                        he_meta::Vector{Union{Nothing,E}}=Vector{Union{Nothing,E}}(nothing, size(m,2))
+                        ) where {T<:Real,V,E,D<:AbstractDict{Int,T}}
+    @assert length(v_meta) == size(m,1)
+    @assert length(he_meta) == size(m,2)
     n, k = size(m)
-    h = Hypergraph{T, V, E, Dict{Int,T}}(n, k, v_meta, he_meta)
+    h = Hypergraph{T,V,E,D}(n, k, v_meta, he_meta)
     h .= m
     h
 end
 
+function Hypergraph{T,V,E}(m::AbstractMatrix{Union{T, Nothing}};
+                        v_meta::Vector{Union{Nothing,V}}=Vector{Union{Nothing,V}}(nothing, size(m,1)),
+                        he_meta::Vector{Union{Nothing,E}}=Vector{Union{Nothing,E}}(nothing, size(m,2))
+                        ) where {T<:Real,V,E}
+    Hypergraph{T,V,E,Dict{Int,T}}(m;v_meta=v_meta,he_meta=he_meta)
+end
 
-Hypergraph{V}(m::AbstractMatrix{Union{T, Nothing}};
-            v_meta=Vector{Union{V,Nothing}}(nothing, size(m,1))) where {T<:Real, V} =
-    Hypergraph{V, Nothing}(m; v_meta=v_meta)
+function Hypergraph{T,V}(m::AbstractMatrix{Union{T, Nothing}};
+                        v_meta::Vector{Union{Nothing,V}}=Vector{Union{Nothing,V}}(nothing, size(m,1))
+                        ) where {T<:Real,V}
+    Hypergraph{T,V,Nothing,Dict{Int,T}}(m;v_meta=v_meta)
+end
 
-Hypergraph(m::AbstractMatrix{Union{T, Nothing}}) where {T<:Real} =
-    Hypergraph{Nothing, Nothing}(m)
+function Hypergraph{T}(m::AbstractMatrix{Union{T, Nothing}}) where {T<:Real}
+    Hypergraph{T,Nothing,Nothing,Dict{Int,T}}(m)
+end
+
+function Hypergraph(m::AbstractMatrix{Union{T, Nothing}}) where {T<:Real}
+    Hypergraph{T,Nothing,Nothing,Dict{Int,T}}(m)
+end
+
 
 function Hypergraph(g::LightGraphs.Graph)
-    h = Hypergraph{Bool}(maximum(vertices(g)), ne(g))
+    h = Hypergraph{Bool,Nothing,Nothing,SortedDict{Int,Bool}}(maximum(vertices(g)), ne(g))
     e = 0
     for edge in edges(g)
         e+=1
@@ -115,6 +148,14 @@ If a vertex does not belong to a hyperedge `nothing` is returned.
 @inline function Base.getindex(h::Hypergraph, idx::Vararg{Int,2})
     @boundscheck checkbounds(h, idx...)
     get(h.v2he[idx[1]], idx[2], nothing)
+end
+
+@inline function Base.pop!(d::SortedDict,key::Int,::Nothing)
+    if haskey(d,key)
+        return pop!(d,key)
+    else
+        return nothing
+    end
 end
 
 """
@@ -322,7 +363,6 @@ Next a vertex within hyperedge is with weights proportional to `vselect` functio
 a vertex identifier or a hyperedge identifier. The return values of both functions
 should be respectively a list of hyperedges or vertices and their weights.
 """
-
 function random_walk(h::Hypergraph, start::Int;
                      heselect::Function=_default_heselect,
                      vselect::Function=_default_vselect)
