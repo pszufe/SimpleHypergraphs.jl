@@ -39,7 +39,7 @@ h
 
 # output
 
-2×3 Hypergraph{Int64,Nothing,Nothing}:
+2×3 Hypergraph{Int64,Nothing,Nothing,Dict{Int64,Int64}}:
  nothing  5         5
  nothing   nothing   nothing
 ```
@@ -79,7 +79,7 @@ get_connected_components(::Hypergraph)
 modularity(::Hypergraph, ::Vector{Set{Int}}, ::SimpleHypergraphs.HypergraphAggs)
 random_walk(::Hypergraph, ::Int; heselect::Function, vselect::Function)
 
-random_walk(::Hypergraph, ::Int; heselect::Function, vselect::Function)
+random_walk(::Hypergraph, ::Int; ::Function, ::Function)
 
 SimpleHypergraphs.HypergraphAggs
 

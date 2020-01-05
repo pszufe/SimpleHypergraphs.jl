@@ -2,6 +2,7 @@ module SimpleHypergraphs
 
 using LightGraphs
 using StatsBase
+using DataStructures
 
 export Hypergraph, getvertices, gethyperedges, hg_load, hg_save
 export add_vertex!, add_hyperedge!, remove_vertex!
