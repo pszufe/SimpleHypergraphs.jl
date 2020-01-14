@@ -3,6 +3,9 @@ module SimpleHypergraphs
 using LightGraphs
 using StatsBase
 using DataStructures
+using PyCall
+using PyPlot
+using JSON
 
 export Hypergraph, getvertices, gethyperedges, hg_load, hg_save
 export add_vertex!, add_hyperedge!, remove_vertex!
@@ -18,11 +21,25 @@ export findcommunities
 export random_walk
 export get_connected_components
 
+export HyperNetX, GraphBased
+export draw
+
+const hnx = PyNULL()
+const nx = PyNULL()
+
+function __init__()
+    copy!(hnx, pyimport("hypernetx"))
+    copy!(nx, pyimport("networkx"))
+end
+
 
 include("hypergraph.jl")
 include("bipartite.jl")
 include("io.jl")
 include("twosection.jl")
 include("modularity.jl")
+
+include("viz/drawing.jl")
+include("viz/widget.jl")
 
 end # module
