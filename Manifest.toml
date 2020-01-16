@@ -77,6 +77,12 @@ git-tree-sha1 = "b34d7cef7b337321e97d22242c3c2b91f476748e"
 uuid = "682c06a0-de6a-54ab-a142-c8b1cf79cde6"
 version = "0.21.0"
 
+[[JSON3]]
+deps = ["Dates", "Mmap", "Parsers", "Test", "UUIDs"]
+git-tree-sha1 = "3989e277c668f2c1c9b7595a7f489510e78d3e73"
+uuid = "0f8b85d8-7281-11e9-16c2-39a750bddbf1"
+version = "0.1.13"
+
 [[LaTeXStrings]]
 deps = ["Compat"]
 git-tree-sha1 = "7ab9b8788cfab2bdde22adf9004bda7ad9954b6c"
@@ -211,6 +217,12 @@ deps = ["DataAPI", "DataStructures", "LinearAlgebra", "Missings", "Printf", "Ran
 git-tree-sha1 = "c53e809e63fe5cf5de13632090bc3520649c9950"
 uuid = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
 version = "0.32.0"
+
+[[StructTypes]]
+deps = ["Dates", "UUIDs"]
+git-tree-sha1 = "153bbf4f79d187a461eaaf7baf3bbec9e349fd14"
+uuid = "856f2bd8-1eba-4b0a-8007-ebc267875bd4"
+version = "1.0.1"
 
 [[Test]]
 deps = ["Distributed", "InteractiveUtils", "Logging", "Random"]

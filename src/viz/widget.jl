@@ -8,8 +8,11 @@ function display(w::Widget)
 end
 
 function widget_graph(
-        json_hg::String,
+        v2he::String,
+        he2v::String,
         div_id::Int;
+        v_meta::Union{Vector, Nothing}=nothing,
+        he_meta::Union{Vector, Nothing}=nothing,
         width::Int=500,
         height::Int=500,
         radius::Real=10,
@@ -33,7 +36,7 @@ function widget_graph(
         he_labels::Union{Vector{String}, Nothing}=nothing,
         with_he_metadata_hover::Bool=false
         )
-
+        
     w = Widget("graph", """
                 <head>
                 </head>
@@ -45,8 +48,11 @@ function widget_graph(
                 <script>
 
                     hgd.draw(
-                        $(json_hg),
+                        $(v2he),
+                        $(he2v),
                         "div$(div_id)",
+                        vmeta=$(JSON.json(v_meta)),
+                        hemeta=$(JSON.json(he_meta)),
                         width=$(JSON.json(width)),
                         height=$(JSON.json(height)),
                         strength=-60,

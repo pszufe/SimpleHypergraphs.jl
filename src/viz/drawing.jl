@@ -98,11 +98,12 @@ function draw(
         with_he_metadata_hover::Bool=false
     )
 
-    jsonified_hg, stringified_hg = _jsonify(h; tostring=true)
-
     w = widget_graph(
-        stringified_hg,
+        JSON3.write(h.v2he),
+        JSON3.write(h.he2v),
         element;
+        v_meta=h.v_meta,
+        he_meta=h.he_meta,
         width=width,
         height=height,
         radius=radius,
@@ -129,83 +130,6 @@ function draw(
 
     display(w)
 end
-
-
-"""
-    jsonify(h::Hypergraph; tostring::Bool=false)
-
-Transform a hypergraph `h` into a dictionary `d`.
-If `tostring` is true, a jsonified string version of `d` will also be returned.
-
-**Example**
-
-h = Hypergraph{Float64}(7,4)
-h[1:3,1] .= 1.5
-h[6:7,1] .= 1
-h[3,4] = 2.5
-h[2,3] = 3.5
-h[4,3:4] .= 4.5
-h[5,4] = 5.5
-h[5,2] = 6.5
-
-jsonify(h)
-
-Dict{Symbol,Any} with 4 entries:
-  :nVertices   => 7
-  :nHyperedges => 4
-  :vertices    => Dict{Int64,Any}(
-    7 => Dict{Symbol,Any}(:metadata=>nothing,:hyperedges=>Dict(1=>1.0))
-    4 => Dict{Symbol,Any}(:metadata=>nothing,:hyperedges=>Dict(4=>4.5,3=>4.5))
-    2 => Dict{Symbol,Any}(:metadata=>nothing,:hyperedges=>Dict(3=>3.5,1=>1.5))
-    3 => Dict{Symbol,Any}(:metadata=>nothing,:hyperedges=>Dict(4=>2.5,1=>1.5))
-    5 => Dict{Symbol,Any}(:metadata=>nothing,:hyperedges=>Dict(4=>5.5,2=>6.5))
-    6 => Dict{Symbol,Any}(:metadata=>nothing,:hyperedges=>Dict(1=>1.0))
-    1 => Dict{Symbol,Any}(:metadata=>nothing,:hyperedges=>Dict(1=>1.5))
-  )
-  :hyperedges  => Dict{Int64,Any}(
-    4 => Dict{Symbol,Any}(:metadata=>nothing,:vertices=>Dict(4=>4.5,3=>2.5,5=>5.5))
-    2 => Dict{Symbol,Any}(:metadata=>nothing,:vertices=>Dict(5=>6.5))
-    3 => Dict{Symbol,Any}(:metadata=>nothing,:vertices=>Dict(4=>4.5,2=>3.5))
-    1 => Dict{Symbol,Any}(:metadata=>nothing,:vertices=>Dict(7=>1.0,2=>1.5,3=>1.5,6=>1.0,1=>1.5))
-  )
-"""
-function _jsonify(h::Hypergraph; tostring::Bool=false)
-    jsonified_hg = Dict{Symbol, Any}()
-
-    jsonified_hg[:nVertices] = nhv(h)
-    jsonified_hg[:nHyperedges] = nhe(h)
-
-    for v = 1:nhv(h)
-        vDict = Dict{Symbol, Any}()
-
-        vDict[:hyperedges] = gethyperedges(h, v)
-        vDict[:metadata] = get_vertex_meta(h, v)
-
-        push!(
-            get!(jsonified_hg, :vertices, Dict{Int, Any}()),
-            v => vDict
-        )
-    end
-
-    for he = 1:nhe(h)
-        heDict = Dict{Symbol, Any}()
-
-        heDict[:vertices] = getvertices(h, he)
-        heDict[:metadata] = get_hyperedge_meta(h, he)
-
-        push!(
-            get!(jsonified_hg, :hyperedges, Dict{Int, Any}()),
-            he => heDict
-        )
-    end
-
-    if tostring
-        return jsonified_hg, JSON.json(jsonified_hg)
-    end
-
-    jsonified_hg
-end
-
 
 
 """

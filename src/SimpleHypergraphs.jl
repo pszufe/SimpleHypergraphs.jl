@@ -5,14 +5,18 @@ using StatsBase
 using DataStructures
 using PyCall
 using PyPlot
+using JSON3
 using JSON
 
-export Hypergraph, getvertices, gethyperedges, hg_load, hg_save
+export Hypergraph, getvertices, gethyperedges
 export add_vertex!, add_hyperedge!, remove_vertex!
 export set_vertex_meta!, get_vertex_meta
 export set_hyperedge_meta!, get_hyperedge_meta
 export BipartiteView, shortest_path
 export TwoSectionView
+
+export HGF_FORMAT, JSON_FORMAT
+export hg_load, hg_save
 
 export nhv, nhe
 export modularity, randompartition
