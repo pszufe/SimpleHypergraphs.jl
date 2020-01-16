@@ -3,7 +3,7 @@ using Random
 using DataStructures
 import LightGraphs
 
-h1 = Hypergraph{Float64}(5,4)
+h1 = Hypergraph{Float64, Int, String}(5,4)
 h1[1:3,1] .= 1.5
 h1[3,4] = 2.5
 h1[2,3] = 3.5
@@ -50,6 +50,25 @@ h1[5,2] = 6.5
                 r"^\"\"\"(?s).*\"\"\"\n"=>"", #remove initial comments
                 r"\n*$"=>""], #remove final \n*
                 init=read("data/test_multiplelinescomment.hgf", String)) #multiple lines comment
+
+        for v=1:nhv(h)
+            set_vertex_meta!(h1, v, v)
+        end
+
+        for he=1:nhe(h)
+            set_hyperedge_meta!(h1, string(he), he)
+        end
+
+        hg_save(path, h1; format=JSON_FORMAT)
+        loaded_hg = hg_load(path, Float64; format=JSON_FORMAT, V=Int, E=String)
+
+        @test h1 == loaded_hg
+        @test h1.v_meta == loaded_hg.v_meta
+        @test h1.he_meta == loaded_hg.he_meta
+
+        @test get_vertex_meta(h1, 1) == get_vertex_meta(loaded_hg, 1)
+        @test get_hyperedge_meta(h1, 2) == get_hyperedge_meta(loaded_hg, 2)
+
     end
 
     @test_throws ArgumentError hg_load("data/test_malformedcomment.hgf", Int)
