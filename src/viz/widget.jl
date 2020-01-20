@@ -11,32 +11,32 @@ function widget_graph(
         v2he::String,
         he2v::String,
         div_id::Int;
-        v_meta::Union{Vector, Nothing}=nothing,
-        he_meta::Union{Vector, Nothing}=nothing,
+        v_meta::Union{AbstractVector, Nothing}=nothing,
+        he_meta::Union{AbstractVector, Nothing}=nothing,
         width::Int=500,
         height::Int=500,
         radius::Real=10,
-        node_radii::Union{Vector{<:Real}, Nothing}=nothing,
+        node_radii::Union{AbstractVector{<:Real}, Nothing}=nothing,
         node_color::String="#999",
-        node_colors::Union{Vector{String}, Nothing}=nothing,
+        node_colors::Union{AbstractVector{String}, Nothing}=nothing,
         node_stroke::Union{String, Nothing} = nothing,
-        node_strokes::Union{Vector{String}, Nothing}=nothing,
+        node_strokes::Union{AbstractVector{String}, Nothing}=nothing,
         stroke_width::Real=0,
-        stroke_widths::Union{Vector{<:Real}, Nothing}=nothing,
+        stroke_widths::Union{AbstractVector{<:Real}, Nothing}=nothing,
         node_opacity::Real=1,
-        node_opacities::Union{Vector{<:Real}, Nothing}=nothing,
+        node_opacities::Union{AbstractVector{<:Real}, Nothing}=nothing,
         stroke_opacity::Real=1,
-        stroke_opacities::Union{Vector{<:Real}, Nothing}=nothing,
+        stroke_opacities::Union{AbstractVector{<:Real}, Nothing}=nothing,
         with_node_labels::Bool=false,
-        node_labels::Union{Vector{String}, Nothing}=nothing,
+        node_labels::Union{AbstractVector{String}, Nothing}=nothing,
         with_node_metadata_hover::Bool=false,
         with_node_weight::Bool=false,
-        he_colors::Union{Vector{String}, Nothing}=nothing,
+        he_colors::Union{AbstractVector{String}, Nothing}=nothing,
         with_he_labels::Bool=false,
-        he_labels::Union{Vector{String}, Nothing}=nothing,
+        he_labels::Union{AbstractVector{String}, Nothing}=nothing,
         with_he_metadata_hover::Bool=false
         )
-        
+
     w = Widget("graph", """
                 <head>
                 </head>

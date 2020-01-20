@@ -14,7 +14,7 @@ h1[5,2] = 6.5
 
 @testset "SimpleHypergraphs Hypergraph      " begin
 
-    h = hg_load("data/test1.hgf", Int)
+    h = hg_load("data/test1.hgf"; T=Int)
     @test size(h) == (4, 4)
     @test nhv(h) == 4
     @test nhe(h) == 4
@@ -59,8 +59,8 @@ h1[5,2] = 6.5
             set_hyperedge_meta!(h1, string(he), he)
         end
 
-        hg_save(path, h1; format=JSON_FORMAT)
-        loaded_hg = hg_load(path, Float64; format=JSON_FORMAT, V=Int, E=String)
+        hg_save(path, h1; format=JSON_Format())
+        loaded_hg = hg_load(path; format=JSON_Format(), T=Float64, V=Int, E=String)
 
         @test h1 == loaded_hg
         @test h1.v_meta == loaded_hg.v_meta
@@ -71,12 +71,16 @@ h1[5,2] = 6.5
 
     end
 
-    @test_throws ArgumentError hg_load("data/test_malformedcomment.hgf", Int)
+    @test_throws ArgumentError hg_load("data/test_malformedcomment.hgf"; T=Int)
+    @test_throws ArgumentError hg_load("data/test_argumenterror.hgf"; T=Int)
 
     h2 = Hypergraph{Float64}(0,0)
     @test h2 == Hypergraph{Float64,Nothing}(0,0)
     @test h2 == Hypergraph{Float64,Nothing,Nothing}(0,0)
     @test h2 == Hypergraph{Float64,Nothing,Nothing,Dict{Int,Float64}}(0,0)
+
+    h3 = Hypergraph(0,0)
+    @test h3 == Hypergraph{Bool, Nothing, Nothing, Dict{Int, Bool}}(0,0)
 
     for i in 1:4 add_vertex!(h2) end
     add_hyperedge!(h2;vertices=Dict(1:3 .=> 1.5))
@@ -88,6 +92,7 @@ h1[5,2] = 6.5
     m = Matrix(h1)
     @test  m == Matrix(h2)
     @test h1 == Hypergraph(m)
+    @test h1 == Hypergraph{Float64}(m)
     @test h1 == Hypergraph{Float64,Nothing}(m)
     @test h1 == Hypergraph{Float64,Nothing, Nothing}(m)
     @test h1 == Hypergraph{Float64,Nothing, Nothing,Dict{Int,Float64}}(m)
@@ -127,6 +132,9 @@ h1[5,2] = 6.5
     @test add_vertex!(h1_0) == 6
     h1_0[6,:] = h1_0[5,:]
     @test remove_vertex!(h1_0,5) == h1
+    setindex!(h1_0, nothing, 1, 1)
+    @test h1_0[1,1] == nothing
+    @test_throws BoundsError setindex!(h1_0, nothing, 10, 9)
 
 end;
 
