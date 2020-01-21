@@ -1,3 +1,7 @@
+ENV["MPLBACKEND"]="agg" # no GUI
+using PyPlot, PyCall
+@info("SimpleHypergraphs is using Matplotlib $(PyPlot.version) with Python $(PyCall.pyversion)")
+
 using Test, SimpleHypergraphs, StatsBase
 using Random
 using DataStructures
@@ -344,3 +348,34 @@ end
     @test sort!(sort!.(cc)) == sort!(sort!.(cc2))
     @test typeof(cc2) == Vector{Vector{Int}}
 end
+
+@testset "SimpleHypergraphs hypernetx bridge" begin
+    h_hnx = SimpleHypergraphs._convert_to_hnx(h1)
+    data = Dict{String, Array{Int, 1}}(
+        "1" => [1, 2, 3],
+        "2" => [5],
+        "3" => [2, 4],
+        "4" => [3, 4, 5],
+        "5" => [5, 6, 7]
+    )
+    h2 = SimpleHypergraphs.hnx.Hypergraph(data)
+    @test h_hnx == h2
+
+    h_hnx =
+        SimpleHypergraphs._convert_to_hnx(
+            h1,
+            node_labels = Dict{Int, String}(
+                1=>"A", 2=>"B", 3=>"C", 4=>"D", 5=>"E", 6=>"F", 7=>"G"),
+            edge_labels = Dict{Int, String}(
+                1=>"HE1", 2=>"HE2", 3=>"HE3", 4=>"HE4", 5=>"HE5"
+            ))
+    data = Dict{String, Array{String, 1}}(
+        "HE1" => ["A", "B", "C"],
+        "HE2" => ["E"],
+        "HE3" => ["B", "D"],
+        "HE4" => ["C", "D", "E"],
+        "HE5" => ["E", "F", "G"]
+    )
+    h2 = SimpleHypergraphs.hnx.Hypergraph(data)
+    @test h_hnx == h2
+end;
