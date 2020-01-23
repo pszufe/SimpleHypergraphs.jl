@@ -378,4 +378,7 @@ end
     )
     h2 = SimpleHypergraphs.hnx.Hypergraph(data)
     @test h_hnx == h2
+
+    @test SimpleHypergraphs.get_next_div_id() == 1
+    @test SimpleHypergraphs.get_next_div_id() == 2
 end;

@@ -213,7 +213,7 @@ function draw(
         h_hnx = h_hnx.collapse_edges()
     end
 
-    if isnothing(ax)
+    if ax === nothing #isnothing(ax)
         fig = plt.figure(figsize=[width,height])
         ax = plt.gca()
 
@@ -262,13 +262,13 @@ function _convert_to_hnx(h::Hypergraph;
     h_hnx = hnx.Hypergraph()
 
     for he=1:nhe(h)
-        if isnothing(node_labels)
+        if node_labels === nothing #isnothing(node_labels)
             vertices = collect(keys(getvertices(h, he)))
         else
             vertices = [get(node_labels, v, v) for v in collect(keys(getvertices(h, he)))]
         end
 
-        if isnothing(edge_labels)
+        if edge_labels === nothing #isnothing(edge_labels)
             he_hnx = hnx.Entity(string(he), elements=vertices)
         else
             he_hnx = hnx.Entity(get(edge_labels, he, string(he)), elements=vertices)
