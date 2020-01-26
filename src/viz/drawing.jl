@@ -200,7 +200,10 @@ function draw(
         with_node_labels::Bool=true,
         label_alpha::Float64=.35
         )
-
+	if (!SimpleHypergraphs.support_hypernetx)
+		throw("HyperNetX is not installed in Python used by this Julia. Install HyperNetX and reload SimpleHypergraphs.jl")
+	end
+	
     h_hnx = _convert_to_hnx(h;
         node_labels=node_labels,
         edge_labels=edge_labels

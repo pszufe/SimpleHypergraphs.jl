@@ -350,6 +350,12 @@ end
 end
 
 @testset "SimpleHypergraphs hypernetx bridge" begin
+
+	if (!SimpleHypergraphs.support_hypernetx)
+		@warn "HyperNetX is not installed. Skipping hypernetx tests"
+		return
+	end
+
     h_hnx = SimpleHypergraphs._convert_to_hnx(h1)
     data = Dict{String, Array{Int, 1}}(
         "1" => [1, 2, 3],

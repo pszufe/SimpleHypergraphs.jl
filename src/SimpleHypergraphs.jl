@@ -4,6 +4,7 @@ using LightGraphs
 using StatsBase
 using DataStructures
 using PyCall
+using Conda
 using PyPlot
 using JSON3
 using JSON
@@ -31,9 +32,22 @@ export draw
 const hnx = PyNULL()
 const nx = PyNULL()
 
+
 function __init__()
-    copy!(hnx, pyimport("hypernetx"))
-    copy!(nx, pyimport("networkx"))
+    plot_ok = true
+    try 
+		copy!(nx, pyimport("networkx"))
+    catch e
+		@warn "Python networkx not found. Plotting functionality of HyperNetX will not work."
+		plot_ok = false
+	end
+	try 
+		copy!(hnx, pyimport("hypernetx"))
+    catch e
+		@warn "Python HyperNetX not found. Plotting functionality will not work."
+		plot_ok = false
+	end
+	@eval const support_hypernetx = $plot_ok
 end
 
 

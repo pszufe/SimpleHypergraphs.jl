@@ -19,7 +19,7 @@ using PyCall
 using Conda
 Conda.runconda(`install matplotlib --yes`)
 Conda.runconda(`install networkx --yes`)
-run(`$(PyCall.python) -m pip install hypernetx`)'
+run(`$(PyCall.python) -m pip install hypernetx`)
 ```
 For plotting we also use the Jupyter notebook. The installation instructions are [here](https://github.com/JuliaLang/IJulia.jl#installation)
 ### Installation
