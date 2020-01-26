@@ -101,6 +101,13 @@ hg_save
 hg_load
 ```
 
+Hypergraph Visualization
+------------------------
+
+```@docs
+draw
+```
+
 ```@meta
 DocTestSetup = nothing
 ```

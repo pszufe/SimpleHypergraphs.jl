@@ -1,9 +1,13 @@
+ENV["MPLBACKEND"]="agg" # no GUI
+using PyPlot, PyCall
+@info("SimpleHypergraphs is using Matplotlib $(PyPlot.version) with Python $(PyCall.pyversion)")
+
 using Test, SimpleHypergraphs, StatsBase
 using Random
 using DataStructures
 import LightGraphs
 
-h1 = Hypergraph{Float64}(5,4)
+h1 = Hypergraph{Float64, Int, String}(5,4)
 h1[1:3,1] .= 1.5
 h1[3,4] = 2.5
 h1[2,3] = 3.5
@@ -14,7 +18,7 @@ h1[5,2] = 6.5
 
 @testset "SimpleHypergraphs Hypergraph      " begin
 
-    h = hg_load("data/test1.hgf", Int)
+    h = hg_load("data/test1.hgf"; T=Int)
     @test size(h) == (4, 4)
     @test nhv(h) == 4
     @test nhe(h) == 4
@@ -50,14 +54,37 @@ h1[5,2] = 6.5
                 r"^\"\"\"(?s).*\"\"\"\n"=>"", #remove initial comments
                 r"\n*$"=>""], #remove final \n*
                 init=read("data/test_multiplelinescomment.hgf", String)) #multiple lines comment
+
+        for v=1:nhv(h)
+            set_vertex_meta!(h1, v, v)
+        end
+
+        for he=1:nhe(h)
+            set_hyperedge_meta!(h1, string(he), he)
+        end
+
+        hg_save(path, h1; format=JSON_Format())
+        loaded_hg = hg_load(path; format=JSON_Format(), T=Float64, V=Int, E=String)
+
+        @test h1 == loaded_hg
+        @test h1.v_meta == loaded_hg.v_meta
+        @test h1.he_meta == loaded_hg.he_meta
+
+        @test get_vertex_meta(h1, 1) == get_vertex_meta(loaded_hg, 1)
+        @test get_hyperedge_meta(h1, 2) == get_hyperedge_meta(loaded_hg, 2)
+
     end
 
-    @test_throws ArgumentError hg_load("data/test_malformedcomment.hgf", Int)
+    @test_throws ArgumentError hg_load("data/test_malformedcomment.hgf"; T=Int)
+    @test_throws ArgumentError hg_load("data/test_argumenterror.hgf"; T=Int)
 
     h2 = Hypergraph{Float64}(0,0)
     @test h2 == Hypergraph{Float64,Nothing}(0,0)
     @test h2 == Hypergraph{Float64,Nothing,Nothing}(0,0)
     @test h2 == Hypergraph{Float64,Nothing,Nothing,Dict{Int,Float64}}(0,0)
+
+    h3 = Hypergraph(0,0)
+    @test h3 == Hypergraph{Bool, Nothing, Nothing, Dict{Int, Bool}}(0,0)
 
     for i in 1:4 add_vertex!(h2) end
     add_hyperedge!(h2;vertices=Dict(1:3 .=> 1.5))
@@ -69,6 +96,7 @@ h1[5,2] = 6.5
     m = Matrix(h1)
     @test  m == Matrix(h2)
     @test h1 == Hypergraph(m)
+    @test h1 == Hypergraph{Float64}(m)
     @test h1 == Hypergraph{Float64,Nothing}(m)
     @test h1 == Hypergraph{Float64,Nothing, Nothing}(m)
     @test h1 == Hypergraph{Float64,Nothing, Nothing,Dict{Int,Float64}}(m)
@@ -108,6 +136,9 @@ h1[5,2] = 6.5
     @test add_vertex!(h1_0) == 6
     h1_0[6,:] = h1_0[5,:]
     @test remove_vertex!(h1_0,5) == h1
+    setindex!(h1_0, nothing, 1, 1)
+    @test h1_0[1,1] == nothing
+    @test_throws BoundsError setindex!(h1_0, nothing, 10, 9)
 
 end;
 
@@ -317,3 +348,37 @@ end
     @test sort!(sort!.(cc)) == sort!(sort!.(cc2))
     @test typeof(cc2) == Vector{Vector{Int}}
 end
+
+@testset "SimpleHypergraphs hypernetx bridge" begin
+    h_hnx = SimpleHypergraphs._convert_to_hnx(h1)
+    data = Dict{String, Array{Int, 1}}(
+        "1" => [1, 2, 3],
+        "2" => [5],
+        "3" => [2, 4],
+        "4" => [3, 4, 5],
+        "5" => [5, 6, 7]
+    )
+    h2 = SimpleHypergraphs.hnx.Hypergraph(data)
+    @test h_hnx == h2
+
+    h_hnx =
+        SimpleHypergraphs._convert_to_hnx(
+            h1,
+            node_labels = Dict{Int, String}(
+                1=>"A", 2=>"B", 3=>"C", 4=>"D", 5=>"E", 6=>"F", 7=>"G"),
+            edge_labels = Dict{Int, String}(
+                1=>"HE1", 2=>"HE2", 3=>"HE3", 4=>"HE4", 5=>"HE5"
+            ))
+    data = Dict{String, Array{String, 1}}(
+        "HE1" => ["A", "B", "C"],
+        "HE2" => ["E"],
+        "HE3" => ["B", "D"],
+        "HE4" => ["C", "D", "E"],
+        "HE5" => ["E", "F", "G"]
+    )
+    h2 = SimpleHypergraphs.hnx.Hypergraph(data)
+    @test h_hnx == h2
+
+    @test SimpleHypergraphs.get_next_div_id() == 1
+    @test SimpleHypergraphs.get_next_div_id() == 2
+end;
