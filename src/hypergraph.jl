@@ -421,5 +421,38 @@ function get_connected_components(h::Hypergraph)
     cc
 end
 
+"""
+    getneighbours(h::Hypergraph, v::Int)
+Return a set of vertices which are neighbours to vertex `v` in hypergraph `h`
+(i.e. are located on the same edge).
+"""
+function getneighbours(h::Hypergraph,v::Int)
+    cc = Set{Int}()
+        for he in keys(gethyperedges(h,v))
+            union!(cc,Set(keys(getvertices(h,he))))
+        end
+    delete!(cc,v)
+end
+
+"""
+    hellyprop(h::Hypergraph)
+Return logical value depending on whether the hypergraph `h` has the Helly property.
+"""
+function hellyprop(h::Hypergraph)
+    helly = []
+    for x in 1:nhv(h)
+        for y in 1:nhv(h)
+            x == y && continue
+            for v in intersect(getneighbours(h,x), getneighbours(h,y))
+                isempty(v) && continue
+                xyv = [keys(intersect(gethyperedges(h,i[1]), gethyperedges(h,i[2]))) for i = [[x,y],[y,v],[x,v]]]
+                X = intersect(xyv[1],xyv[2],xyv[3])
+                append!(helly, !isempty(X))
+            end
+        end
+    end
+    all(helly)
+end
+
 # TODO find connected components without recurrence
 # TODO needs validate_hypergraph!(h::Hypergraph{T})
