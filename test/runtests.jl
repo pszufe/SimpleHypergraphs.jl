@@ -349,6 +349,11 @@ end
     @test typeof(cc2) == Vector{Vector{Int}}
 end
 
+@testset "SimpleHypergraphs helly property" begin
+    getneighbours(h1,1) == Set([2,3])
+    hellyprop(h1) == false
+end
+
 @testset "SimpleHypergraphs hypernetx bridge" begin
 
 	if (!SimpleHypergraphs.support_hypernetx)
