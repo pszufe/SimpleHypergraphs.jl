@@ -351,7 +351,7 @@ end
 
 @testset "SimpleHypergraphs hypernetx bridge" begin
 
-	if (!SimpleHypergraphs.support_hypernetx)
+	if (!SimpleHypergraphs.support_hypernetx())
 		@warn "HyperNetX is not installed. Skipping hypernetx tests"
 		return
 	end

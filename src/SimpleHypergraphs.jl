@@ -31,6 +31,7 @@ export draw
 
 const hnx = PyNULL()
 const nx = PyNULL()
+const pynull = PyNULL()
 
 
 function __init__()
@@ -47,9 +48,13 @@ function __init__()
 		@warn "Python HyperNetX not found. Plotting functionality will not work."
 		plot_ok = false
 	end
-	@eval const support_hypernetx = $plot_ok
 end
 
+function support_hypernetx()
+    return ((SimpleHypergraphs.nx !=  SimpleHypergraphs.pynull) &&
+           (SimpleHypergraphs.hnx !=  SimpleHypergraphs.pynull))
+  
+end
 
 include("hypergraph.jl")
 include("bipartite.jl")
