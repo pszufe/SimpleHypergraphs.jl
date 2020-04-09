@@ -15,6 +15,29 @@ h1[4,3:4] .= 4.5
 h1[5,4] = 5.5
 h1[5,2] = 6.5
 
+@testset "SimpleHypergraphs building models    " begin
+
+    Hᵣ = random_model(5,5)
+    @test nhv(Hᵣ) == 5
+    @test nhe(Hᵣ) == 5
+    @test  all(length.(Hᵣ.v2he) .> 0)
+    @test  all(length.(Hᵣ.v2he) .<= 5)
+
+    Hκ = random_kuniform_model(5, 5, 3)
+    @test nhv(Hκ) == 5
+    @test nhe(Hκ) == 5
+    @test all(length.(Hκ.he2v) .== 3)
+
+    Hδ = random_dregular_model(5, 5, 3)
+    @test nhv(Hδ) == 5
+    @test nhe(Hδ) == 5
+    @test all(length.(Hδ.v2he) .== 3)
+
+    H∂ = random_preferential_model(20, 0.5)
+    @test nhv(H∂) == 20
+
+
+end;
 
 @testset "SimpleHypergraphs Hypergraph      " begin
 
@@ -244,6 +267,7 @@ end;
     @test minimum([sum((h_from_g .== true)[:,n]) for n in 1:6] .== 2)
     @test LightGraphs.modularity(g,[1,1,2,2,3,3,4,4]) ≈ modularity(h_from_g, Set.([[1,2],[3,4],[5,6],[7,8]]))
     @test LightGraphs.SimpleGraphs.fadj(g) == LightGraphs.SimpleGraphs.fadj(TwoSectionView(h_from_g))
+
 end;
 
 

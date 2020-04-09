@@ -18,7 +18,7 @@ the algorithm computes - for each hyperedge *he={1,...,m}* -
 a random number *s ϵ [1, n]* (i.e. the hyperedge size).
 Then, the algorithm selects uniformly at random *s* vertices from *V* to be added in *he*.
 """
-function random_model(nVertices, nEdges)
+function random_model(nVertices::Int, nEdges::Int)
     mx = Matrix{Union{Nothing,Bool}}(nothing, nVertices,nEdges)
     for e in 1:size(mx,2)
         nv = rand(1:size(mx,1))
@@ -42,7 +42,7 @@ Generates a *k*-uniform hypergraph, i.e. an hypergraph where each hyperedge has 
 **The Algorithm**
 The algorithm proceeds as the *randomH*, forcing the size of each hyperedge equal to *k*.
 """
-function random_kuniform_model(nVertices, nEdges, k)
+function random_kuniform_model(nVertices::Int, nEdges::Int, k::Int)
     mx = Matrix{Union{Nothing,Bool}}(nothing, nVertices,nEdges)
     for e in 1:size(mx,2)
         nv = k
@@ -50,10 +50,10 @@ function random_kuniform_model(nVertices, nEdges, k)
     end
 
     h = Hypergraph(mx)
-    if all(length.(h.v2he) .== k)
+    if all(length.(h.he2v) .== k)
         return h
     else
-        return random_kuniform_model(nVertices, nEdges)
+        return random_kuniform_model(nVertices, nEdges, k)
     end
 end
 
@@ -68,7 +68,7 @@ The algorithm exploits the *k*-uniform approach described for the *random_kunifo
 to build a *d*-regular hypergraph *H* having *nVertices* nodes and *nEdges* edges.
 It returns the hypergraph H^* dual of *H*.
 """
-function random_dregular_model(nVertices, nEdges, d)
+function random_dregular_model(nVertices::Int, nEdges::Int, d::Int)
     mx = Matrix{Union{Nothing,Bool}}(nothing, nVertices,nEdges)
 
     for v in 1:size(mx,1)
@@ -77,10 +77,10 @@ function random_dregular_model(nVertices, nEdges, d)
     end
 
     h = Hypergraph(mx)
-    if all(length.(h.he2v) .== d)
+    if all(length.(h.v2he) .== d)
         return h
     else
-        return random_dregular_model(nVertices, nEdges)
+        return random_dregular_model(nVertices, nEdges, d)
     end
 end
 
@@ -92,15 +92,16 @@ Generate a hypergraph with a preferential attachment rule between nodes, as pres
 *Avin, C., Lotker, Z., and Peleg, D.Random preferential attachment hyper-graphs.Computer Science 23(2015).*
 
 **The Algorithm**
-The algorithm starts with a random graph with 5 nodes and 5 edges.
+The algorithm starts with a random graph with 5 nodes and 5 edges. For this reason,
+the generated random graph has at least 5 nodes and 5 edges.
 It iteratively adds a node or a edge, according to a given parameter *p*,
 which defines the probability of creating a new node or a new hyperedge.
 
 More in detail, the connections with the new node/hyperedge are generated according to
 a preferential attachment policy defined by _p_.
 """
-function random_preferential_model(nVertices, p)
-    H₀ = random_model(10,10)
+function random_preferential_model(nVertices::Int, p::Real)
+    H₀ = random_model(5,5)
     H = H₀
     while nhv(H) < nVertices
         r = rand()
