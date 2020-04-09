@@ -118,7 +118,7 @@ function random_preferential_model(nVertices::Int, p::Real)
                 push!(Y,v)
             end
         end
-            SimpleHypergraphs.add_hyperedge!(H, vertices=Y)
+        SimpleHypergraphs.add_hyperedge!(H, vertices=Y)
     end
     H
 end
