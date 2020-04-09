@@ -47,16 +47,9 @@ The algorithm proceeds as the *randomH*, forcing the size of each hyperedge equa
 function random_kuniform_model(nVertices::Int, nEdges::Int, k::Int)
     mx = Matrix{Union{Nothing,Bool}}(nothing, nVertices,nEdges)
     for e in 1:size(mx,2)
-        nv = k
-        mx[sample(1:size(mx,1), nv;replace=false), e] .= true
+        mx[sample(1:size(mx,1), k;replace=false), e] .= true
     end
-
-    h = Hypergraph(mx)
-    if all(length.(h.he2v) .== k)
-        return h
-    else
-        return random_kuniform_model(nVertices, nEdges, k)
-    end
+    Hypergraph(mx)
 end
 
 
@@ -73,18 +66,10 @@ It returns the hypergraph H^* dual of *H*.
 """
 function random_dregular_model(nVertices::Int, nEdges::Int, d::Int)
     mx = Matrix{Union{Nothing,Bool}}(nothing, nVertices,nEdges)
-
     for v in 1:size(mx,1)
-        ne = d
-        mx[v, sample(1:size(mx,2), ne;replace=false)] .= true
+        mx[v, sample(1:size(mx,2), d;replace=false)] .= true
     end
-
-    h = Hypergraph(mx)
-    if all(length.(h.v2he) .== d)
-        return h
-    else
-        return random_dregular_model(nVertices, nEdges, d)
-    end
+    Hypergraph(mx)
 end
 
 
@@ -105,8 +90,7 @@ More in detail, the connections with the new node/hyperedge are generated accord
 a preferential attachment policy defined by _p_.
 """
 function random_preferential_model(nVertices::Int, p::Real)
-    H₀ = random_model(5,5)
-    H = H₀
+    H = random_model(5,5)
     while nhv(H) < nVertices
         r = rand()
         y = rand(1:nhv(H))
