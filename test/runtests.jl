@@ -35,8 +35,6 @@ h1[5,2] = 6.5
 
     H∂ = random_preferential_model(20, 0.5)
     @test nhv(H∂) == 20
-
-
 end;
 
 @testset "SimpleHypergraphs Hypergraph      " begin
@@ -162,7 +160,6 @@ end;
     setindex!(h1_0, nothing, 1, 1)
     @test h1_0[1,1] == nothing
     @test_throws BoundsError setindex!(h1_0, nothing, 10, 9)
-
 end;
 
 @testset "SimpleHypergraphs BipartiteView   " begin
@@ -267,7 +264,6 @@ end;
     @test minimum([sum((h_from_g .== true)[:,n]) for n in 1:6] .== 2)
     @test LightGraphs.modularity(g,[1,1,2,2,3,3,4,4]) ≈ modularity(h_from_g, Set.([[1,2],[3,4],[5,6],[7,8]]))
     @test LightGraphs.SimpleGraphs.fadj(g) == LightGraphs.SimpleGraphs.fadj(TwoSectionView(h_from_g))
-
 end;
 
 
