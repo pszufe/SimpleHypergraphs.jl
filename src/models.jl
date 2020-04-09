@@ -12,7 +12,8 @@
 
 Generate a *random* hypergraph without any structural constraints.
 
-**The Algorithm**
+# The Algorithm
+
 Given two integer parameters *nVertices* and *nEdges* (the number of nodes and hyperedges, respectively),
 the algorithm computes - for each hyperedge *he={1,...,m}* -
 a random number *s ϵ [1, n]* (i.e. the hyperedge size).
@@ -39,7 +40,8 @@ end
 
 Generates a *k*-uniform hypergraph, i.e. an hypergraph where each hyperedge has size *k*.
 
-**The Algorithm**
+# The Algorithm
+
 The algorithm proceeds as the *randomH*, forcing the size of each hyperedge equal to *k*.
 """
 function random_kuniform_model(nVertices::Int, nEdges::Int, k::Int)
@@ -63,7 +65,8 @@ end
 
 Generates a *d*-regular hypergraph, where each node has degree *d*.
 
-**The Algorithm**
+# The Algorithm
+
 The algorithm exploits the *k*-uniform approach described for the *random_kuniform_model* method
 to build a *d*-regular hypergraph *H* having *nVertices* nodes and *nEdges* edges.
 It returns the hypergraph H^* dual of *H*.
@@ -91,7 +94,8 @@ end
 Generate a hypergraph with a preferential attachment rule between nodes, as presented in
 *Avin, C., Lotker, Z., and Peleg, D.Random preferential attachment hyper-graphs.Computer Science 23(2015).*
 
-**The Algorithm**
+# The Algorithm
+
 The algorithm starts with a random graph with 5 nodes and 5 edges. For this reason,
 the generated random graph has at least 5 nodes and 5 edges.
 It iteratively adds a node or a edge, according to a given parameter *p*,
