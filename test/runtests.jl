@@ -160,6 +160,19 @@ end;
     setindex!(h1_0, nothing, 1, 1)
     @test h1_0[1,1] == nothing
     @test_throws BoundsError setindex!(h1_0, nothing, 10, 9)
+
+    h1_1 = Hypergraph([nothing nothing nothing nothing
+                       1       1       nothing nothing
+                       nothing nothing 1       nothing
+                       nothing nothing 1       nothing])
+    @test add_hyperedge!(h1_1) == 5
+    @test size(remove_hyperedge!(h1_1, 5))[2] == 4
+    @test add_vertex!(h1_1) == 5
+    @test add_hyperedge!(h1_1) == 5
+    clean!(h1_1)
+    @test size(h1_1)[1] == 3
+    @test size(h1_1)[2] == 3
+
 end;
 
 @testset "SimpleHypergraphs BipartiteView   " begin

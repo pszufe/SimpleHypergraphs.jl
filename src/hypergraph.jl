@@ -255,6 +255,7 @@ function remove_vertex!(h::Hypergraph, v::Int)
     h
 end
 
+
 """
     add_hyperedge!(h::Hypergraph{T, V, E, D};
                    vertices::D = D(), he_meta::Union{E,Nothing}=nothing
@@ -278,6 +279,48 @@ function add_hyperedge!(h::Hypergraph{T, V, E, D};
     end
     push!(h.he_meta, he_meta)
     ix
+end
+
+"""
+    remove_hyperedge!(h::Hypergraph, e::Int)
+Removes the heyperedge `e` from a given hypergraph `h`.
+Note that running this function will cause reordering of hyperedges in the
+hypergraph: the hyperedge `e` will replaced by the last hyperedge of the hypergraph
+and the list of hyperedges will be shrunk.
+"""
+function remove_hyperedge!(h::Hypergraph, e::Int)
+    ne = nhe(h)
+	@assert(e <= ne)
+	if e < ne
+	    h.he2v[e] = h.he2v[ne]
+	    h.he_meta[e] = h.he_meta[ne]
+	end
+
+    for he in h.v2he
+		if e < ne && haskey(he, ne)
+			he[e] = he[ne]
+            delete!(he, ne)
+		else
+			delete!(he, e)
+		end
+    end
+    resize!(h.he2v, length(h.he2v) - 1)
+    h
+end
+
+"""
+	clean!(h::Hypergraph)
+Removes all verticies with degree 0 and all hyperedges with size 0.
+"""
+
+function clean!(h)
+	for e in reverse(1:nhe(h))
+        length(h.he2v[e]) == 0 && remove_hyperedge!(h,e)
+    end
+	for v in reverse(1:nhv(h))
+    	length(h.v2he[v]) == 0 && 	remove_vertex!(h,v)
+    end
+	h
 end
 
 """
