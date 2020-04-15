@@ -20,7 +20,10 @@ a random number *s ϵ [1, n]* (i.e. the hyperedge size).
 Then, the algorithm selects uniformly at random *s* vertices from *V* to be added in *he*.
 """
 function random_model(nVertices::Int, nEdges::Int)
-    mx = Matrix{Union{Nothing,Bool}}(nothing, nVertices,nEdges)
+    mx = Matrix{Union{Nothing,Bool}}(nothing, nVertices, nEdges)
+    if nEdges == 0
+        return Hypergraph(nVertices, nEdges)
+    end
     for e in 1:size(mx,2)
         nv = rand(1:size(mx,1))
         mx[sample(1:size(mx,1), nv;replace=false), e] .= true
@@ -117,9 +120,9 @@ function nextNodes(h,size)
 
     ids = collect(1:nhv(h))
     degrees = length.(h.v2he)
-
+    
     for s=1:size
-        psum = collect(1:length(ids))
+        psum = Vector{Int}(undef, length(ids))
 
         psum[1] = degrees[ids[1]]
         for j=2:length(ids)
@@ -127,7 +130,7 @@ function nextNodes(h,size)
         end
 
         number = rand(1:psum[length(psum)])
-        bucket = -1
+        local bucket::Int
         index=1
         for i=1:length(psum)
             if number <= psum[i]
@@ -137,7 +140,7 @@ function nextNodes(h,size)
             end
         end
 
-        push!(nodes, bucket=>true)
+        nodes[bucket]=true
         deleteat!(ids, index)
     end
     nodes
