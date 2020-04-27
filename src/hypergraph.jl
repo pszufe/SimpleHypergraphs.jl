@@ -297,8 +297,8 @@ function remove_hyperedge!(h::Hypergraph, e::Int)
 	end
 
     for he in h.v2he
-		if e < ne && haskey(he, ne)
-			he[e] = he[ne]
+	    if e < ne && haskey(he, ne)
+		    he[e] = he[ne]
             delete!(he, ne)
 		else
 			delete!(he, e)
@@ -309,11 +309,11 @@ function remove_hyperedge!(h::Hypergraph, e::Int)
 end
 
 """
-	clean!(h::Hypergraph)
-Removes all verticies with degree 0 and all hyperedges with size 0.
+    prune_hypergraph!(h::Hypergraph)
+Removes all vertices with degree 0 and all hyperedges of size 0.
 """
 
-function clean!(h)
+function prune_hypergraph!(h)
 	for e in reverse(1:nhe(h))
         length(h.he2v[e]) == 0 && remove_hyperedge!(h,e)
     end
@@ -321,6 +321,22 @@ function clean!(h)
     	length(h.v2he[v]) == 0 && 	remove_vertex!(h,v)
     end
 	h
+end
+
+"""
+    prune_hypergraph(h::Hypergraph)
+Returns a pruned copy of `h`, removing all vertices with degree 0 and all hyperedges of size 0.
+"""
+
+function prune_hypergraph(h)
+    hcp = deepcopy(h)
+	for e in reverse(1:nhe(hcp))
+        length(hcp.he2v[e]) == 0 && remove_hyperedge!(hcp,e)
+    end
+	for v in reverse(1:nhv(h))
+    	length(hcp.v2he[v]) == 0 && remove_vertex!(hcp,v)
+    end
+	hcp
 end
 
 """

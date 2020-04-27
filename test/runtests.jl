@@ -169,7 +169,10 @@ end;
     @test size(remove_hyperedge!(h1_1, 5))[2] == 4
     @test add_vertex!(h1_1) == 5
     @test add_hyperedge!(h1_1) == 5
-    clean!(h1_1)
+    hp = prune_hypergraph(h1_1)
+    @test size(hp)[1] == 3 && size(h)[1] == 4 
+    @test size(hp)[2] == 3 && size(h)[1] == 4 
+    prune_hypergraph!(h1_1)
     @test size(h1_1)[1] == 3
     @test size(h1_1)[2] == 3
 
