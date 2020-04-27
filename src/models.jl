@@ -77,10 +77,10 @@ end
 
 
 """
-    random_preferential_model(nVertices, p)
+    random_preferential_model(nVertices::Int, p::Real; H = random_model(5,5))
 
 Generate a hypergraph with a preferential attachment rule between nodes, as presented in
-*Avin, C., Lotker, Z., and Peleg, D.Random preferential attachment hyper-graphs.Computer Science 23(2015).*
+*Avin, C., Lotker, Z., and Peleg, D.Random preferential attachment hyper-graphs. Computer Science 23 (2015).*
 
 # The Algorithm
 
@@ -91,9 +91,12 @@ which defines the probability of creating a new node or a new hyperedge.
 
 More in detail, the connections with the new node/hyperedge are generated according to
 a preferential attachment policy defined by _p_.
+
+The so-built hypergraph will have `nVertices` vertices.
+
+The starting hypergraph can be instantiated as preferred.
 """
-function random_preferential_model(nVertices::Int, p::Real)
-    H = random_model(5,5)
+function random_preferential_model(nVertices::Int, p::Real; H = random_model(5,5))
     while nhv(H) < nVertices
         r = rand()
         y = rand(1:nhv(H))
@@ -101,11 +104,11 @@ function random_preferential_model(nVertices::Int, p::Real)
         if r < p
             v = SimpleHypergraphs.add_vertex!(H)
             push!(Y,v=>true)
-            for v in nextNodes(H,y-1)
+            for v in next_nodes(H,y-1)
                 push!(Y,v)
             end
         else
-            for v in nextNodes(H,y)
+            for v in next_nodes(H,y)
                 push!(Y,v)
             end
         end
@@ -115,7 +118,12 @@ function random_preferential_model(nVertices::Int, p::Real)
 end
 
 
-function nextNodes(h,size)
+"""
+    next_nodes(h::Hypergraph, size::Int)
+
+Selects nodes to add to a hyperedge.
+"""
+function next_nodes(h::Hypergraph, size::Int)
     nodes = Dict{Int, Bool}()
 
     ids = collect(1:nhv(h))
@@ -140,7 +148,7 @@ function nextNodes(h,size)
             end
         end
 
-        nodes[bucket]=true
+        nodes[bucket] = true
         deleteat!(ids, index)
     end
     nodes
