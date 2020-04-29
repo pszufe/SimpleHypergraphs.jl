@@ -313,7 +313,7 @@ end
 Removes all vertices with degree 0 and all hyperedges of size 0.
 """
 
-function prune_hypergraph!(h)
+function prune_hypergraph!(h::Hypergraph)
 	for e in reverse(1:nhe(h))
         length(h.he2v[e]) == 0 && remove_hyperedge!(h,e)
     end
@@ -328,15 +328,8 @@ end
 Returns a pruned copy of `h`, removing all vertices with degree 0 and all hyperedges of size 0.
 """
 
-function prune_hypergraph(h)
-    hcp = deepcopy(h)
-	for e in reverse(1:nhe(hcp))
-        length(hcp.he2v[e]) == 0 && remove_hyperedge!(hcp,e)
-    end
-	for v in reverse(1:nhv(h))
-    	length(hcp.v2he[v]) == 0 && remove_vertex!(hcp,v)
-    end
-	hcp
+function prune_hypergraph(h::Hypergraph)
+    prune_hypergraph!(deepcopy(h))
 end
 
 """
