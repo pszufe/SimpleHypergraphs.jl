@@ -10,7 +10,7 @@ using JSON3
 using JSON
 
 export Hypergraph, getvertices, gethyperedges
-export add_vertex!, add_hyperedge!, remove_vertex!
+export add_vertex!, add_hyperedge!, remove_vertex!, remove_hyperedge!, prune_hypergraph!, prune_hypergraph
 export set_vertex_meta!, get_vertex_meta
 export set_hyperedge_meta!, get_hyperedge_meta
 export BipartiteView, shortest_path

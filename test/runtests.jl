@@ -30,7 +30,7 @@ h1[5,2] = 6.5
 
     Hᵣ3  = random_model(5,1)
     @test nhe(Hᵣ3) == 1
-   
+
     Hκ = random_kuniform_model(5, 5, 3)
     @test nhv(Hκ) == 5
     @test nhe(Hκ) == 5
@@ -168,6 +168,21 @@ end;
     setindex!(h1_0, nothing, 1, 1)
     @test h1_0[1,1] == nothing
     @test_throws BoundsError setindex!(h1_0, nothing, 10, 9)
+
+    h1_1 = Hypergraph([nothing nothing nothing nothing
+                       1       1       nothing nothing
+                       nothing nothing 1       nothing
+                       nothing nothing 1       nothing])
+    @test add_hyperedge!(h1_1) == 5
+    @test size(remove_hyperedge!(h1_1, 5))[2] == 4
+    @test add_vertex!(h1_1) == 5
+    @test add_hyperedge!(h1_1) == 5
+    hp = prune_hypergraph(h1_1)
+    @test size(hp)[1] == 3 && size(h)[1] == 4 
+    @test size(hp)[2] == 3 && size(h)[1] == 4 
+    prune_hypergraph!(h1_1)
+    @test size(h1_1)[1] == 3
+    @test size(h1_1)[2] == 3
 end;
 
 @testset "SimpleHypergraphs BipartiteView   " begin
