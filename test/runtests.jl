@@ -15,6 +15,35 @@ h1[4,3:4] .= 4.5
 h1[5,4] = 5.5
 h1[5,2] = 6.5
 
+@testset "SimpleHypergraphs building models    " begin
+
+    Hᵣ = random_model(5,5)
+    @test nhv(Hᵣ) == 5
+    @test nhe(Hᵣ) == 5
+    @test  all(length.(Hᵣ.v2he) .> 0)
+    @test  all(length.(Hᵣ.v2he) .<= 5)
+
+    Hᵣ2 = random_model(5,0)
+    add_hyperedge!(Hᵣ2;vertices=Dict(2 => true, 4 => true))
+    @test nhv(Hᵣ2) == 5
+    @test nhe(Hᵣ2) == 1
+
+    Hᵣ3  = random_model(5,1)
+    @test nhe(Hᵣ3) == 1
+   
+    Hκ = random_kuniform_model(5, 5, 3)
+    @test nhv(Hκ) == 5
+    @test nhe(Hκ) == 5
+    @test all(length.(Hκ.he2v) .== 3)
+
+    Hδ = random_dregular_model(5, 5, 3)
+    @test nhv(Hδ) == 5
+    @test nhe(Hδ) == 5
+    @test all(length.(Hδ.v2he) .== 3)
+
+    H∂ = random_preferential_model(20, 0.5)
+    @test nhv(H∂) == 20
+end;
 
 @testset "SimpleHypergraphs Hypergraph      " begin
 
@@ -139,7 +168,6 @@ h1[5,2] = 6.5
     setindex!(h1_0, nothing, 1, 1)
     @test h1_0[1,1] == nothing
     @test_throws BoundsError setindex!(h1_0, nothing, 10, 9)
-
 end;
 
 @testset "SimpleHypergraphs BipartiteView   " begin
