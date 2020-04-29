@@ -23,6 +23,14 @@ h1[5,2] = 6.5
     @test  all(length.(Hᵣ.v2he) .> 0)
     @test  all(length.(Hᵣ.v2he) .<= 5)
 
+    Hᵣ2 = random_model(5,0)
+    add_hyperedge!(Hᵣ2;vertices=Dict(2 => true, 4 => true))
+    @test nhv(Hᵣ2) == 5
+    @test nhe(Hᵣ2) == 1
+
+    Hᵣ3  = random_model(5,1)
+    @test nhe(Hᵣ3) == 1
+
     Hκ = random_kuniform_model(5, 5, 3)
     @test nhv(Hκ) == 5
     @test nhe(Hκ) == 5
@@ -175,7 +183,6 @@ end;
     prune_hypergraph!(h1_1)
     @test size(h1_1)[1] == 3
     @test size(h1_1)[2] == 3
-
 end;
 
 @testset "SimpleHypergraphs BipartiteView   " begin
