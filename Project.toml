@@ -1,7 +1,7 @@
 name = "SimpleHypergraphs"
 uuid = "aa4a32ff-dd5d-5357-90e3-e7a9512f0501"
 authors = ["Przemysław Szufel <pszufe@sgh.waw.pl>", "Bogumił Kamiński <bkamins@sgh.waw.pl>", "Carmine Spagnuolo <spagnuolocarmine@gmail.com>", "Alessia Antelmi <aless.antelmi@gmail.com>"]
-version = "0.1.8"
+version = "0.1.9"
 
 [deps]
 Conda = "8f4d0f93-b110-5947-807f-2305c1781a2d"
