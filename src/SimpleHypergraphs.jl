@@ -25,6 +25,7 @@ export AbstractCommunityFinder, CFModularityRandom, CFModularityCNMLike
 export findcommunities
 export random_walk
 export get_connected_components
+export conductance
 
 export HyperNetX, GraphBased
 export draw
@@ -36,13 +37,13 @@ const pynull = PyNULL()
 
 function __init__()
     plot_ok = true
-    try 
+    try
 		copy!(nx, pyimport("networkx"))
     catch e
 		@warn "Python networkx not found. Plotting functionality of HyperNetX will not work."
 		plot_ok = false
 	end
-	try 
+	try
 		copy!(hnx, pyimport("hypernetx"))
     catch e
 		@warn "Python HyperNetX not found. Plotting functionality will not work."
@@ -53,7 +54,7 @@ end
 function support_hypernetx()
     return ((SimpleHypergraphs.nx !=  SimpleHypergraphs.pynull) &&
            (SimpleHypergraphs.hnx !=  SimpleHypergraphs.pynull))
-  
+
 end
 
 include("hypergraph.jl")
@@ -61,6 +62,7 @@ include("bipartite.jl")
 include("io.jl")
 include("twosection.jl")
 include("modularity.jl")
+include("conductance.jl")
 
 include("viz/drawing.jl")
 include("viz/widget.jl")
