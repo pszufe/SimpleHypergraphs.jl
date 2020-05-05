@@ -75,6 +75,8 @@ nhe(::Hypergraph)
 getvertices(::Hypergraph, ::Int)
 gethyperedges(::Hypergraph, ::Int)
 get_connected_components(::Hypergraph)
+getneighbours(::Hypergraph, ::Int)
+hellyprop(::Hypergraph)
 
 conductance(::Hypergraph, ::Set{Int})
 modularity(::Hypergraph, ::Vector{Set{Int}}, ::SimpleHypergraphs.HypergraphAggs)
