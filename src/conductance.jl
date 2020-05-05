@@ -1,16 +1,16 @@
 """
     conductance(h::Hypergraph, subset::Set{Int})::Float64
 
-Calculate conductance of `subset`.
+Calculate unweighted hypergraph conductance of `subset`.
+note: ∅ ⊊ `subset` ⊊ `1:nhv(h)`
 
 For more information see `1. Introduction` at:
 Generalizing the Hypergraph Laplacian via a Diffusion Processwith Mediators,
 auhtors: T-H. Hubert Chan, Xhibin Liang.
-
 """
 
 function conductance(h::Hypergraph, subset::Set{Int})::Float64
-  subset2 = setdiff(Set([node for node in 1:nhv(h)]), subset)
+  subset2 = setdiff(Set(1:nhv(h)), subset)
   wₛ = sum([length(gethyperedges(h, node)) for node in subset])
   w∂s = 0
   for he in 1:nhe(h)
