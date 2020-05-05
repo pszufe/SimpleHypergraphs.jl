@@ -10,6 +10,8 @@ auhtors: T-H. Hubert Chan, Xhibin Liang.
 """
 
 function conductance(h::Hypergraph, subset::Set{Int})::Float64
+  if isempty(subset) error("`subset` is not allowed empty.") end
+  if subset == Set(1:nhv(h)) error("`subset` is not allowed true subset of `h`.") end
   subset2 = setdiff(Set(1:nhv(h)), subset)
   wₛ = sum([length(gethyperedges(h, node)) for node in subset])
   w∂s = 0

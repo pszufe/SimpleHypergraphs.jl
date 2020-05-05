@@ -455,4 +455,6 @@ end;
   h[5:6, 7] .= 1
   @test SimpleHypergraphs.conductance(h, Set(1:3)) == 2 / 8
   @test SimpleHypergraphs.conductance(h, Set([1, 4])) == 14 / 6
+  @test_throws ErrorException SimpleHypergraphs.conductance(h, Set{Int}())
+  @test_throws ErrorException SimpleHypergraphs.conductance(h, Set(1:nhv(h)))
 end;
