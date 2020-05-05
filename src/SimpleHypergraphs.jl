@@ -26,6 +26,7 @@ export AbstractCommunityFinder, CFModularityRandom, CFModularityCNMLike
 export findcommunities
 export random_walk
 export get_connected_components
+export conductance
 
 export random_model, random_kuniform_model, random_dregular_model, random_preferential_model
 
@@ -64,6 +65,7 @@ include("bipartite.jl")
 include("io.jl")
 include("twosection.jl")
 include("modularity.jl")
+include("conductance.jl")
 include("models.jl")
 
 include("viz/drawing.jl")

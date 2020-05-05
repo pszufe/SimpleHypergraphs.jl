@@ -178,8 +178,8 @@ end;
     @test add_vertex!(h1_1) == 5
     @test add_hyperedge!(h1_1) == 5
     hp = prune_hypergraph(h1_1)
-    @test size(hp)[1] == 3 && size(h)[1] == 4 
-    @test size(hp)[2] == 3 && size(h)[1] == 4 
+    @test size(hp)[1] == 3 && size(h)[1] == 4
+    @test size(hp)[2] == 3 && size(h)[1] == 4
     prune_hypergraph!(h1_1)
     @test size(h1_1)[1] == 3
     @test size(h1_1)[2] == 3
@@ -430,4 +430,31 @@ end
 
     @test SimpleHypergraphs.get_next_div_id() == 1
     @test SimpleHypergraphs.get_next_div_id() == 2
+end;
+
+@testset "SimpleHypergraphs conductance" begin
+  h = Hypergraph{Float64, Int}(5,4)
+  h[1:3,1] .= 1
+  h[3,4] = 1
+  h[2,3] = 1
+  h[4,3:4] .= 1
+  h[5,4] = 1
+  h[5,2] = 1
+  @test SimpleHypergraphs.conductance(h, Set(1:3)) == 5 / 5
+  @test SimpleHypergraphs.conductance(h, Set(1)) == 3 / 1
+  @test SimpleHypergraphs.conductance(h, Set([1, 4])) == 8 / 3
+  @test SimpleHypergraphs.conductance(h, Set(2:5)) == 3 / 8
+  h = Hypergraph{Int}(6, 7)
+  h[1:3, 1] .= 1
+  h[1:2, 2] .= 1
+  h[1, 3] = 1
+  h[3, 3] = 1
+  h[3:4, 4] .= 1
+  h[4:6, 5] .= 1
+  h[4:5, 6] .= 1
+  h[5:6, 7] .= 1
+  @test SimpleHypergraphs.conductance(h, Set(1:3)) == 2 / 8
+  @test SimpleHypergraphs.conductance(h, Set([1, 4])) == 14 / 6
+  @test_throws ErrorException SimpleHypergraphs.conductance(h, Set{Int}())
+  @test_throws ErrorException SimpleHypergraphs.conductance(h, Set(1:nhv(h)))
 end;
