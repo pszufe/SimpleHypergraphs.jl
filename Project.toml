@@ -18,7 +18,7 @@ Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 [compat]
 Conda = "1.4.0"
 DataStructures = "0.17.10"
-JSON3 = "0.1.13"
+JSON3 = "1.0.1"
 LightGraphs = "^1.1.0"
 PyCall = "1.91.2"
 PyPlot = "2.8.2"
