@@ -7,7 +7,6 @@ using PyCall
 using Conda
 using PyPlot
 using JSON3
-using JSON
 
 export Hypergraph, getvertices, gethyperedges
 export add_vertex!, add_hyperedge!, remove_vertex!, remove_hyperedge!, prune_hypergraph!, prune_hypergraph

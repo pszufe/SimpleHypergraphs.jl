@@ -22,7 +22,9 @@ notifications:
 #  - julia -e 'Pkg.clone(pwd()); Pkg.build("SimpleHypergraphs"); Pkg.test("SimpleHypergraphs"; coverage=true)';
 
 after_success:
-  - julia -e 'using Pkg; cd(Pkg.dir("SimpleHypergraphs")); Pkg.add("Coverage"); using Coverage; Coveralls.submit(Coveralls.process_folder())';
+  - julia -e 'using Pkg;cd(Pkg.dir("SimpleHypergraphs")); Pkg.add("Coverage");using Coverage;Coveralls.submit(Coveralls.process_folder())';
+  - julia --project=docs/ -e 'if Sys.isapple();exit();end;display(pwd());using Pkg;Pkg.instantiate();Pkg.develop(PackageSpec(path=pwd()));include("docs/make.jl")'
+
 #  - julia -e 'if VERSION >= v"0.7.0-" using Pkg end; cd(Pkg.dir("SimpleHypergraphs")); Pkg.add("Coverage"); using Coverage; Codecov.submit(Codecov.process_folder())';
 
 jobs:
@@ -31,7 +33,6 @@ jobs:
       julia: 1.0
       os: linux
       script:
-        - julia --project=docs/ -e 'using Pkg; Pkg.instantiate();
-                                    Pkg.develop(PackageSpec(path=pwd()))'
+        - julia --project=docs/ -e 'using Pkg; Pkg.instantiate();Pkg.develop(PackageSpec(path=pwd()))'
         - julia --project=docs/ docs/make.jl
       after_success: skip
