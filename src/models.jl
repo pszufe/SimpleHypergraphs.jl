@@ -8,7 +8,7 @@
 
 
 """
-    random_model(nVertices, nEdges)
+    random_model(nVertices::Int, nEdges::Int)
 
 Generate a *random* hypergraph without any structural constraints.
 
@@ -39,7 +39,7 @@ end
 
 
 """
-    random_kuniform_model(nVertices, nEdges, k)
+    random_kuniform_model(nVertices::Int, nEdges::Int, k::Int)
 
 Generates a *k*-uniform hypergraph, i.e. an hypergraph where each hyperedge has size *k*.
 
@@ -57,7 +57,7 @@ end
 
 
 """
-    random_dregular_model(nVertices, nEdges, d)
+    random_dregular_model(nVertices::Int, nEdges::Int, d::Int)
 
 Generates a *d*-regular hypergraph, where each node has degree *d*.
 

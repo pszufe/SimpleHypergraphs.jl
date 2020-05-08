@@ -151,13 +151,6 @@ If a vertex does not belong to a hyperedge `nothing` is returned.
     get(h.v2he[idx[1]], idx[2], nothing)
 end
 
-@inline function Base.pop!(d::SortedDict,key::Int,::Nothing)
-    if haskey(d,key)
-        return pop!(d,key)
-    else
-        return nothing
-    end
-end
 
 """
     Base.setindex!(h::Hypergraph, ::Nothing, idx::Vararg{Int,2})

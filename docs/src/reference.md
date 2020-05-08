@@ -13,6 +13,10 @@ Creating a hypergraph
 
 ```@docs
 Hypergraph
+random_model(::Int, ::Int)
+random_kuniform_model(::Int, ::Int, ::Int)
+random_dregular_model(::Int, ::Int, ::Int)
+random_preferential_model
 ```
 
 Manipulating vertices and hyperedges
@@ -26,6 +30,7 @@ get_vertex_meta(::Hypergraph{T, V, E}, ::Int) where {T <: Real, V, E}
 set_hyperedge_meta!(::Hypergraph{T, V, E}, ::Union{E,Nothing}, ::Int) where {T <: Real, V, E}
 get_hyperedge_meta(::Hypergraph{T, V, E}, ::Int) where {T <: Real, V, E}
 remove_vertex!(::Hypergraph, ::Int)
+remove_hyperedge!(::Hypergraph, ::Int)
 ```
 
 Hypergraph array getters and setters
@@ -77,10 +82,10 @@ gethyperedges(::Hypergraph, ::Int)
 get_connected_components(::Hypergraph)
 
 conductance(::Hypergraph, ::Set{Int})
-modularity(::Hypergraph, ::Vector{Set{Int}}, ::SimpleHypergraphs.HypergraphAggs)
-random_walk(::Hypergraph, ::Int; heselect::Function, vselect::Function)
-
+get_twosection_adjacency_mx
 random_walk(::Hypergraph, ::Int; ::Function, ::Function)
+
+modularity(::Hypergraph, ::Vector{Set{Int}}, ::SimpleHypergraphs.HypergraphAggs)
 
 SimpleHypergraphs.HypergraphAggs
 

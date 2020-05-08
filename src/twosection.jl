@@ -155,7 +155,7 @@ LightGraphs.zero(::Type{TwoSectionView{T}}) where T = TwoSectionView(Hypergraph{
     get_twosection_adjacency_mx(h::Hypergraph{T,V,E}; count_self_loops::Bool=false,
                                 replace_weights::Union{Nothing,Real}=nothing ) where {T<:Real, V, E}
 
-    Returns an adjacency matrix for a two section view of a hypergraph `h`.
+Returns an adjacency matrix for a two section view of a hypergraph `h`.
 """
 function get_twosection_adjacency_mx(h::Hypergraph{T,V,E}; count_self_loops::Bool=false,
                                      replace_weights::Union{Nothing,Real}=nothing ) where {T<:Real, V, E}
