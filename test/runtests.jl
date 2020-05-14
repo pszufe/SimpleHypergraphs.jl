@@ -570,15 +570,16 @@ end;
                                                  0  0  0  0  0  0
                                              ]
 
-    @test distance(h, 1, 5) == 2
-    @test distance(h, 3, 6) == 1
 
-    @test distance(h, 1, 2; s=2) == 2
-    @test distance(h, 1, 6; s=2) == typemax(Int)
+    @test distance(h, SnodeDistanceDijkstra(1, 5, 1)) == 2
+    @test distance(h, SnodeDistanceDijkstra(3, 6, 1)) == 1
 
-    @test edge_distance(h, 1, 3) == 1
-    @test edge_distance(h, 2, 3; s=3) == 1
-    @test edge_distance(h, 1, 3; s=3) == typemax(Int)
+    @test distance(h, SnodeDistanceDijkstra(1, 2, 2)) == 2
+    @test distance(h, SnodeDistanceDijkstra(1, 6, 2)) == typemax(Int)
+
+    @test distance(h, SedgeDistanceDijkstra(1, 3, 1)) == 1
+    @test distance(h, SedgeDistanceDijkstra(2, 3, 3)) == 1
+    @test distance(h, SedgeDistanceDijkstra(1, 3, 3)) == typemax(Int)
 end;
 
 

@@ -1,10 +1,42 @@
 """
-    distance(h::Hypergraph, u::Int, v::Int; s::Int=1)
+The base type for all algorithms representing various distances metrics.
+"""
+abstract type AbstractDistance end
 
-Return the shortest `s`-walk distance between the `u` and the node `v` in the hypergraph `h`.
+"""
+    struct SnodeDistanceDijkstra(source_node::Int, target_node::Int, s::Int) <: AbstractDistance
+
+Represents a distance between two nodes of the hypergraph `h`, which is 
+the minimum `s`-walk lenght between the two nodes. An `s`-walk between nodes 
+is a sequence of nodes that pairwise share at least `s` edges.
+"""
+struct SnodeDistanceDijkstra <: AbstractDistance
+    source_node::Int
+    target_node::Int
+    s::Int
+end
+
+"""
+    struct SedgeDistanceDijkstra(source_edge::Int, target_edge::Int, s::Int) <: AbstractDistance
+
+Represents a distance between two hyperedges of the hypergraph `h`, which is 
+the minimum `s`-walk lenght between the two hyperedge. An `s`-walk between edges is a sequence 
+of edges such that consecutive pairwise edges intersect in at least `s` nodes.
+"""
+struct SedgeDistanceDijkstra <: AbstractDistance
+    source_edge::Int
+    target_edge::Int
+    s::Int
+end
+
+"""
+    distance(h::Hypergraph, distance_method::SnodeDistanceDijkstra)
+
+Return the shortest `distance_method.s`-walk distance between the `distance_method.source_node` and 
+the node `distance_method.target_node` in the hypergraph `h`.
 
 NOTE
-The concepts of `s`-distance and `s`-walk have been firstly defined in the
+The concepts of `s`-distance and `s`-walk have been defined in the
 Python library [HyperNetX](https://github.com/pnnl/HyperNetX)
 
 From [HyperNetX](https://pnnl.github.io/HyperNetX/build/_modules/classes/hypergraph.html#Hypergraph.distance)
@@ -13,25 +45,24 @@ An `s`-walk between nodes is a sequence of nodes that pairwise share
 at least `s` edges. The length of the shortest `s`-walk is 1 less than
 the number of nodes in the path sequence. If no such path exists returns typemax(T).
 """
-function distance(h::Hypergraph, source::Int, target::Int; s::Int=1)
-    checkbounds(h.v2he, source)
-    checkbounds(h.v2he, target)
-
-    A = adjacency_matrix(h; s=s)
+function distance(h::Hypergraph, distance_method::SnodeDistanceDijkstra)
+    checkbounds(h.v2he, distance_method.source_node)
+    checkbounds(h.v2he, distance_method.target_node)
+    A = adjacency_matrix(h; s=distance_method.s)
     g = LightGraphs.Graph(A)
-
-    dj = LightGraphs.dijkstra_shortest_paths(g, source)
-    dj.dists[target]
+    dj = LightGraphs.dijkstra_shortest_paths(g, distance_method.source_node)
+    dj.dists[distance_method.target_node]
 end
 
 
 """
-    edge_distance(h::Hypergraph, he_source::Int, he_target::Int; s::Int=1)
+    distance(h::Hypergraph, distance_method::SedgeDistanceDijkstra)
 
-Return the shortest `s`-walk distance between two edges in the hypergraph.
+Return the shortest `distance_method.s`-walk distance between the `distance_method.source_edge` and 
+the node `distance_method.target_edge` in the hypergraph `h`.
 
 NOTE
-The concepts of `s`-distance and `s`-walk have been firstly defined in the
+The concepts of `s`-distance and `s`-walk have been defined in the
 Python library [HyperNetX](https://github.com/pnnl/HyperNetX)
 
 From [HyperNetX](https://pnnl.github.io/HyperNetX/build/_modules/classes/hypergraph.html#Hypergraph.edge_distance)
@@ -40,13 +71,11 @@ An `s`-walk between edges is a sequence of edges such that consecutive pairwise
 edges intersect in at least `s` nodes. The length of the shortest `s`-walk is 1 less than
 the number of edges in the path sequence. If no such path exists returns typemax(T).
 """
-function edge_distance(h::Hypergraph, he_source::Int, he_target::Int; s::Int=1)
-    checkbounds(h.he2v, he_source)
-    checkbounds(h.he2v, he_target)
-
-    A = edge_adjacency_matrix(h; s=s)
+function distance(h::Hypergraph, distance_method::SedgeDistanceDijkstra)
+    checkbounds(h.he2v, distance_method.source_edge)
+    checkbounds(h.he2v, distance_method.target_edge)
+    A = edge_adjacency_matrix(h; s=distance_method.s)
     g = LightGraphs.Graph(A)
-
-    dj = LightGraphs.dijkstra_shortest_paths(g, he_source)
-    dj.dists[he_target]
+    dj = LightGraphs.dijkstra_shortest_paths(g, distance_method.source_edge)
+    dj.dists[distance_method.target_edge]
 end

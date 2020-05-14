@@ -22,6 +22,8 @@ export get_twosection_adjacency_mx, get_twosection_weighted_adjacency_mx
 export Abstract_HG_format, HGF_Format, JSON_Format
 export hg_load, hg_save
 
+export AbstractDistance, SnodeDistanceDijkstra, SedgeDistanceDijkstra
+
 export nhv, nhe
 export modularity, nmi, randompartition
 export AbstractCommunityFinder, CFModularityRandom, CFModularityCNMLike, CFLabelPropagationFinder
