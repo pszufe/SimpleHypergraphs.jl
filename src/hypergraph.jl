@@ -473,5 +473,79 @@ function get_connected_components(h::Hypergraph)
     cc
 end
 
+
+"""
+    adjacency_matrix(h::Hypergraph; s::Int=1, weighted::Bool=false)
+
+The sparse weighted `s`-adjacency matrix.
+
+NOTE
+The concept of `s`-adjacency matrix has been firstly defined in the
+Python library [HyperNetX](https://github.com/pnnl/HyperNetX)
+
+From [HyperNetX](https://pnnl.github.io/HyperNetX/build/classes/classes.html#classes.hypergraph.Hypergraph.adjacency_matrix)
+If weighted is `true` each off diagonal cell will equal the number
+of edges shared by the nodes indexing the row and column if that number is
+greater than `s`, otherwise the cell will equal 0. If weighted is `false`,
+the off diagonal cell will equal 1 if the nodes indexed by the row and column
+share at least `s` edges and 0 otherwise.
+
+! information about the weight of a vertex in a he will be lost.
+"""
+function adjacency_matrix(h; s::Int=1, weighted::Bool=true)
+    M = Matrix(h)
+    _incidence_to_adjacency(M; s=s, weighted=weighted)
+end
+
+
+"""
+    edge_adjacency_matrix(h::Hypergraph; s::Int=1, weighted::Bool=false)
+
+The sparse weighted `s`-adjacency matrix for the dual hypergraph.
+
+NOTE
+The concept of `s`-adjacency matrix has been firstly defined in the
+Python library [HyperNetX](https://github.com/pnnl/HyperNetX)
+
+From [HyperNetX](https://pnnl.github.io/HyperNetX/build/classes/classes.html#classes.hypergraph.Hypergraph.edge_adjacency_matrix)
+This is also the adjacency matrix for the line graph.
+Two edges are `s`-adjacent if they share at least `s` nodes.
+
+If weighted is `true` each off diagonal cell will equal the number
+of nodes shared by the hyperedges indexing the row and column if that number is
+greater than `s`, otherwise the cell will equal 0. If weighted is `false`,
+the off diagonal cell will equal 1 if the hyperedges indexed by the row and column
+share at least `s` nodes and 0 otherwise.
+"""
+function edge_adjacency_matrix(h; s::Int=1, weighted::Bool=true)
+    M = Matrix(h)
+	M[M .== nothing] .= 0
+    _incidence_to_adjacency(transpose(M); s=s, weighted=weighted)
+end
+
+
+"""
+    _incidence_to_adjacency(M; s::Int=1, weighted::Bool=true)
+
+Helper method to obtain adjacency matrix from incidence matrix.
+"""
+function _incidence_to_adjacency(M; s::Int=1, weighted::Bool=true)
+    M[M .== nothing] .= 0
+    M[M .> 0] .= 1
+
+    A = *(M, transpose(M))
+    A[diagind(A)] .= 0
+
+    if s > 1
+        A = A .* (A .>= s)
+    end
+    if !weighted
+        A = (A .> 0) .* 1
+    end
+
+    A
+end
+
+
 # TODO find connected components without recurrence
 # TODO needs validate_hypergraph!(h::Hypergraph{T})

@@ -8,6 +8,8 @@ using Conda
 using PyPlot
 using JSON3
 using JSON
+using Random
+using LinearAlgebra
 
 export Hypergraph, getvertices, gethyperedges
 export add_vertex!, add_hyperedge!, remove_vertex!, remove_hyperedge!, prune_hypergraph!, prune_hypergraph
@@ -21,13 +23,16 @@ export Abstract_HG_format, HGF_Format, JSON_Format
 export hg_load, hg_save
 
 export nhv, nhe
-export modularity, randompartition
-export AbstractCommunityFinder, CFModularityRandom, CFModularityCNMLike
+export modularity, nmi, randompartition
+export AbstractCommunityFinder, CFModularityRandom, CFModularityCNMLike, CFLabelPropagationFinder
 export findcommunities
 export random_walk
 export get_connected_components
 export conductance
 
+export distance, edge_distance, adjacency_matrix, edge_adjacency_matrix
+
+export dual
 export random_model, random_kuniform_model, random_dregular_model, random_preferential_model
 
 export HyperNetX, GraphBased
@@ -60,13 +65,19 @@ function support_hypernetx()
 
 end
 
+
 include("hypergraph.jl")
-include("bipartite.jl")
 include("io.jl")
-include("twosection.jl")
-include("modularity.jl")
-include("conductance.jl")
-include("models.jl")
+
+include("models/bipartite.jl")
+include("models/twosection.jl")
+include("models/random-models.jl")
+include("models/dual.jl")
+
+include("algorithms/distance.jl")
+include("algorithms/community/modularity.jl")
+include("algorithms/community/label-propagation.jl")
+include("algorithms/conductance.jl")
 
 include("viz/drawing.jl")
 include("viz/widget.jl")
