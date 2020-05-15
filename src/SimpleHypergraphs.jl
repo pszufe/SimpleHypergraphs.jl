@@ -86,5 +86,4 @@ include("algorithms/community/label-propagation.jl")
 include("viz/drawing.jl")
 include("viz/widget.jl")
 
-
 end # module

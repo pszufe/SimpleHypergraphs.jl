@@ -21,7 +21,7 @@ end
 """
     struct SedgeDistanceDijkstra(source_edge::Int, target_edge::Int, s::Int) <: AbstractDistance
 
-Represent a distance between two hyperedges of the hypergraph `h`, which is 
+Represent a distance between two hyperedges of the hypergraph `h`, which is
 the minimum `s`-walk lenght between the two hyperedge. An `s`-walk between edges is a sequence
 of edges such that consecutive pairwise edges intersect in at least `s` nodes.
 """
