@@ -7,27 +7,36 @@ using PyCall
 using Conda
 using PyPlot
 using JSON3
+using Random
+using LinearAlgebra
 
 export Hypergraph, getvertices, gethyperedges
-export add_vertex!, add_hyperedge!, remove_vertex!, remove_hyperedge!, prune_hypergraph!, prune_hypergraph
+export add_vertex!, add_hyperedge!, remove_vertex!, remove_hyperedge!
+export prune_hypergraph!, prune_hypergraph
 export set_vertex_meta!, get_vertex_meta
 export set_hyperedge_meta!, get_hyperedge_meta
-export BipartiteView, shortest_path
-export TwoSectionView
+export adjacency_matrix, edge_adjacency_matrix
+
+export BipartiteView, TwoSectionView
+export shortest_path
 export get_twosection_adjacency_mx, get_twosection_weighted_adjacency_mx
+export dual
+export random_model, random_kuniform_model, random_dregular_model, random_preferential_model
 
 export Abstract_HG_format, HGF_Format, JSON_Format
 export hg_load, hg_save
 
-export nhv, nhe
-export modularity, randompartition
-export AbstractCommunityFinder, CFModularityRandom, CFModularityCNMLike
+export modularity, nmi
+export randompartition
+export AbstractCommunityFinder, CFModularityRandom, CFModularityCNMLike, CFLabelPropagationFinder
 export findcommunities
+
+export nhv, nhe
 export random_walk
 export get_connected_components
 export conductance
-
-export random_model, random_kuniform_model, random_dregular_model, random_preferential_model
+export AbstractDistance, SnodeDistanceDijkstra, SedgeDistanceDijkstra
+export distance
 
 export HyperNetX, GraphBased
 export draw
@@ -59,13 +68,20 @@ function support_hypernetx()
 
 end
 
+
 include("hypergraph.jl")
-include("bipartite.jl")
 include("io.jl")
-include("twosection.jl")
-include("modularity.jl")
-include("conductance.jl")
-include("models.jl")
+
+include("models/bipartite.jl")
+include("models/twosection.jl")
+include("models/random-models.jl")
+include("models/dual.jl")
+
+include("algorithms/conductance.jl")
+include("algorithms/distance.jl")
+
+include("algorithms/community/modularity.jl")
+include("algorithms/community/label-propagation.jl")
 
 include("viz/drawing.jl")
 include("viz/widget.jl")

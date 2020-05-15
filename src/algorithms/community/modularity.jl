@@ -5,6 +5,7 @@ Generates a random partition for vertices of a hypergraph `h` into `n` subsets.
 """
 randompartition(h::Hypergraph, n::Int) = randompartition(nhv(h), n)
 
+
 """
     randompartition(N::Int, n::Int)::Vector{Set{Int}}
 
@@ -17,6 +18,7 @@ function randompartition(N::Int, n::Int)
     end
     res
 end
+
 
 """
     HypergraphAggs(h::Hypergraph)
@@ -45,6 +47,7 @@ struct HypergraphAggs
     end
 end
 
+
 """
     LightGraphs.modularity(h::Hypergraph, partition::Vector{Set{Int}},
 ha::HypergraphAggs=HypergraphAggs(h))
@@ -54,7 +57,7 @@ the precomputed aggregates `ha`.
 """
 @inline function LightGraphs.modularity(h::Hypergraph, partition::Vector{Set{Int}},
         ha::HypergraphAggs=HypergraphAggs(h))
-        
+
     @boundscheck sum(length.(partition)) == nhv(h)
     @boundscheck union(partition...) == Set(1:nhv(h))
     volP_volV = [sum(ha.deg_vs[i] for i in p)/ha.volV for p in partition]
@@ -64,7 +67,7 @@ end
 
 
 """
-The base type for all algorithms representing various community search patterns. 
+The base type for all algorithms representing various community search patterns.
 """
 abstract type AbstractCommunityFinder end
 
@@ -82,8 +85,6 @@ struct CFModularityRandom <: AbstractCommunityFinder
     n::Int
     reps::Int
 end
-
-
 
 
 """
@@ -127,11 +128,10 @@ function find_first(c::Array{Set{Int}}, vals)
 end
 
 
-
 """
     CFModularityCNMLike(n::Int, reps::Int) <: AbstractCommunityFinder
 
-Represents a CNM-Like algorithm for finding communities. 
+Represents a CNM-Like algorithm for finding communities.
 In the algorithm we start with a partition where each node is in its own part.
 Then in each step, we randomly select a hyperedge.
 Subsequently, we consider merging each set of that parts it touches.
@@ -142,30 +142,31 @@ The algortithm iterates through `reps` of repetitions.
 For more information see `Algorithm 1` at:
 Clustering via Hypergraph Modularity (submitted to Plos ONE), auhtors:
 Bogumil Kaminski, Valerie Poulin, Pawel Pralat, Przemyslaw Szufel, Francois Theberge
-    
+
 """
 struct CFModularityCNMLike <: AbstractCommunityFinder
     reps::Int
 end
 
+
 """
     findcommunities(h::Hypergraph, method::CFModularityCNMLike)
 
-Iterates a CNM-Like algorithm for finding communities. 
+Iterates a CNM-Like algorithm for finding communities.
 In the algorithm we start with a partition where each node is in its own part.
-Then in each step, we randomly select a hyperedge.  
-Subsequently, we consider merging each set of that parts it touches. 
+Then in each step, we randomly select a hyperedge.
+Subsequently, we consider merging each set of that parts it touches.
 We actually merge the parts if the new best modularity is at least as high
-as the modularity from the previous step. 
+as the modularity from the previous step.
 
 Returns a `NamedTuple` where the field `bp` contains partition
 and the field `bm` contains the modularity value for that partition,
-finally, the fiel `mod_history` represents modularities achieved 
+finally, the fiel `mod_history` represents modularities achieved
 in subsequent steps of the algorithm.
 
 For more information see `Algorithm 1` at:
 Clustering via Hypergraph Modularity (submitted to Plos ONE), authors:
-Bogumil Kaminski, Valerie Poulin, Pawel Pralat, Przemyslaw Szufel, 
+Bogumil Kaminski, Valerie Poulin, Pawel Pralat, Przemyslaw Szufel,
 Francois Theberge.
 
 """
@@ -203,3 +204,62 @@ function findcommunities(h::Hypergraph, method::CFModularityCNMLike)
     return (bm=best_modularity, bp=comms, mod_history=mod_history)
 end
 
+
+"""
+    nmi(p1::Array{Int64}, p2::Array{Int64})
+
+Evaluate the mutual information conveyed by two collections `p1` and `p2`.
+
+For more information see the paper
+Vinh, N.X., Epps,  J. and Bailey, J.
+_Information theoretic measures for clusterings comparison: variants, properties,
+normalization and correction for chance_
+Journal of Machine Learning Research, 2010, Vol. 11, No. 10, pp.2837–2854.
+"""
+function nmi(p1::Array{Int64}, p2::Array{Int64})
+    hp1 = Dict{Int64,Set{Int64}}()
+    hp2 = Dict{Int64,Set{Int64}}()
+    n = length(p1)
+
+    for i in 1:length(p1)
+        v = p1[i]
+        if !haskey(hp1, v)
+            push!(hp1, v=>Set{Int64}())
+        end
+        push!(hp1[v],i)
+    end
+
+    for i in 1:length(p2)
+        v = p2[i]
+        if !haskey(hp2, v)
+            push!(hp2, v=>Set{Int64}())
+        end
+        push!(hp2[v],i)
+    end
+
+    np1 = length(values(hp2))
+    np2 = length(values(hp2))
+    nhl = Dict{Pair{Int64,Int64},Int64}()
+    IAB = 0.0
+
+    for i in keys(hp1)
+        for j in keys(hp2)
+            nhl = length(intersect(hp2[j],hp1[i]))
+            if nhl != 0
+                IAB+= nhl * log2(n * nhl / (length(hp1[i])*length(hp2[j])))
+            end
+        end
+    end
+
+    HA = 0.0
+    for i in keys(hp1)
+        HA += length(hp1[i]) * log2(length(hp1[i])/n)
+    end
+
+    HB = 0.0
+    for j in keys(hp2)
+        HB += length(hp2[j]) * log2(length(hp2[j])/n)
+    end
+
+    return - (2 * IAB) / (HA + HB)
+end

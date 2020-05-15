@@ -15,37 +15,8 @@ h1[4,3:4] .= 4.5
 h1[5,4] = 5.5
 h1[5,2] = 6.5
 
-@testset "SimpleHypergraphs building models    " begin
 
-    Hᵣ = random_model(5,5)
-    @test nhv(Hᵣ) == 5
-    @test nhe(Hᵣ) == 5
-    @test  all(length.(Hᵣ.v2he) .> 0)
-    @test  all(length.(Hᵣ.v2he) .<= 5)
-
-    Hᵣ2 = random_model(5,0)
-    add_hyperedge!(Hᵣ2;vertices=Dict(2 => true, 4 => true))
-    @test nhv(Hᵣ2) == 5
-    @test nhe(Hᵣ2) == 1
-
-    Hᵣ3  = random_model(5,1)
-    @test nhe(Hᵣ3) == 1
-
-    Hκ = random_kuniform_model(5, 5, 3)
-    @test nhv(Hκ) == 5
-    @test nhe(Hκ) == 5
-    @test all(length.(Hκ.he2v) .== 3)
-
-    Hδ = random_dregular_model(5, 5, 3)
-    @test nhv(Hδ) == 5
-    @test nhe(Hδ) == 5
-    @test all(length.(Hδ.v2he) .== 3)
-
-    H∂ = random_preferential_model(20, 0.5)
-    @test nhv(H∂) == 20
-end;
-
-@testset "SimpleHypergraphs Hypergraph      " begin
+@testset "SimpleHypergraphs Hypergraph          " begin
 
     h = hg_load("data/test1.hgf"; T=Int)
     @test size(h) == (4, 4)
@@ -185,7 +156,8 @@ end;
     @test size(h1_1)[2] == 3
 end;
 
-@testset "SimpleHypergraphs BipartiteView   " begin
+
+@testset "SimpleHypergraphs BipartiteView       " begin
     h2 = deepcopy(h1)
 
     @test LightGraphs.nv(LightGraphs.zero(BipartiteView{Int})) == 0
@@ -231,7 +203,8 @@ end;
     @test sort!(LightGraphs.SimpleGraphs.fadj(b,2)) == [7,9]
 end;
 
-@testset "SimpleHypergraphs TwoSectionView  " begin
+
+@testset "SimpleHypergraphs TwoSectionView      " begin
 
     ht = Hypergraph{Float64}(3,3)
     ht[1:2,1:2] .= 2.
@@ -290,8 +263,38 @@ end;
 end;
 
 
+@testset "SimpleHypergraphs random-models       " begin
 
-@testset "SimpleHypergraphs Modularity      " begin
+    Hᵣ = random_model(5,5)
+    @test nhv(Hᵣ) == 5
+    @test nhe(Hᵣ) == 5
+    @test  all(length.(Hᵣ.v2he) .> 0)
+    @test  all(length.(Hᵣ.v2he) .<= 5)
+
+    Hᵣ2 = random_model(5,0)
+    add_hyperedge!(Hᵣ2;vertices=Dict(2 => true, 4 => true))
+    @test nhv(Hᵣ2) == 5
+    @test nhe(Hᵣ2) == 1
+
+    Hᵣ3  = random_model(5,1)
+    @test nhe(Hᵣ3) == 1
+
+    Hκ = random_kuniform_model(5, 5, 3)
+    @test nhv(Hκ) == 5
+    @test nhe(Hκ) == 5
+    @test all(length.(Hκ.he2v) .== 3)
+
+    Hδ = random_dregular_model(5, 5, 3)
+    @test nhv(Hδ) == 5
+    @test nhe(Hδ) == 5
+    @test all(length.(Hδ.v2he) .== 3)
+
+    H∂ = random_preferential_model(20, 0.5)
+    @test nhv(H∂) == 20
+end;
+
+
+@testset "SimpleHypergraphs modularity          " begin
     Random.seed!(1234);
     hg = Hypergraph{Bool}(10, 12)
     for i in eachindex(hg)
@@ -338,11 +341,10 @@ end;
     @test findcommunities(hh, CFModularityRandom(4,10000)).bm ≈ findcommunities(hh, cnm).bm
     Random.seed!(0);
     @test findcommunities(hh, cnm).bm ≈ 223/972
-
-
 end;
-                                     #
-@testset "SimpleHypergraphs randomized tests" begin
+
+
+@testset "SimpleHypergraphs randomized tests    " begin
     Random.seed!(0)
     N = 100
     res = Vector{Bool}(undef, N)
@@ -358,7 +360,30 @@ end;
     @test sum(res) >= N*0.80
 end
 
-@testset "SimpleHypergraphs randomwalk      " begin
+
+@testset "SimpleHypergraphs label propagation   " begin
+    Random.seed!(1234);
+    hg = Hypergraph{Bool}(10, 12)
+    for i in eachindex(hg)
+        if rand() < 0.2
+            hg[i] = true
+        end
+    end
+
+    cflp = CFLabelPropagationFinder(100, 1234)
+    @test_throws AssertionError findcommunities(hg, cflp)
+
+    h = Hypergraph(11, 2)
+    h[1:5, 1] .= true
+    h[5:11, 2] .= true
+
+    comms = findcommunities(h, cflp)
+    @test comms.np == [Set([7, 9, 10, 11, 8, 5, 6]), Set([4, 2, 3, 1])]
+    @test comms.hep == Set[Set([2]), Set([1])]
+end;
+
+
+@testset "SimpleHypergraphs randomwalk          " begin
     h1 = Hypergraph{Float64}(5,4)
     h1[1:3,1] .= 1.5
     h1[3,4] = 2.5
@@ -381,6 +406,7 @@ end
     @test_throws ArgumentError random_walk(h1, 0)
 end
 
+
 @testset "SimpleHypergraphs connected components" begin
     bip = LightGraphs.SimpleGraph(BipartiteView(h1))
     cc = LightGraphs.connected_components(bip)
@@ -392,7 +418,8 @@ end
     @test typeof(cc2) == Vector{Vector{Int}}
 end
 
-@testset "SimpleHypergraphs hypernetx bridge" begin
+
+@testset "SimpleHypergraphs hypernetx bridge    " begin
 
 	if (!SimpleHypergraphs.support_hypernetx())
 		@warn "HyperNetX is not installed. Skipping hypernetx tests"
@@ -432,7 +459,8 @@ end
     @test SimpleHypergraphs.get_next_div_id() == 2
 end;
 
-@testset "SimpleHypergraphs conductance" begin
+
+@testset "SimpleHypergraphs conductance         " begin
   h = Hypergraph{Float64, Int}(5,4)
   h[1:3,1] .= 1
   h[3,4] = 1
@@ -457,4 +485,118 @@ end;
   @test SimpleHypergraphs.conductance(h, Set([1, 4])) == 14 / 6
   @test_throws ErrorException SimpleHypergraphs.conductance(h, Set{Int}())
   @test_throws ErrorException SimpleHypergraphs.conductance(h, Set(1:nhv(h)))
+end;
+
+
+@testset "SimpleHypergraphs dual                " begin
+    m = [
+          1         nothing   nothing   4
+          1         2         3         nothing
+          1         2         3         4
+          nothing   2         3         nothing
+          nothing   nothing   3         nothing
+          nothing   nothing   nothing   4
+    ]
+
+    v_meta = Array{Union{Nothing, Char}, 1}(collect('a':'f'))
+    he_meta = Array{Union{Nothing, Symbol}, 1}(Symbol.(collect('A':'D')))
+
+    h = Hypergraph{Int, Char, Symbol}(m; v_meta=v_meta, he_meta=he_meta)
+    h_dual = dual(h)
+
+    @test nhv(h_dual) == nhe(h)
+    @test nhe(h_dual) == nhv(h)
+
+    @test h.v_meta == h_dual.he_meta
+    @test h.he_meta == h_dual.v_meta
+
+    m_dual = Matrix(h_dual)
+    m_dual[m_dual .== nothing] .= 0
+    m[m .== nothing] .= 0
+
+    @test m == transpose(m_dual)
+
+    @test_throws AssertionError dual(Hypergraph(0, 0))
+end;
+
+
+@testset "SimpleHypergraphs s-distance          " begin
+    h = Hypergraph{Int}(6,4)
+
+    h[1:3, 1] .= 1
+    h[2:4, 2] .= 2
+    h[2:5, 3] .= 3
+    h[1, 4] = 4
+    h[3, 4] = 4
+    h[6, 4] = 4
+
+    @test adjacency_matrix(Matrix(h); s=1) == [
+                                                0  1  2  0  0  1
+                                                1  0  3  2  1  0
+                                                2  3  0  2  1  1
+                                                0  2  2  0  1  0
+                                                0  1  1  1  0  0
+                                                1  0  1  0  0  0
+                                               ]
+
+    @test adjacency_matrix(Matrix(h); s=1, weighted=false) == [
+                                                            0  1  1  0  0  1
+                                                            1  0  1  1  1  0
+                                                            1  1  0  1  1  1
+                                                            0  1  1  0  1  0
+                                                            0  1  1  1  0  0
+                                                            1  0  1  0  0  0
+                                                        ]
+
+    @test edge_adjacency_matrix(h; s=1, weighted=false) == [
+                                                            0  1  1  1
+                                                            1  0  1  1
+                                                            1  1  0  1
+                                                            1  1  1  0
+                                                        ]
+
+    @test edge_adjacency_matrix(h; s=1) == [
+                                            0  2  2  2
+                                            2  0  3  1
+                                            2  3  0  1
+                                            2  1  1  0
+                                        ]
+
+    @test adjacency_matrix(Matrix(h); s=2) == [
+                                                 0  0  2  0  0  0
+                                                 0  0  3  2  0  0
+                                                 2  3  0  2  0  0
+                                                 0  2  2  0  0  0
+                                                 0  0  0  0  0  0
+                                                 0  0  0  0  0  0
+                                             ]
+
+
+    @test distance(h, SnodeDistanceDijkstra(1, 5, 1)) == 2
+    @test distance(h, SnodeDistanceDijkstra(3, 6, 1)) == 1
+
+    @test distance(h, SnodeDistanceDijkstra(1, 2, 2)) == 2
+    @test distance(h, SnodeDistanceDijkstra(1, 6, 2)) == typemax(Int)
+
+    @test distance(h, SedgeDistanceDijkstra(1, 3, 1)) == 1
+    @test distance(h, SedgeDistanceDijkstra(2, 3, 3)) == 1
+    @test distance(h, SedgeDistanceDijkstra(1, 3, 3)) == typemax(Int)
+end;
+
+
+@testset "SimpleHypergraphs nmi                 " begin
+    h = Hypergraph{Int}(6,4)
+
+    h[1:3, 1] .= 1
+    h[2:4, 2] .= 2
+    h[2:5, 3] .= 3
+    h[1, 4] = 4
+    h[3, 4] = 4
+    h[6, 4] = 4
+
+    cflp = CFLabelPropagationFinder(100, 1234)
+    comms_lp = findcommunities(h, cflp)
+
+    @test nmi(comms_lp.vlabels, fill(1, 5)) < 0.1
+    @test abs(nmi(comms_lp.vlabels, comms_lp.vlabels) - 1) < 1e-15
 end;
