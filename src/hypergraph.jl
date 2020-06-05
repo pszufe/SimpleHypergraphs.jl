@@ -166,6 +166,7 @@ Note that trying to remove a vertex from a hyperedge when it is not present will
     h
 end
 
+
 """
     Base.setindex!(h::Hypergraph, v::Real, idx::Vararg{Int,2})
 
@@ -180,6 +181,7 @@ Adds a vertex to a hyperedge (represented by indices `idx`) and assigns value
     h
 end
 
+
 """
     getvertices(h::Hypergraph, he_id::Int)
 
@@ -188,6 +190,7 @@ Returns vertices from a hypergraph `a` for a given hyperedge `he_id`.
 """
 @inline getvertices(h::Hypergraph, he_id::Int) = h.he2v[he_id]
 
+
 """
     gethyperedges(h::Hypergraph, v_id::Int)
 
@@ -195,6 +198,7 @@ Returns hyperedges for a given vertex `v_id` in a hypergraph `h`.
 
 """
 @inline gethyperedges(h::Hypergraph, v_id::Int) = h.v2he[v_id]
+
 
 """
     add_vertex!(h::Hypergraph{T, V, E, D};
@@ -220,6 +224,7 @@ function add_vertex!(h::Hypergraph{T, V, E, D};
     push!(h.v_meta, v_meta)
     ix
 end
+
 
 """
     remove_vertex!(h::Hypergraph, v::Int)
@@ -274,6 +279,7 @@ function add_hyperedge!(h::Hypergraph{T, V, E, D};
     ix
 end
 
+
 """
     remove_hyperedge!(h::Hypergraph, e::Int)
 Removes the heyperedge `e` from a given hypergraph `h`.
@@ -301,11 +307,13 @@ function remove_hyperedge!(h::Hypergraph, e::Int)
     h
 end
 
+
 """
     prune_hypergraph!(h::Hypergraph)
-Removes all vertices with degree 0 and all hyperedges of size 0.
-"""
 
+Remove all vertices with degree 0 and all hyperedges of size 0.
+
+"""
 function prune_hypergraph!(h::Hypergraph)
 	for e in reverse(1:nhe(h))
         length(h.he2v[e]) == 0 && remove_hyperedge!(h,e)
@@ -316,11 +324,14 @@ function prune_hypergraph!(h::Hypergraph)
 	h
 end
 
+
 """
     prune_hypergraph(h::Hypergraph)
-Returns a pruned copy of `h`, removing all vertices with degree 0 and all hyperedges of size 0.
-"""
 
+Return a pruned copy of `h`, removing all vertices with degree 0 and
+all hyperedges of size 0.
+
+"""
 function prune_hypergraph(h::Hypergraph)
     prune_hypergraph!(deepcopy(h))
 end
@@ -340,17 +351,20 @@ function set_vertex_meta!(h::Hypergraph{T, V, E, D},
     h.v_meta
 end
 
+
 """
     get_vertex_meta(h::Hypergraph{T, V, E, D}, id::Int
                     ) where {T <: Real, V, E, D <: AbstractDict{Int,T}}
 
 Returns a meta value stored at the vertex `id` in the hypergraph `h`.
+
 """
 function get_vertex_meta(h::Hypergraph{T, V, E, D}, id::Int
                          ) where {T <: Real, V, E, D <: AbstractDict{Int,T}}
     checkbounds(h.v_meta, id)
     h.v_meta[id]
 end
+
 
 """
     set_hyperedge_meta!(h::Hypergraph{T, V, E, D},
@@ -368,6 +382,7 @@ function set_hyperedge_meta!(h::Hypergraph{T, V, E, D},
     h.he_meta
 end
 
+
 """
     get_hyperedge_meta(h::Hypergraph{T, V, E, D}, id::Int)
         where {T <: Real, V, E, D <: AbstractDict{Int,T}}
@@ -380,6 +395,7 @@ function get_hyperedge_meta(h::Hypergraph{T, V, E, D}, id::Int
     h.he_meta[id]
 end
 
+
 """
     nhe(h::Hypergraph)
 
@@ -388,6 +404,7 @@ Return the number of hyperedges in the hypergraph `h`.
 function nhe(h::Hypergraph)
     length(h.he2v)
 end
+
 
 """
     nhv(h::Hypergraph)
@@ -398,15 +415,18 @@ function nhv(h::Hypergraph)
     length(h.v2he)
 end
 
+
 function _default_heselect(h::Hypergraph, v::Int)
     hes = gethyperedges(h, v)
     sort!(collect(keys(hes))), ones(length(hes))
 end
 
+
 function _default_vselect(h::Hypergraph, he::Int)
     vs = getvertices(h, he)
     sort!(collect(keys(vs))), ones(length(vs))
 end
+
 
 """
     random_walk(h::Hypergraph, start::Int; heselect::Function, vselect::Function)
@@ -431,6 +451,7 @@ function random_walk(h::Hypergraph, start::Int;
     return sample(ves, Weights(vw))
 end
 
+
 """
     _walk!(h::Hypergraph, s::AbstractVector{Int}, i::Int, visited::AbstractVector{Bool})
 
@@ -446,6 +467,7 @@ function _walk!(h::Hypergraph, s::AbstractVector{Int}, i::Int, visited::Abstract
         end
     end
 end
+
 
 """
     get_connected_components(h::Hypergraph)
@@ -465,6 +487,83 @@ function get_connected_components(h::Hypergraph)
     end
     cc
 end
+
+
+"""
+    adjacency_matrix(h::Hypergraph; s::Int=1, weighted::Bool=false)
+
+The sparse weighted `s`-adjacency matrix.
+
+NOTE
+The concept of `s`-adjacency matrix has been firstly defined in the
+Python library [HyperNetX](https://github.com/pnnl/HyperNetX)
+
+From [HyperNetX](https://pnnl.github.io/HyperNetX/build/classes/classes.html#classes.hypergraph.Hypergraph.adjacency_matrix)
+If weighted is `true` each off diagonal cell will equal the number
+of edges shared by the nodes indexing the row and column if that number is
+greater than `s`, otherwise the cell will equal 0. If weighted is `false`,
+the off diagonal cell will equal 1 if the nodes indexed by the row and column
+share at least `s` edges and 0 otherwise.
+
+! information about the weight of a vertex in a he will be lost.
+
+"""
+function adjacency_matrix(h; s::Int=1, weighted::Bool=true)
+    M = Matrix(h)
+    _incidence_to_adjacency(M; s=s, weighted=weighted)
+end
+
+
+"""
+    edge_adjacency_matrix(h::Hypergraph; s::Int=1, weighted::Bool=false)
+
+The sparse weighted `s`-adjacency matrix for the dual hypergraph.
+
+NOTE
+The concept of `s`-adjacency matrix has been firstly defined in the
+Python library [HyperNetX](https://github.com/pnnl/HyperNetX)
+
+From [HyperNetX](https://pnnl.github.io/HyperNetX/build/classes/classes.html#classes.hypergraph.Hypergraph.edge_adjacency_matrix)
+This is also the adjacency matrix for the line graph.
+Two edges are `s`-adjacent if they share at least `s` nodes.
+
+If weighted is `true` each off diagonal cell will equal the number
+of nodes shared by the hyperedges indexing the row and column if that number is
+greater than `s`, otherwise the cell will equal 0. If weighted is `false`,
+the off diagonal cell will equal 1 if the hyperedges indexed by the row and column
+share at least `s` nodes and 0 otherwise.
+
+"""
+function edge_adjacency_matrix(h; s::Int=1, weighted::Bool=true)
+    M = Matrix(h)
+	M[M .== nothing] .= 0
+    _incidence_to_adjacency(transpose(M); s=s, weighted=weighted)
+end
+
+
+"""
+    _incidence_to_adjacency(M; s::Int=1, weighted::Bool=true)
+
+Helper method to obtain adjacency matrix from incidence matrix.
+
+"""
+function _incidence_to_adjacency(M; s::Int=1, weighted::Bool=true)
+    M[M .== nothing] .= 0
+    M[M .> 0] .= 1
+
+    A = *(M, transpose(M))
+    A[diagind(A)] .= 0
+
+    if s > 1
+        A = A .* (A .>= s)
+    end
+    if !weighted
+        A = (A .> 0) .* 1
+    end
+
+    A
+end
+
 
 # TODO find connected components without recurrence
 # TODO needs validate_hypergraph!(h::Hypergraph{T})
