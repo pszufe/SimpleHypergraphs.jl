@@ -4,7 +4,7 @@
 
 | **Documentation** | **Build Status** |
 |---------------|--------------|
-|[![][docs-stable-img]][docs-stable-url] <br/> [![][docs-latest-img]][docs-dev-url] | [![Build Status][travis-img]][travis-url]  [![Coverage Status][codecov-img]][codecov-url] <br/> Linux and macOS |
+|[![][docs-stable-img]][docs-stable-url] <br/> [![][docs-latest-img]][docs-dev-url]<br/>[**tutorial**][tutorial-url] | [![Build Status][travis-img]][travis-url]  [![Coverage Status][codecov-img]][codecov-url] <br/> Linux and macOS |
 
 
 ## Installation instructions
@@ -29,7 +29,7 @@ In Julia command line REPL press `]` for the Julia package manager and run:
 ```
 ## Documentation
 
-- tutorial [html](https://github.com/pszufe/SimpleHypergraphs.jl/blob/master/examples/basics/SimpleHypergraphs_tutorial_v4.html) [nbviewer](https://nbviewer.jupyter.org/github/pszufe/SimpleHypergraphs.jl/blob/master/examples/basics/SimpleHypergraphs_tutorial_v4.ipynb) &mdash; for a quick start with the library see our Jupyter Notebook tutorial on main library functionality.
+- [**tutorial**][tutorial-url] &mdash; for a quick start with the library see our Jupyter Notebook tutorial on main library functionality.
 - [**STABLE**][docs-stable-url] &mdash; **documentation of the most recently tagged version.**
 - [**DEV**][docs-dev-url] &mdash; **documentation of the development version.**
 
@@ -37,6 +37,7 @@ In Julia command line REPL press `]` for the Julia package manager and run:
 [docs-stable-img]: https://img.shields.io/badge/docs-stable-blue.svg
 [docs-dev-url]: https://pszufe.github.io/SimpleHypergraphs.jl/dev
 [docs-stable-url]: https://pszufe.github.io/SimpleHypergraphs.jl/stable
+[tutorial-url]: https://nbviewer.jupyter.org/github/pszufe/SimpleHypergraphs.jl/blob/master/examples/basics/SimpleHypergraphs_tutorial_v4.ipynb
 
 [travis-img]: https://travis-ci.org/pszufe/SimpleHypergraphs.jl.svg?branch=master
 [travis-url]: https://travis-ci.org/pszufe/SimpleHypergraphs.jl
