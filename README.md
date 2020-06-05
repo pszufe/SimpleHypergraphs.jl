@@ -29,7 +29,7 @@ In Julia command line REPL press `]` for the Julia package manager and run:
 ```
 ## Documentation
 
-- [tutorial](https://nbviewer.jupyter.org/github/pszufe/SimpleHypergraphs.jl/blob/master/examples/basics/Basics.ipynb) &mdash; for a quick start with the library see our Jupyter Notebook tutorial on main library functionality.
+- tutorial [html](https://github.com/pszufe/SimpleHypergraphs.jl/blob/master/examples/basics/SimpleHypergraphs_tutorial_v4.html) [nbviewer](https://nbviewer.jupyter.org/github/pszufe/SimpleHypergraphs.jl/blob/master/examples/basics/SimpleHypergraphs_tutorial_v4.ipynb) &mdash; for a quick start with the library see our Jupyter Notebook tutorial on main library functionality.
 - [**STABLE**][docs-stable-url] &mdash; **documentation of the most recently tagged version.**
 - [**DEV**][docs-dev-url] &mdash; **documentation of the development version.**
 
