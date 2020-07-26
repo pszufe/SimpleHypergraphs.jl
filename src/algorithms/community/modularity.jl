@@ -141,7 +141,7 @@ The algortithm iterates through `reps` of repetitions.
 
 For more information see `Algorithm 1` at:
 Clustering via Hypergraph Modularity (submitted to Plos ONE), auhtors:
-Bogumil Kaminski, Valerie Poulin, Pawel Pralat, Przemyslaw Szufel, Francois Theberge
+Bogumil Kaminski, Valerie Poulin, pawel Pralat, Przemyslaw Szufel, Francois Theberge
 
 """
 struct CFModularityCNMLike <: AbstractCommunityFinder
@@ -166,7 +166,7 @@ in subsequent steps of the algorithm.
 
 For more information see `Algorithm 1` at:
 Clustering via Hypergraph Modularity (submitted to Plos ONE), authors:
-Bogumil Kaminski, Valerie Poulin, Pawel Pralat, Przemyslaw Szufel,
+Bogumil Kaminski, Valerie Poulin, pawel Pralat, Przemyslaw Szufel,
 Francois Theberge.
 
 """
@@ -202,72 +202,4 @@ function findcommunities(h::Hypergraph, method::CFModularityCNMLike)
         mod_history[rep] = best_modularity
     end
     return (bm=best_modularity, bp=comms, mod_history=mod_history)
-end
-
-
-"""
-    nmi(p1::Array{Int64}, p2::Array{Int64})
-
-Evaluate the mutual information conveyed by two collections `p1` and `p2`.
-
-For more information see the paper
-Vinh, N.X., Epps,  J. and Bailey, J.
-_Information theoretic measures for clusterings comparison: variants, properties,
-normalization and correction for chance_
-Journal of Machine Learning Research, 2010, Vol. 11, No. 10, pp.2837–2854.
-"""
-function nmi(p1::Array{Int64}, p2::Array{Int64})
-
-        n = length(pA)
-        partitionA = Dict{Int64, Array{Int64}}() 
-        partitionB = Dict{Int64, Array{Int64}}()
-
-        for (index, value) in enumerate(pA)
-            push!(get!(partitionA, value, Array{Int, 1}()), index)
-        end
-
-        for (index, value) in enumerate(pB)
-            push!(get!(partitionB, value, Array{Int, 1}()), index)
-        end
-    
-        ka = length(partitionA)
-        nah = zeros(Int, ka)
-        for h=1:ka
-            nah[h] =  length(get!(partitionA, h, nothing))
-        end
-
-		kb= length(partitionB)
-        nbl = zeros(Int, kb)
-        for l=1:kb
-            nbl[l] =  length(get!(partitionB, l, nothing))
-        end
-	
-        nhl =  fill(0, ka, kb)
-        for h=1:ka
-            for l=1:kb
-                intersection = intersect(Set(get!(partitionA, h, nothing)), Set(get!(partitionB, l, nothing)))
-				nhl[h, l] = length(intersection)
-            end
-        end
-
-        num = 0.0
-        for h=1:ka
-            for l=1:kb
-                if nhl[h, l] != 0
-                    num += nhl[h,l] * log2( (n * nhl[h,l]) / (nah[h] * nbl[l]))
-                end
-            end
-        end
-
-        left = 0
-        for h=1:ka     
-            left += nah[h] * log2(nah[h]/n)
-        end
-
-        right = 0
-        for l=1:kb
-            right += nbl[l] * log2(nbl[l]/n)
-        end
-	
-		return -num/min(left,right)
 end

@@ -26,7 +26,7 @@ export random_model, random_kuniform_model, random_dregular_model, random_prefer
 export Abstract_HG_format, HGF_Format, JSON_Format
 export hg_load, hg_save
 
-export modularity, nmi
+export modularity
 export randompartition
 export AbstractCommunityFinder, CFModularityRandom, CFModularityCNMLike, CFLabelPropagationFinder
 export findcommunities

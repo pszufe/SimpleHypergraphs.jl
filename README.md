@@ -29,7 +29,7 @@ In Julia command line REPL press `]` for the Julia package manager and run:
 ```
 ## Documentation
 
-- [**tutorial**][tutorial-url] &mdash; for a quick start with the library see our Jupyter Notebook tutorial on main library functionality.
+- [**Tutorial**][tutorial-url] &mdash; for a quick start with the library see our Jupyter Notebook tutorial on main library functionality.
 - [**STABLE**][docs-stable-url] &mdash; **documentation of the most recently tagged version.**
 - [**DEV**][docs-dev-url] &mdash; **documentation of the development version.**
 
