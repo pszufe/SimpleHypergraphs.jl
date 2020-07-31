@@ -380,6 +380,11 @@ end
     comms = findcommunities(h, cflp)
     @test comms.np == [Set([7, 9, 10, 11, 8, 5, 6]), Set([4, 2, 3, 1])]
     @test comms.hep == Set[Set([2]), Set([1])]
+
+    add_hyperedge!(h)
+    comms = findcommunities(h, cflp)
+
+    @test comms.helabels == [4, 7, -1]
 end;
 
 

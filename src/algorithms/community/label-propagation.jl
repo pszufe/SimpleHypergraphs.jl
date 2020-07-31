@@ -37,8 +37,8 @@ function findcommunities(h::Hypergraph, method::CFLabelPropagationFinder)
     @assert length(get_connected_components(h)) == 1
 
     rng = MersenneTwister(method.seed)
-    vlabels = Dict{Int64,Int64}()
-    helabels = Dict{Int64,Int64}()
+    vlabels = Dict{Int, Int}()
+    helabels = Dict{Int, Int}()
 
     for v in 1:nhv(h)
         push!(vlabels, v=>v)
@@ -57,7 +57,7 @@ function findcommunities(h::Hypergraph, method::CFLabelPropagationFinder)
         for e in edges
             length(getvertices(h, e)) == 0 && continue
             l = SimpleHypergraphs.compute_edge_label(h, e, vlabels, helabels, rng)
-            push!(helabels, e=>l)
+            push!(helabels, e => l)
         end
 
         shuffle!(rng, vertices)
@@ -65,7 +65,7 @@ function findcommunities(h::Hypergraph, method::CFLabelPropagationFinder)
             l = SimpleHypergraphs.compute_vertex_label(h, v, vlabels, helabels, rng)
             if l != vlabels[v]
                 stop = false
-                push!(vlabels, v=>l)
+                push!(vlabels, v => l)
             end
         end
 
@@ -92,12 +92,12 @@ function findcommunities(h::Hypergraph, method::CFLabelPropagationFinder)
         )
     end
 
-    labels = Array{Int64}(undef, nhv(h))
+    labels = Array{Int}(undef, nhv(h))
     for i in 1:nhv(h)
         labels[i] = vlabels[i]
     end
 
-    hlabels = Array{Int64}(undef, nhe(h))
+    hlabels = Array{Int}(undef, nhe(h))
     for i in 1:nhe(h)
         if length(getvertices(h, i)) == 0
             hlabels[i] = -1
@@ -111,17 +111,17 @@ end
 
 
 """
-    compute_vertex_label(h::Hypergraph, v::Int64, vlabels::Dict{Int64,Int64}, helabels::Dict{Int64,Int64}, rng::MersenneTwister)
+    compute_vertex_label(h::Hypergraph, v::Int, vlabels::Dict{Int,Int}, helabels::Dict{Int,Int}, rng::MersenneTwister)
 
 Vertices labeling phase. Computes the label of each vertex according to the most
 frequent label among the hyperedges it belongs to.
 """
-function compute_vertex_label(h::Hypergraph, v::Int64, vlabels::Dict{Int64,Int64}, helabels::Dict{Int64,Int64}, rng::MersenneTwister)
+function compute_vertex_label(h::Hypergraph, v::Int, vlabels::Dict{Int,Int}, helabels::Dict{Int,Int}, rng::MersenneTwister)
     hesᵥ = gethyperedges(h, v)
-    vL = Dict{Int64,Int64}()
+    vL = Dict{Int,Int}()
 
     max = 0
-    maxL = Set{Int64}()
+    maxL = Set{Int}()
 
     for e in shuffle!(rng, sort(collect(keys(hesᵥ))))
         l = helabels[e]
@@ -139,7 +139,7 @@ function compute_vertex_label(h::Hypergraph, v::Int64, vlabels::Dict{Int64,Int64
             push!(maxL, l)
         elseif vL[l] > max
             max = vL[l]
-            maxL = Set{Int64}()
+            maxL = Set{Int}()
             push!(maxL, l)
         end
     end
@@ -153,17 +153,17 @@ end
 
 
 """
-    compute_edge_label(h::Hypergraph, e::Int64, vlabels::Dict{Int64,Int64}, helabels::Dict{Int64,Int64}, rng::MersenneTwister)
+    compute_edge_label(h::Hypergraph, e::Int, vlabels::Dict{Int,Int}, helabels::Dict{Int,Int}, rng::MersenneTwister)
 
 Hyperedges labeling phase. Computes the labels of the hyperedges according  to
 the  most frequent label among the vertices contained in that hyperedge.
 """
-function compute_edge_label(h::Hypergraph, e::Int64, vlabels::Dict{Int64,Int64}, helabels::Dict{Int64,Int64}, rng::MersenneTwister)
+function compute_edge_label(h::Hypergraph, e::Int, vlabels::Dict{Int,Int}, helabels::Dict{Int,Int}, rng::MersenneTwister)
     vₑ = getvertices(h,e)
-    eL = Dict{Int64,Int64}()
+    eL = Dict{Int,Int}()
 
     max = 0
-    maxL = Set{Int64}()
+    maxL = Set{Int}()
 
     for v in shuffle!(rng, sort(collect(keys(vₑ))))
         l = vlabels[v]
@@ -181,7 +181,7 @@ function compute_edge_label(h::Hypergraph, e::Int64, vlabels::Dict{Int64,Int64},
             push!(maxL, l)
         elseif eL[l] > max
             max = eL[l]
-            maxL = Set{Int64}()
+            maxL = Set{Int}()
             push!(maxL, l)
         end
     end

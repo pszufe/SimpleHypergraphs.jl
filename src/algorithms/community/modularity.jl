@@ -141,7 +141,7 @@ The algortithm iterates through `reps` of repetitions.
 
 For more information see `Algorithm 1` at:
 Clustering via Hypergraph Modularity (submitted to Plos ONE), auhtors:
-Bogumil Kaminski, Valerie Poulin, pawel Pralat, Przemyslaw Szufel, Francois Theberge
+Bogumił Kamiński, Valerie Poulin, Paweł Prałat, Przemysław Szufel, Francois Theberge
 
 """
 struct CFModularityCNMLike <: AbstractCommunityFinder
@@ -166,8 +166,7 @@ in subsequent steps of the algorithm.
 
 For more information see `Algorithm 1` at:
 Clustering via Hypergraph Modularity (submitted to Plos ONE), authors:
-Bogumil Kaminski, Valerie Poulin, pawel Pralat, Przemyslaw Szufel,
-Francois Theberge.
+Bogumił Kamiński, Valerie Poulin, Paweł Prałat, Przemysław Szufel, Francois Theberge
 
 """
 function findcommunities(h::Hypergraph, method::CFModularityCNMLike)
