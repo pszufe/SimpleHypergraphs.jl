@@ -380,6 +380,11 @@ end
     comms = findcommunities(h, cflp)
     @test comms.np == [Set([7, 9, 10, 11, 8, 5, 6]), Set([4, 2, 3, 1])]
     @test comms.hep == Set[Set([2]), Set([1])]
+
+    add_hyperedge!(h)
+    comms = findcommunities(h, cflp)
+
+    @test comms.helabels == [4, 7, -1]
 end;
 
 
@@ -581,22 +586,4 @@ end;
     @test distance(h, SedgeDistanceDijkstra(1, 3, 1)) == 1
     @test distance(h, SedgeDistanceDijkstra(2, 3, 3)) == 1
     @test distance(h, SedgeDistanceDijkstra(1, 3, 3)) == typemax(Int)
-end;
-
-
-@testset "SimpleHypergraphs nmi                 " begin
-    h = Hypergraph{Int}(6,4)
-
-    h[1:3, 1] .= 1
-    h[2:4, 2] .= 2
-    h[2:5, 3] .= 3
-    h[1, 4] = 4
-    h[3, 4] = 4
-    h[6, 4] = 4
-
-    cflp = CFLabelPropagationFinder(100, 1234)
-    comms_lp = findcommunities(h, cflp)
-
-    @test nmi(comms_lp.vlabels, fill(1, 5)) < 0.1
-    @test abs(nmi(comms_lp.vlabels, comms_lp.vlabels) - 1) < 1e-15
 end;
