@@ -341,7 +341,7 @@ end;
     @test cnm.reps == 1000
     @test findcommunities(hh, CFModularityRandom(4,10000)).bm ≈ findcommunities(hh, cnm).bm
     Random.seed!(0);
-    @test findcommunities(hh, cnm).bm ≈ 16/81
+    @test any(isapprox.(findcommunities(hh, cnm).bm, [16/81, 223/972]))
 end;
 
 
