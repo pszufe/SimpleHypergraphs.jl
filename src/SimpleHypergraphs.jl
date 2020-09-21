@@ -41,31 +41,33 @@ export distance
 export HyperNetX, GraphBased
 export draw
 
-const hnx = PyNULL()
+const hnx  = PyNULL()
 const nx = PyNULL()
-const pynull = PyNULL()
+const has_plotting = Ref(false)
 
 
 function __init__()
-    plot_ok = true
+    has_networkx = false
+    has_hypernetx = false
     try
-		copy!(nx, pyimport("networkx"))
-    catch e
-		@warn "Python networkx not found. Plotting functionality of HyperNetX will not work."
-		plot_ok = false
-	end
-	try
-		copy!(hnx, pyimport("hypernetx"))
-    catch e
-		@warn "Python HyperNetX not found. Plotting functionality will not work."
-		plot_ok = false
-	end
+        copy!(nx, pyimport("networkx"))
+        has_networkx = true
+    catch e; end
+    try
+        copy!(hnx, pyimport("hypernetx"))
+        has_hypernetx = true
+    catch e; end
+    has_plotting[] = has_networkx && has_hypernetx
+    if !has_plotting[]
+        @warn "The plotting functionality of HyperNetX will not work!\n"* 
+		(has_networkx ? "" : "Conda Python networkx not found.\n")*
+        (has_hypernetx ? "" : "Conda Python HyperNetX not found.\n")*        
+        "To test your installation try running `using PyCall;pyimport(\"networkx\");pyimport(\"hypernetx\")`"
+    end
 end
 
 function support_hypernetx()
-    return ((SimpleHypergraphs.nx !=  SimpleHypergraphs.pynull) &&
-           (SimpleHypergraphs.hnx !=  SimpleHypergraphs.pynull))
-
+    return has_plotting[]
 end
 
 
