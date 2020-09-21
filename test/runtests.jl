@@ -305,12 +305,13 @@ end;
 
     cfmr = CFModularityRandom(3,10000)
 
-    @test findcommunities(hg,cfmr) ==
-         (bp = Set.([[4, 5, 9], [1, 3, 6, 7], [2, 8, 10]]), bm = 0.21505688117829677)
+    @test findcommunities(hg,cfmr).bm ≈ 0.21505688117829677
     @test modularity(hg,  Set.([1:10])) == 0.0
     Random.seed!(1234);
-    @test randompartition(hg, 2) == Set.([[1, 5, 6, 7, 9], [2, 3, 4, 8, 10]])
-
+    @test typeof(randompartition(hg, 2)) == Vector{Set{Int}}
+    @test length(randompartition(hg, 2)) == 2
+    @test sort(vcat(collect.(randompartition(hg, 2))...))==1:nhv(hg)
+    
     hh = Hypergraph{Bool}(7,4)
     hh[1,1] = true
     hh[2,1:2] .= true
@@ -336,17 +337,17 @@ end;
     @test cfmr.reps == 10000
     @test findcommunities(hh,cfmr).bm ≈ 16/81
     Random.seed!(1234);
-    cnm = CFModularityCNMLike(100)
-    @test cnm.reps == 100
+    cnm = CFModularityCNMLike(1000)
+    @test cnm.reps == 1000
     @test findcommunities(hh, CFModularityRandom(4,10000)).bm ≈ findcommunities(hh, cnm).bm
     Random.seed!(0);
-    @test findcommunities(hh, cnm).bm ≈ 223/972
+    @test findcommunities(hh, cnm).bm ≈ 16/81
 end;
 
 
 @testset "SimpleHypergraphs randomized tests    " begin
     Random.seed!(0)
-    N = 100
+    N = 500
     res = Vector{Bool}(undef, N)
     for i in 1:N
         m1 = CFModularityCNMLike(100)
@@ -357,7 +358,7 @@ end;
         bm2 = findcommunities(hh, m2).bm
         res[i] = (bm1 > bm2)
     end
-    @test sum(res) >= N*0.80
+    @test sum(res) >= N*0.75
 end
 
 
@@ -426,10 +427,10 @@ end
 
 @testset "SimpleHypergraphs hypernetx bridge    " begin
 
-	if (!SimpleHypergraphs.support_hypernetx())
-		@warn "HyperNetX is not installed. Skipping hypernetx tests"
-		return
-	end
+    if (!SimpleHypergraphs.support_hypernetx())
+        @warn "HyperNetX is not installed. Skipping hypernetx tests"
+        return
+    end
 
     h_hnx = SimpleHypergraphs._convert_to_hnx(h1)
     data = Dict{String, Array{Int, 1}}(

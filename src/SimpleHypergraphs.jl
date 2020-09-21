@@ -41,8 +41,8 @@ export distance
 export HyperNetX, GraphBased
 export draw
 
-const hnx  = Ref{PyObject}(PyObject(nothing))
-const nx = Ref{PyObject}(PyObject(nothing))
+const hnx  = PyNULL()
+const nx = PyNULL()
 const has_plotting = Ref(false)
 
 
@@ -54,14 +54,14 @@ function __init__()
         has_networkx = true
     catch e; end
     try
-        copy!(nx, pyimport("hypernetx"))
+        copy!(hnx, pyimport("hypernetx"))
         has_hypernetx = true
     catch e; end
     has_plotting[] = has_networkx && has_hypernetx
     if !has_plotting[]
-        @info (has_networkx ? "" : "Conda Python networkx not found.\n")*
-        (has_hypernetx ? "" : "Conda Python HyperNetX not found.\n")*
-        "The plotting functionality of HyperNetX will not work!\n"*
+        @warn "The plotting functionality of HyperNetX will not work!\n"* 
+		(has_networkx ? "" : "Conda Python networkx not found.\n")*
+        (has_hypernetx ? "" : "Conda Python HyperNetX not found.\n")*        
         "To test your installation try running `using PyCall;pyimport(\"networkx\");pyimport(\"hypernetx\")`"
     end
 end
