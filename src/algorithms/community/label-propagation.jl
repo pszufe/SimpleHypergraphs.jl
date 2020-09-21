@@ -123,7 +123,7 @@ function compute_vertex_label(h::Hypergraph, v::Int, vlabels::Dict{Int,Int}, hel
     max = 0
     maxL = Set{Int}()
 
-    for e in shuffle!(rng, sort(collect(keys(hesᵥ))))
+    for e in shuffle!(rng, collect(keys(hesᵥ)))
         l = helabels[e]
 
         if !haskey(vL, l)
@@ -165,7 +165,7 @@ function compute_edge_label(h::Hypergraph, e::Int, vlabels::Dict{Int,Int}, helab
     max = 0
     maxL = Set{Int}()
 
-    for v in shuffle!(rng, sort(collect(keys(vₑ))))
+    for v in shuffle!(rng, collect(keys(vₑ)))
         l = vlabels[v]
 
         if !haskey(eL, l)
