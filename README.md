@@ -32,6 +32,12 @@ In Julia command line REPL press `]` for the Julia package manager and run:
 - [**Tutorial**][tutorial-url] &mdash; for a quick start with the library see our Jupyter Notebook tutorial on main library functionality.
 - [**STABLE**][docs-stable-url] &mdash; **documentation of the most recently tagged version.**
 - [**DEV**][docs-dev-url] &mdash; **documentation of the development version.**
+- [**A Game of Thrones use case**][got-url] &mdash; check out how you can exploit the library to gather insights into real-world networks through a case study of the Game of Thrones TV series
+
+
+
+[got-url]: https://nbviewer.jupyter.org/github/pszufe/SimpleHypergraphs.jl/blob/master/tutorials/basics/A%20case%20study%20-%20Game%20of%20Thrones.ipynb
+
 
 [docs-latest-img]: https://img.shields.io/badge/docs-latest-blue.svg
 [docs-stable-img]: https://img.shields.io/badge/docs-stable-blue.svg
