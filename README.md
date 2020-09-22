@@ -11,7 +11,7 @@
 ### Prerequisites for plotting
 `Simplehypergraphs` uses the Python's [hypernetx](https://github.com/pnnl/HyperNetX) library so if you want the plotting to work you need to install it first. In Julia command line REPL press `]` for the Julia package manager and run:
 ```
-(v1.3) pkg> add PyCall Conda
+(v1.5) pkg> add PyCall Conda
 ```
 Now press *backspace* to exit the package manager and run the following installation code:
 ```julia
@@ -25,18 +25,17 @@ For plotting we also use the Jupyter notebook. The installation instructions are
 ### Installation
 In Julia command line REPL press `]` for the Julia package manager and run:
 ```
-(v1.3) pkg> add Simplehypergraphs
+(v1.5) pkg> add SimpleHypergraphs
 ```
 ## Documentation
 
-- [**Tutorial**][tutorial-url] &mdash; for a quick start with the library see our Jupyter Notebook tutorial on main library functionality.
+- [**Tutorial**][tutorial-url] &mdash; for a quick start with the library see our Jupyter Notebook tutorial (raw `*.ipynb` version can be also [downloaded][tutorial-raw])
 - [**STABLE**][docs-stable-url] &mdash; **documentation of the most recently tagged version.**
 - [**DEV**][docs-dev-url] &mdash; **documentation of the development version.**
-- [**A Game of Thrones use case**][got-url] &mdash; check out how you can exploit the library to gather insights into real-world networks through a case study of the Game of Thrones TV series
+- [**A Game of Thrones use case**][got-url] &mdash; check out how you can exploit the library to gather insights into real-world networks through a case study of the Game of Thrones TV series (raw `*.ipynb` version can be also [downloaded][got-raw])
 
 
 
-[got-url]: https://nbviewer.jupyter.org/github/pszufe/SimpleHypergraphs.jl/blob/master/tutorials/basics/A%20case%20study%20-%20Game%20of%20Thrones.ipynb
 
 
 [docs-latest-img]: https://img.shields.io/badge/docs-latest-blue.svg
@@ -44,6 +43,10 @@ In Julia command line REPL press `]` for the Julia package manager and run:
 [docs-dev-url]: https://pszufe.github.io/SimpleHypergraphs.jl/dev
 [docs-stable-url]: https://pszufe.github.io/SimpleHypergraphs.jl/stable
 [tutorial-url]: https://nbviewer.jupyter.org/github/pszufe/SimpleHypergraphs.jl/blob/master/tutorials/basics/SimpleHypergraphs_tutorial_v4.ipynb
+[got-url]: https://nbviewer.jupyter.org/github/pszufe/SimpleHypergraphs.jl/blob/master/tutorials/basics/A%20case%20study%20-%20Game%20of%20Thrones.ipynb
+
+[tutorial-raw]: https://github.com/pszufe/SimpleHypergraphs.jl/raw/master/tutorials/basics/SimpleHypergraphs_tutorial_v4.ipynb
+[got-raw]: https://github.com/pszufe/SimpleHypergraphs.jl/raw/master/tutorials/basics/A%20case%20study%20-%20Game%20of%20Thrones.ipynb
 
 [travis-img]: https://travis-ci.org/pszufe/SimpleHypergraphs.jl.svg?branch=master
 [travis-url]: https://travis-ci.org/pszufe/SimpleHypergraphs.jl
