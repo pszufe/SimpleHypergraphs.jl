@@ -9,7 +9,7 @@
 
 ## Installation instructions
 ### Prerequisites for plotting
-`Simplehypergraphs` uses the Python's [hypernetx](https://github.com/pnnl/HyperNetX) library so if you want the plotting to work you need to install it first. In Julia command line REPL press `]` for the Julia package manager and run:
+`Simplehypergraphs` can optionally use (among other options) the Python's [hypernetx](https://github.com/pnnl/HyperNetX) library so if you want the `hypernetx` plotting to work you need to install it first along with its all dependent libraries. In Julia command line REPL press `]` for the Julia package manager and run:
 ```
 (v1.5) pkg> add PyCall Conda
 ```
@@ -19,8 +19,16 @@ using PyCall
 using Conda
 Conda.runconda(`install matplotlib --yes`)
 Conda.runconda(`install networkx --yes`)
+Conda.runconda(`install pandas --yes`)
 run(`$(PyCall.python) -m pip install hypernetx`)
 ```
+In case of throubleshooting to check whether `hypernetx` is properly configured with Julia you can always run the following test:
+```
+using PyCall
+pyimport("hypernetx")
+```
+
+
 For plotting we also use the Jupyter notebook. The installation instructions are [here](https://github.com/JuliaLang/IJulia.jl#installation)
 ### Installation
 In Julia command line REPL press `]` for the Julia package manager and run:
