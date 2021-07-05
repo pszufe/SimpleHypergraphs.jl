@@ -311,7 +311,7 @@ end;
     @test typeof(randompartition(hg, 2)) == Vector{Set{Int}}
     @test length(randompartition(hg, 2)) == 2
     @test sort(vcat(collect.(randompartition(hg, 2))...))==1:nhv(hg)
-    
+
     hh = Hypergraph{Bool}(7,4)
     hh[1,1] = true
     hh[2,1:2] .= true
@@ -474,10 +474,10 @@ end;
   h[4,3:4] .= 1
   h[5,4] = 1
   h[5,2] = 1
-  @test SimpleHypergraphs.conductance(h, Set(1:3)) == 5 / 5
-  @test SimpleHypergraphs.conductance(h, Set(1)) == 3 / 1
-  @test SimpleHypergraphs.conductance(h, Set([1, 4])) == 8 / 3
-  @test SimpleHypergraphs.conductance(h, Set(2:5)) == 3 / 8
+  @test SimpleHypergraphs.conductance(h, Set(1:3)) == 2 / 4
+  @test SimpleHypergraphs.conductance(h, Set(1)) == 1 / 1
+  @test SimpleHypergraphs.conductance(h, Set([1, 4])) == 3 / 3
+  @test SimpleHypergraphs.conductance(h, Set(2:5)) == SimpleHypergraphs.conductance(h, Set(1))
   h = Hypergraph{Int}(6, 7)
   h[1:3, 1] .= 1
   h[1:2, 2] .= 1
@@ -487,8 +487,8 @@ end;
   h[4:6, 5] .= 1
   h[4:5, 6] .= 1
   h[5:6, 7] .= 1
-  @test SimpleHypergraphs.conductance(h, Set(1:3)) == 2 / 8
-  @test SimpleHypergraphs.conductance(h, Set([1, 4])) == 14 / 6
+  @test SimpleHypergraphs.conductance(h, Set(1:3)) == 1 / 8
+  @test SimpleHypergraphs.conductance(h, Set([1, 4])) == 6 / 6
   @test_throws ErrorException SimpleHypergraphs.conductance(h, Set{Int}())
   @test_throws ErrorException SimpleHypergraphs.conductance(h, Set(1:nhv(h)))
 end;
