@@ -45,7 +45,7 @@ In Julia command line REPL press `]` for the Julia package manager and run:
 ## Citing
 If you use this library in your research please cite us:
 
-Antelmi, A., Cordasco, G., Kamiński, B., Prałat, P., Scarano, V., Spagnuolo, C. and Szufel, P., 2020. Analyzing, exploring, and visualizing complex networks via hypergraphs using SimpleHypergraphs. jl.,  Internet Mathematics, vol. 1 iss. 1 (2020), March 31, 2020
+Antelmi, A., Cordasco, G., Kamiński, B., Prałat, P., Scarano, V., Spagnuolo, C. and Szufel, P., "Analyzing, exploring, and visualizing complex networks via hypergraphs using SimpleHypergraphs. jl.",  Internet Mathematics, vol. 1 iss. 1 (2020), March 31, 2020
 
 The full paper is available at [https://doi.org/10.24166/im.01.2020](https://doi.org/10.24166/im.01.2020)
 
