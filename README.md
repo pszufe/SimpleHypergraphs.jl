@@ -49,6 +49,8 @@ Antelmi, A., Cordasco, G., Kamiński, B., Prałat, P., Scarano, V., Spagnuolo, C
 
 The full paper is available at [https://doi.org/10.24166/im.01.2020](https://doi.org/10.24166/im.01.2020)
 
+## Acknowledgement
+The research is financed by NAWA - The Polish National Agency for Academic Exchange.
 
 
 [docs-latest-img]: https://img.shields.io/badge/docs-latest-blue.svg
