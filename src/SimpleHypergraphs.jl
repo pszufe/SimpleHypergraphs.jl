@@ -1,6 +1,6 @@
 module SimpleHypergraphs
 
-using LightGraphs
+using Graphs
 using StatsBase
 using DataStructures
 using PyCall

@@ -52,8 +52,8 @@ function distance(h::Hypergraph, distance_method::SnodeDistanceDijkstra)
     checkbounds(h.v2he, distance_method.source_node)
     checkbounds(h.v2he, distance_method.target_node)
     A = adjacency_matrix(h; s=distance_method.s)
-    g = LightGraphs.Graph(A)
-    dj = LightGraphs.dijkstra_shortest_paths(g, distance_method.source_node)
+    g = Graphs.Graph(A)
+    dj = Graphs.dijkstra_shortest_paths(g, distance_method.source_node)
     dj.dists[distance_method.target_node]
 end
 
@@ -78,7 +78,7 @@ function distance(h::Hypergraph, distance_method::SedgeDistanceDijkstra)
     checkbounds(h.he2v, distance_method.source_edge)
     checkbounds(h.he2v, distance_method.target_edge)
     A = edge_adjacency_matrix(h; s=distance_method.s)
-    g = LightGraphs.Graph(A)
-    dj = LightGraphs.dijkstra_shortest_paths(g, distance_method.source_edge)
+    g = Graphs.Graph(A)
+    dj = Graphs.dijkstra_shortest_paths(g, distance_method.source_edge)
     dj.dists[distance_method.target_edge]
 end

@@ -1,5 +1,5 @@
 """
-    TwoSectionView{T<:Real} <: LightGraphs.SimpleGraphs.AbstractSimpleGraph{Int64}
+    TwoSectionView{T<:Real} <: Graphs.SimpleGraphs.AbstractSimpleGraph{Int64}
 
 Represents a 2-section view of a hypergraph `h`.
 Note (1) this is a view - changes to the original hypergraph will be automatically reflected in the view.
@@ -13,11 +13,11 @@ This can be achieved via the `get_twosection_adjacency_mx(h)` method.
 
 TwoSectionView(::Hypergraph)
 
-The 2-section view of a hypergraph is suitable for processing with the LightGraphs.jl package.
-Several LightGraphs methods are provided for the compability.
+The 2-section view of a hypergraph is suitable for processing with the Graphs.jl package.
+Several Graphs methods are provided for the compability.
 
 """
-struct TwoSectionView{T<:Real} <: LightGraphs.SimpleGraphs.AbstractSimpleGraph{Int}
+struct TwoSectionView{T<:Real} <: Graphs.SimpleGraphs.AbstractSimpleGraph{Int}
     h::Hypergraph{T}
     TwoSectionView(h::Hypergraph{T}) where { T <: Real } = begin
         has_overlapping_hedges(h) && error("A two section view can be created only for a graph with non overlapping edges")
@@ -40,15 +40,15 @@ end
 """
   Return the number of vertices in 2-section view `t` of a hypergraph.
 """
-LightGraphs.nv(t::TwoSectionView) = length(t.h.v2he)
+Graphs.nv(t::TwoSectionView) = length(t.h.v2he)
 
 
-LightGraphs.vertices(t::TwoSectionView) = Base.OneTo(nv(t))
+Graphs.vertices(t::TwoSectionView) = Base.OneTo(nv(t))
 
 """
   Return the number of edges in 2-section view `t` of a hypergraph.
 """
-function LightGraphs.ne(t::TwoSectionView)
+function Graphs.ne(t::TwoSectionView)
     s = 0
     for x in t.h.he2v
         s += length(x) * (length(x) - 1)
@@ -57,11 +57,11 @@ function LightGraphs.ne(t::TwoSectionView)
 end
 
 """
-    LightGraphs.all_neighbors(t::TwoSectionView, v::Integer)
+    Graphs.all_neighbors(t::TwoSectionView, v::Integer)
 
 Returns N(v) (the vertex v is not included in N(v))
 """
-function LightGraphs.all_neighbors(t::TwoSectionView, v::Integer)
+function Graphs.all_neighbors(t::TwoSectionView, v::Integer)
     neighbors = Set{Int}()
     for he in keys(t.h.v2he[v])
         union!(neighbors, keys(t.h.he2v[he]))
@@ -70,32 +70,32 @@ function LightGraphs.all_neighbors(t::TwoSectionView, v::Integer)
     collect(neighbors) #returns the corresponding array
 end
 
-function LightGraphs.has_edge(t::TwoSectionView, s, d)
+function Graphs.has_edge(t::TwoSectionView, s, d)
     s == d && return false
     !isempty(intersect(keys(t.h.v2he[s]), keys(t.h.v2he[d])))
 end
 
 
-LightGraphs.has_vertex(t::TwoSectionView, v::Integer) = 1 <= v <= LightGraphs.nv(t)
+Graphs.has_vertex(t::TwoSectionView, v::Integer) = 1 <= v <= Graphs.nv(t)
 
-LightGraphs.outneighbors(t::TwoSectionView, v::Integer) =
-    LightGraphs.all_neighbors(t::TwoSectionView, v)
+Graphs.outneighbors(t::TwoSectionView, v::Integer) =
+    Graphs.all_neighbors(t::TwoSectionView, v)
 
-LightGraphs.inneighbors(t::TwoSectionView, v::Integer) =
-    LightGraphs.all_neighbors(t::TwoSectionView, v)
+Graphs.inneighbors(t::TwoSectionView, v::Integer) =
+    Graphs.all_neighbors(t::TwoSectionView, v)
 
 """
-    LightGraphs.SimpleGraph(t::TwoSectionView)
+    Graphs.SimpleGraph(t::TwoSectionView)
 
-Creates a `LightGraphs.SimpleGraph` representation of a `TwoSectionView` t.
+Creates a `Graphs.SimpleGraph` representation of a `TwoSectionView` t.
 
 This creates a copy of the date. Note that the weights information is not stored
 in the created `SimpleGraph`.
 """
-function LightGraphs.SimpleGraph(t::TwoSectionView)
+function Graphs.SimpleGraph(t::TwoSectionView)
     g = SimpleGraph(nv(t))
-    for v in LightGraphs.vertices(t)
-        neighbors_v = LightGraphs.all_neighbors(t, v)
+    for v in Graphs.vertices(t)
+        neighbors_v = Graphs.all_neighbors(t, v)
         for neighbor in neighbors_v
             add_edge!(g, v, neighbor)
         end
@@ -103,9 +103,9 @@ function LightGraphs.SimpleGraph(t::TwoSectionView)
     g
 end
 
-LightGraphs.is_directed(t::TwoSectionView{T}) where T = false
+Graphs.is_directed(t::TwoSectionView{T}) where T = false
 
-LightGraphs.is_directed(::Type{TwoSectionView{T}}) where T = false
+Graphs.is_directed(::Type{TwoSectionView{T}}) where T = false
 
 Base.eltype(::TwoSectionView{T}) where T = Int
 
@@ -127,12 +127,12 @@ function shortest_path(t::TwoSectionView, source::Int, target::Int)
 end
 
 """
-    LightGraphs.SimpleGraphs.fadj(t::TwoSectionView)
+    Graphs.SimpleGraphs.fadj(t::TwoSectionView)
 
 Generates an adjency list for this view of a hypergraph.
 """
-function LightGraphs.SimpleGraphs.fadj(t::TwoSectionView)
-    res = [Vector{Int}() for _ in 1:LightGraphs.nv(t)]
+function Graphs.SimpleGraphs.fadj(t::TwoSectionView)
+    res = [Vector{Int}() for _ in 1:Graphs.nv(t)]
     for he in t.h.he2v
         vs = collect(keys(he))
         if length(vs) > 1
@@ -143,13 +143,13 @@ function LightGraphs.SimpleGraphs.fadj(t::TwoSectionView)
     end
     sort!.(res)
 end
-LightGraphs.SimpleGraphs.fadj(t::TwoSectionView, v::Integer) = LightGraphs.all_neighbors(t,v)
-LightGraphs.edges(t::TwoSectionView) = LightGraphs.SimpleGraphs.SimpleEdgeIter(t)
+Graphs.SimpleGraphs.fadj(t::TwoSectionView, v::Integer) = Graphs.all_neighbors(t,v)
+Graphs.edges(t::TwoSectionView) = Graphs.SimpleGraphs.SimpleEdgeIter(t)
 
-LightGraphs.edgetype(t::TwoSectionView{T}) where T = LightGraphs.SimpleGraphs.SimpleEdge{Int}
+Graphs.edgetype(t::TwoSectionView{T}) where T = Graphs.SimpleGraphs.SimpleEdge{Int}
 
-LightGraphs.zero(t::TwoSectionView{T}) where T = TwoSectionView(Hypergraph{T}(0,0))
-LightGraphs.zero(::Type{TwoSectionView{T}}) where T = TwoSectionView(Hypergraph{T}(0,0))
+Graphs.zero(t::TwoSectionView{T}) where T = TwoSectionView(Hypergraph{T}(0,0))
+Graphs.zero(::Type{TwoSectionView{T}}) where T = TwoSectionView(Hypergraph{T}(0,0))
 
 """
     get_twosection_adjacency_mx(h::Hypergraph{T,V,E}; count_self_loops::Bool=false,

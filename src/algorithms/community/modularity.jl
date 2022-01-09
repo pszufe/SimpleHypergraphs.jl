@@ -49,13 +49,13 @@ end
 
 
 """
-    LightGraphs.modularity(h::Hypergraph, partition::Vector{Set{Int}},
+    Graphs.modularity(h::Hypergraph, partition::Vector{Set{Int}},
 ha::HypergraphAggs=HypergraphAggs(h))
 
 Calculates the strict modularity of a hypergraph `h` for a given `partition` using
 the precomputed aggregates `ha`.
 """
-@inline function LightGraphs.modularity(h::Hypergraph, partition::Vector{Set{Int}},
+@inline function Graphs.modularity(h::Hypergraph, partition::Vector{Set{Int}},
         ha::HypergraphAggs=HypergraphAggs(h))
 
     @boundscheck sum(length.(partition)) == nhv(h)
