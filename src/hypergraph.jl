@@ -46,9 +46,9 @@ the internal data storage, however a different dictionary such as `SortedDict`
 to ensure result replicability can be used (e.g. when doing stochastic
 simulations on hypergraphs).
 
-    Hypergraph(g::LightGraphs.Graph)
+    Hypergraph(g::Graphs.Graph)
 
-Constructs a hypergraph of degree 2 by making a deep copy of LightGraphs.Graph.
+Constructs a hypergraph of degree 2 by making a deep copy of Graphs.Graph.
 A `SortedDict` will be used for internal data storage of the hypergraph.
 
 **Arguments**
@@ -119,7 +119,7 @@ function Hypergraph(m::AbstractMatrix{Union{T, Nothing}}) where {T<:Real}
 end
 
 
-function Hypergraph(g::LightGraphs.Graph)
+function Hypergraph(g::Graphs.Graph)
     h = Hypergraph{Bool,Nothing,Nothing,SortedDict{Int,Bool}}(maximum(vertices(g)), ne(g))
     e = 0
     for edge in edges(g)

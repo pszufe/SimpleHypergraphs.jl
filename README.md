@@ -9,7 +9,7 @@
 
 ## Installation instructions
 ### Prerequisites for plotting
-`Simplehypergraphs` uses the Python's [hypernetx](https://github.com/pnnl/HyperNetX) library so if you want the plotting to work you need to install it first. In Julia command line REPL press `]` for the Julia package manager and run:
+`Simplehypergraphs` can optionally use (among other options) the Python's [hypernetx](https://github.com/pnnl/HyperNetX) library so if you want the `hypernetx` plotting to work you need to install it first along with its all dependent libraries. In Julia command line REPL press `]` for the Julia package manager and run:
 ```
 (v1.5) pkg> add PyCall Conda
 ```
@@ -19,8 +19,16 @@ using PyCall
 using Conda
 Conda.runconda(`install matplotlib --yes`)
 Conda.runconda(`install networkx --yes`)
+Conda.runconda(`install pandas --yes`)
 run(`$(PyCall.python) -m pip install hypernetx`)
 ```
+In case of throubleshooting to check whether `hypernetx` is properly configured with Julia you can always run the following test:
+```
+using PyCall
+pyimport("hypernetx")
+```
+
+
 For plotting we also use the Jupyter notebook. The installation instructions are [here](https://github.com/JuliaLang/IJulia.jl#installation)
 ### Installation
 In Julia command line REPL press `]` for the Julia package manager and run:
@@ -34,8 +42,15 @@ In Julia command line REPL press `]` for the Julia package manager and run:
 - [**DEV**][docs-dev-url] &mdash; **documentation of the development version.**
 - [**A Game of Thrones use case**][got-url] &mdash; check out how you can exploit the library to gather insights into real-world networks through a case study of the Game of Thrones TV series (raw `*.ipynb` version can be also [downloaded][got-raw])
 
+## Citing
+If you use this library in your research please cite us:
 
+Antelmi, A., Cordasco, G., Kamiński, B., Prałat, P., Scarano, V., Spagnuolo, C. and Szufel, P., "Analyzing, exploring, and visualizing complex networks via hypergraphs using SimpleHypergraphs. jl.",  Internet Mathematics, vol. 1 iss. 1 (2020), March 31, 2020
 
+The full paper is available at [https://doi.org/10.24166/im.01.2020](https://doi.org/10.24166/im.01.2020)
+
+## Acknowledgement
+The research is financed by NAWA - The Polish National Agency for Academic Exchange.
 
 
 [docs-latest-img]: https://img.shields.io/badge/docs-latest-blue.svg

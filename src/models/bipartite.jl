@@ -1,5 +1,5 @@
 """
-    BipartiteView{T<:Real} <: LightGraphs.SimpleGraphs.AbstractSimpleGraph{Int}
+    BipartiteView{T<:Real} <: Graphs.SimpleGraphs.AbstractSimpleGraph{Int}
 
 Represents a bipartite view of a hypergraph `h`.
 Note this is a view - changes to the original hypergraph will be automatically reflected in the view.
@@ -8,11 +8,11 @@ Note this is a view - changes to the original hypergraph will be automatically r
 
 BipartiteView(::Hypergraph)
 
-The bipartite view of a hypergraph is suitable for processing with the LightGraphs.jl package.
-Several LightGraphs methods are provided for the compability.
+The bipartite view of a hypergraph is suitable for processing with the Graphs.jl package.
+Several Graphs methods are provided for the compability.
 
 """
-struct BipartiteView{T<:Real} <: LightGraphs.SimpleGraphs.AbstractSimpleGraph{Int}
+struct BipartiteView{T<:Real} <: Graphs.SimpleGraphs.AbstractSimpleGraph{Int}
     h::Hypergraph{T}
 end
 
@@ -20,16 +20,16 @@ end
 """
   Return the number of vertices in a bipartite view `b` of a hypergraph.
 """
-LightGraphs.nv(b::BipartiteView) = length(b.h.v2he)+length(b.h.he2v)
+Graphs.nv(b::BipartiteView) = length(b.h.v2he)+length(b.h.he2v)
 
-LightGraphs.vertices(b::BipartiteView) = Base.OneTo(LightGraphs.nv(b))
+Graphs.vertices(b::BipartiteView) = Base.OneTo(Graphs.nv(b))
 
 """
   Return the number of edges in a bipartite view `b` of a hypergraph.
 """
-LightGraphs.ne(b::BipartiteView) = sum(length.(b.h.v2he))
+Graphs.ne(b::BipartiteView) = sum(length.(b.h.v2he))
 
-function LightGraphs.all_neighbors(b::BipartiteView, v::Integer)
+function Graphs.all_neighbors(b::BipartiteView, v::Integer)
     n1 = length(b.h.v2he)
     if v <= n1
       n1 .+ keys(b.h.v2he[v])
@@ -38,7 +38,7 @@ function LightGraphs.all_neighbors(b::BipartiteView, v::Integer)
     end
 end
 
-function LightGraphs.has_edge(b::BipartiteView, s, d)
+function Graphs.has_edge(b::BipartiteView, s, d)
     n1 = length(b.h.v2he)
     if s <= n1
         d > n1 && has_key(b.v2he[s], d - n1)
@@ -47,22 +47,22 @@ function LightGraphs.has_edge(b::BipartiteView, s, d)
     end
 end
 
-LightGraphs.has_vertex(b::BipartiteView, v::Integer) = 1 <= v <= LightGraphs.nv(b)
+Graphs.has_vertex(b::BipartiteView, v::Integer) = 1 <= v <= Graphs.nv(b)
 
 
-LightGraphs.outneighbors(b::BipartiteView, v::Integer) = LightGraphs.all_neighbors(b::BipartiteView, v)
+Graphs.outneighbors(b::BipartiteView, v::Integer) = Graphs.all_neighbors(b::BipartiteView, v)
 
-LightGraphs.inneighbors(b::BipartiteView, v::Integer) = LightGraphs.all_neighbors(b::BipartiteView, v)
+Graphs.inneighbors(b::BipartiteView, v::Integer) = Graphs.all_neighbors(b::BipartiteView, v)
 
 """
-    LightGraphs.SimpleGraph(b::BipartiteView)
+    Graphs.SimpleGraph(b::BipartiteView)
 
-Creates a `LightGraphs.SimpleGraph` representation of a `BipartiteView` b.
+Creates a `Graphs.SimpleGraph` representation of a `BipartiteView` b.
 
 This creates a copy of the date. Note that the weights information is not stored
 in the created `SimpleGraph`.
 """
-function LightGraphs.SimpleGraph(b::BipartiteView)
+function Graphs.SimpleGraph(b::BipartiteView)
     g = SimpleGraph(nv(b))
     for v in keys(b.h.v2he)
         for he in keys(b.h.v2he[v])
@@ -72,9 +72,9 @@ function LightGraphs.SimpleGraph(b::BipartiteView)
     g
 end
 
-LightGraphs.is_directed(b::BipartiteView{T}) where T = false
+Graphs.is_directed(b::BipartiteView{T}) where T = false
 
-LightGraphs.is_directed(::Type{BipartiteView{T}}) where T = false
+Graphs.is_directed(::Type{BipartiteView{T}}) where T = false
 
 Base.eltype(::BipartiteView{T}) where T = Int
 
@@ -95,12 +95,12 @@ function shortest_path(b::BipartiteView,source::Int, target::Int)
 end
 
 """
-    LightGraphs.SimpleGraphs.fadj(b::BipartiteView)
+    Graphs.SimpleGraphs.fadj(b::BipartiteView)
 
 Generates an adjency list for this view of a hypergraph.
 """
-function LightGraphs.SimpleGraphs.fadj(b::BipartiteView)
-    res = Vector{Vector{Int}}(undef, LightGraphs.nv(b))
+function Graphs.SimpleGraphs.fadj(b::BipartiteView)
+    res = Vector{Vector{Int}}(undef, Graphs.nv(b))
 
     h_nv = length(b.h.v2he)
     for i in 1:h_nv
@@ -112,10 +112,10 @@ function LightGraphs.SimpleGraphs.fadj(b::BipartiteView)
     res
 end
 
-LightGraphs.SimpleGraphs.fadj(b::BipartiteView, v::Integer) = LightGraphs.all_neighbors(b,v)
-LightGraphs.edges(b::BipartiteView) = LightGraphs.SimpleGraphs.SimpleEdgeIter(b)
+Graphs.SimpleGraphs.fadj(b::BipartiteView, v::Integer) = Graphs.all_neighbors(b,v)
+Graphs.edges(b::BipartiteView) = Graphs.SimpleGraphs.SimpleEdgeIter(b)
 
-LightGraphs.edgetype(b::BipartiteView{T}) where T = LightGraphs.SimpleGraphs.SimpleEdge{Int}
+Graphs.edgetype(b::BipartiteView{T}) where T = Graphs.SimpleGraphs.SimpleEdge{Int}
 
-LightGraphs.zero(t::BipartiteView{T}) where T = BipartiteView(Hypergraph{T}(0,0))
-LightGraphs.zero(::Type{BipartiteView{T}}) where T = BipartiteView(Hypergraph{T}(0,0))
+Graphs.zero(t::BipartiteView{T}) where T = BipartiteView(Hypergraph{T}(0,0))
+Graphs.zero(::Type{BipartiteView{T}}) where T = BipartiteView(Hypergraph{T}(0,0))

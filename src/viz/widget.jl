@@ -43,7 +43,7 @@ function widget_graph(
 
                 <div id="div$(div_id)"></div>
 
-                <script src="https://aleant93.github.io/hypergraphs-drawing/hypergraphsdrawing.js"></script>
+                <script src="https://alessant.github.io/hypergraphs-drawing/hypergraphsdrawing.js"></script>
 
                 <script>
 
