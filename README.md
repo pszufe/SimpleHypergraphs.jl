@@ -20,7 +20,7 @@ using Conda
 Conda.runconda(`install matplotlib --yes`)
 Conda.runconda(`install networkx --yes`)
 Conda.runconda(`install pandas --yes`)
-run(`$(PyCall.python) -m pip install hypernetx`)
+run(`$(PyCall.python) -m pip install hypernetx==1.2.5`)
 ```
 In case of throubleshooting to check whether `hypernetx` is properly configured with Julia you can always run the following test:
 ```
@@ -28,8 +28,10 @@ using PyCall
 pyimport("hypernetx")
 ```
 
-
 For plotting we also use the Jupyter notebook. The installation instructions are [here](https://github.com/JuliaLang/IJulia.jl#installation)
+
+Note that recently a new version of hypernetx has been released (2.0.0), however as of today SimpleHyprgraphs.jl is integrated with the previous versions up to 1.2.5. 
+
 ### Installation
 In Julia command line REPL press `]` for the Julia package manager and run:
 ```

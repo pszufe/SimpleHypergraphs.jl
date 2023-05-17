@@ -79,7 +79,7 @@ end
 
 Hypergraph{T,V,E}(n::Integer, k::Integer) where {T<:Real, V, E} = Hypergraph{T,V,E,Dict{Int,T}}(n, k)
 
-Hypergraph{T,V}(n::Integer, k::Integer) where {T<:Real, V, E} = Hypergraph{T,V,Nothing,Dict{Int,T}}(n, k)
+Hypergraph{T,V}(n::Integer, k::Integer) where {T<:Real, V} = Hypergraph{T,V,Nothing,Dict{Int,T}}(n, k)
 
 Hypergraph{T}(n::Integer, k::Integer) where {T<:Real} =  Hypergraph{T,Nothing,Nothing,Dict{Int,T}}(n, k)
 
