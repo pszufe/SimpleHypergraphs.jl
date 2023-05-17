@@ -12,7 +12,7 @@ matrix:
 env:
   - PYTHON=~/.julia/conda/3/bin/python
 before_install:
-  - julia -e 'using Pkg; Pkg.add.(["PyCall","Conda"]); Pkg.build("PyCall");using PyCall;println("Python for Julia $(PyCall.python) ver. $(PyCall.pyversion)"); using Conda; Conda.add.(["matplotlib","networkx"]);run(`$(PyCall.python) -m pip install hypernetx`)';
+  - julia -e 'using Pkg; Pkg.add.(["PyCall","Conda"]); Pkg.build("PyCall");using PyCall;println("Python for Julia $(PyCall.python) ver. $(PyCall.pyversion)"); using Conda; Conda.add.(["matplotlib","networkx"]);run(`$(PyCall.python) -m pip install hypernetx==1.2.5`)';
 
 
 notifications:
