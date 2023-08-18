@@ -2,4 +2,4 @@
 
 Documentation for SimpleHypergraphs.jl
 
-For details please go to the [Reference](reference/) section.
+For details please go to the [Reference](reference.md) section.

@@ -44,7 +44,7 @@ h
 
 # output
 
-2×3 Hypergraph{Int64,Nothing,Nothing,Dict{Int64,Int64}}:
+2×3 Hypergraph{Int64, Nothing, Nothing, Dict{Int64, Int64}}:
  nothing  5         5
  nothing   nothing   nothing
 ```
@@ -55,13 +55,13 @@ setindex!(::Hypergraph, ::Nothing, ::Vararg{Int,2})
 setindex!(::Hypergraph, ::Real, ::Vararg{Int,2})
 ```
 
-Hypergraph representation as LightGraphs' simple graphs
+Hypergraph representation as Graphs.jl' simple graphs
 -------------------------------------------------------
 
 The goal of those methods is to provide a way to manipulate a hypergraph using
-the methods from the [LightGraphs.jl](https://github.com/JuliaGraphs/LightGraphs.jl) library.
+the methods from the [Graphs.jl](https://github.com/JuliaGraphs/Graphs.jl) library.
 This has been achieved by providing types that are subtypes of the
-`LightGraphs.SimpleGraphs.AbstractSimpleGraph{Int}` type along with appropiate methods.
+`Graphs.SimpleGraphs.AbstractSimpleGraph{Int}` type along with appropiate methods.
 
 ```@docs
 BipartiteView
