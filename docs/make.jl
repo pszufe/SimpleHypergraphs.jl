@@ -21,6 +21,7 @@ makedocs(
     format = Documenter.HTML(),
     modules = [SimpleHypergraphs],
 	pages = ["index.md", "reference.md"],
+	checkdocs=:exports,
 	doctest = true	
 )
 
