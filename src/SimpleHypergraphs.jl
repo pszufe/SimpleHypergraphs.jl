@@ -71,6 +71,7 @@ function support_hypernetx()
 end
 
 
+include("abstracttypes.jl")
 include("hypergraph.jl")
 include("io.jl")
 

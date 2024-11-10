@@ -1,5 +1,8 @@
+#TODO: traits
+
+
 """
-    Hypergraph{T} <: AbstractMatrix{Union{T, Nothing}}
+    Hypergraph{T} <: AbstractHypergraph{T}
 
 A hypergraph storing information about vertices and hyperedges.
 
@@ -60,8 +63,10 @@ A `SortedDict` will be used for internal data storage of the hypergraph.
 * `n` : number of vertices
 * `k` : number of hyperedges
 * `m` : a matrix representation rows are vertices and columns are hyperedges
+* `g` : a graph representation of the hypergraph
 """
-struct Hypergraph{T<:Real,V,E,D<:AbstractDict{Int,T}} <: AbstractMatrix{Union{T, Nothing}}
+
+struct Hypergraph{T<:Real,V,E,D<:AbstractDict{Int,T}} <: AbstractHypergraph{T}
     v2he::Vector{D}
     he2v::Vector{D}
     v_meta::Vector{Union{V,Nothing}}
@@ -129,6 +134,100 @@ function Hypergraph(g::Graphs.Graph)
     end
     h
 end
+
+
+"""
+    SimpleHypergraph{T} <: AbstractHypergraph{T}
+
+A hypergraph storing only incidence and weight information about vertices and
+hyperedges.
+
+**Constructors**
+
+    SimpleHypergraph{T}(n::Integer,k::Integer) where {T<:Real}
+    SimpleHypergraph{T}(n::Integer, k::Integer) where {T<:Real}
+    SimpleHypergraph{T}(n::Integer, k::Integer) where {T<:Real}
+    SimpleHypergraph{T,D}(n::Integer, k::Integer) where {T<:Real,D<:AbstractDict{Int,T}}
+
+Construct a hypergraph with a given number of vertices and hyperedges.
+By default the hypegraph uses a `Dict{Int,T}` for the internal data storage,
+however a different dictionary such as `SortedDict` to ensure result replicability
+can be used (e.g. when doing stochastic simulations on hypergraphs).
+
+    SimpleHypergraph(m::AbstractMatrix{Union{T, Nothing}}) where {T<:Real}
+    SimpleHypergraph{T, D}(m::AbstractMatrix{Union{T, Nothing}}) where {T<:Real,D<:AbstractDict{Int,T}}
+
+Construct a hypergraph using its matrix representation.
+In the matrix representation rows are vertices and columns are hyperedges.
+By default the hypegraph uses a `Dict{Int,T}` for the internal data storage,
+however a different dictionary such as `SortedDict` to ensure result
+replicability can be used (e.g. when doing stochastic simulations on
+hypergraphs).
+
+    SimpleHypergraph(g::Graphs.Graph)
+
+Constructs a hypergraph of degree 2 by making a deep copy of Graphs.Graph.
+A `SortedDict` will be used for internal data storage of the hypergraph.
+
+**Arguments**
+
+* `T` : type of weight values stored in the hypergraph's adjacency matrix
+* `D` : dictionary for storing values the default is `Dict{Int, T}`
+* `n` : number of vertices
+* `k` : number of hyperedges
+* `m` : a matrix representation rows are vertices and columns are hyperedges
+* `g` : a graph representation of the hypergraph
+"""
+
+struct SimpleHypergraph{T<:Real,D<:AbstractDict{Int,T}} <: AbstractHypergraph{T}
+    v2he::Vector{D}
+    he2v::Vector{D}
+
+    SimpleHypergraph{T,D}(n::Integer, k::Integer) where {T<:Real,D<:AbstractDict{Int,T}} =
+        new{T,D}([D() for i in 1:n],[D() for i in 1:k])
+end
+
+# TODO: constructors
+
+# Implementation based on guidance from Przemysław Szufel: https://github.com/pszufe/SimpleHypergraphs.jl/issues/45
+# Somewhat inefficient representation, as vertex information is copied
+# But, allows us to manipulate DirectedHypergraphs using Hypergraph functionality
+# TODO: reconsider this design choice
+struct DirectedHypergraph{T<:Real,V,E,D<:AbstractDict{Int, T}} <: AbstractHypergraph{T}
+    in::Hypergraph{T,V,E,D}
+    out::Hypergraph{T,V,E,D}
+
+    DirectedHypergraph{T,V,E,D}(
+        n::Integer, k::Integer,
+        v_meta=Vector{Union{V, Nothing}}(nothing, n),
+        he_meta_in=Vector{Union{E, Nothing}}(nothing, k),
+        he_meta_out=Vector{Union{E, Nothing}}(nothing, k)
+        ) where {T<:Real,V,E,D<:AbstractDict{Int, T}} =
+        new{T,V,E,D}(
+            Hypergraph(n, k, v_meta, he_meta_in),
+            Hypergraph(n, k, v_meta, he_meta_out)
+        )
+end
+
+# TODO: constructors
+
+struct SimpleDirectedHypergraph{T<:Real,D<:AbstractDict{Int, T}} <: AbstractHypergraph{T}
+    in::SimpleHypergraph{T,D}
+    out::SimpleHypergraph{T,D}
+
+    SimpleDirectedHypergraph{T,D}(
+        n::Integer, k::Integer,
+        ) where {T<:Real,D<:AbstractDict{Int, T}} =
+        new{T,D}(
+            SimpleHypergraph(n, k),
+            SimpleHypergraph(n, k)
+        )
+end
+
+# TODO: constructors
+
+
+# TODO: make these all more general
 
 """
     Base.size(h::Hypergraph)
