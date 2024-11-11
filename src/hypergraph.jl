@@ -1,3 +1,5 @@
+# TODO: since "simple" has a specific mathematical meaning, should we pick a different name?
+
 """
     Hypergraph{T} <: AbstractUndirectedHypergraph{T}
 

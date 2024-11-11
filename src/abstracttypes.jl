@@ -36,7 +36,6 @@ isdirected(X::T) where {T} = isdirected(T)
 @traitimpl IsDirected{AbstractDirectedHypergraph}
 isdirected(::Type{T}) where {T<:AbstractDirectedHypergraph} = true
 
-
 # functions and default behaviour: vertex/hyperedge metadata
 @traitimpl HasMeta{T} <- hasmeta(T)
 hasmeta(::Type{T}) where {T} = false
