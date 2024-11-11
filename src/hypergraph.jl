@@ -1,6 +1,3 @@
-#TODO: traits
-
-
 """
     Hypergraph{T} <: AbstractHypergraph{T}
 
@@ -666,3 +663,14 @@ end
 
 # TODO find connected components without recurrence
 # TODO needs validate_hypergraph!(h::Hypergraph{T})
+
+
+# build unions of types for easier dispatch
+const DirectedStructs = Union{DirectedHypergraph, SimpleDirectedHypergraph}
+const HasMetaStructs = Union{Hypergraph, DirectedHypergraph}
+
+# implementing traits on types
+@traitimpl IsDirected{DirectedStructs}
+isdirected(::Type{T}) where {T<:DirectedStructs} = true
+@traitimpl HasMeta{HasMetastructs}
+hasmeta(::Type{T}) where {T<:HasMetaStructs} = true
