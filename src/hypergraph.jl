@@ -1,4 +1,6 @@
 # TODO: since "simple" has a specific mathematical meaning, should we pick a different name?
+# TODO: think more carefully about ensuring that metadata vectors are of appropriate lengths
+# TODO: make sure there are constructors for empty (unspecified) types
 
 """
     Hypergraph{T} <: AbstractUndirectedHypergraph{T}
@@ -281,7 +283,7 @@ A `SortedDict` will be used for internal data storage of the hypergraph.
 """
 # Implementation based on guidance from Przemysław Szufel: https://github.com/pszufe/SimpleHypergraphs.jl/issues/45
 # Allows us to manipulate DirectedHypergraphs using Hypergraph functionality
-# Some risk of user manipulating individual `in` and `out` (undirected) hypergraphs
+# Danger of user manipulating individual `hg_in` and `hg_out` (undirected) hypergraphs
 # Is there a smart way to prevent this?
 # TODO: reconsider this design choice
 struct DirectedHypergraph{T<:Real,V,E,D<:AbstractDict{Int, T}} <: AbstractDirectedHypergraph{Tuple{T, T}}
@@ -297,12 +299,34 @@ struct DirectedHypergraph{T<:Real,V,E,D<:AbstractDict{Int, T}} <: AbstractDirect
         v_meta=Vector{Union{V, Nothing}}(nothing, n),
         he_meta_in=Vector{Union{E, Nothing}}(nothing, k),
         he_meta_out=Vector{Union{E, Nothing}}(nothing, k)
-        ) where {T<:Real,V,E,D<:AbstractDict{Int, T}} =
+        ) where {T<:Real,V,E,D<:AbstractDict{Int, T}} = 
         new{T,V,E,D}(
             SimpleHypergraph(n, k),
             SimpleHypergraph(n, k),
             v_meta, he_meta_in, he_meta_out
         )
+
+    function DirectedHypergraph{T,V,E,D}(
+        hg_in::SimpleHypergraph{T,D},
+        hg_out::SimpleHypergraph{T,D};
+        v_meta::Vector{Union{Nothing,V}}=Vector{Union{Nothing,V}}(nothing, size(m,1)),
+        he_meta_in::Vector{Union{Nothing,E}}=Vector{Union{Nothing,E}}(nothing, size(m,2)),
+        he_meta_out::Vector{Union{Nothing,E}}=Vector{Union{Nothing,E}}(nothing, size(m,2))
+        ) where {T<:Real,V,E,D<:AbstractDict{Int, T}}
+        @assert size(hg_in) == size(hg_out)
+
+        @assert length(v_meta) == size(hg_in,1)
+        @assert length(he_meta_in) == size(hg_in,2)
+        @assert length(he_meta_out) == size(hg_out,2)
+
+        new{T,V,E,D}(
+            hg_in,
+            hg_out,
+            v_meta,
+            he_meta_in,
+            he_meta_out
+        )
+    end
 end
 
 DirectedHypergraph{T,V,E}(n::Integer, k::Integer) where {T<:Real, V, E} = DirectedHypergraph{T,V,E,Dict{Int,T}}(n, k)
@@ -313,20 +337,60 @@ DirectedHypergraph{T}(n::Integer, k::Integer) where {T<:Real} = DirectedHypergra
 
 DirectedHypergraph(n::Integer, k::Integer) = DirectedHypergraph{Bool,Nothing,Nothing,Dict{Int,Bool}}(n, k)
 
-# TODO: these and derivatives
-function DirectedHypergraph{T,V,E,D}(
-    shg_in::SimpleHypergraph{T,D},
-    shg_out::SimpleHypergraph{T,D};
+
+function DirectedHypergraph{T,V,D}(
+    hg_in::SimpleHypergraph{T,D},
+    hg_out::SimpleHypergraph{T,D};
     v_meta::Vector{Union{Nothing,V}}=Vector{Union{Nothing,V}}(nothing, size(m,1)),
+    ) where {T<:Real,V,D<:AbstractDict{Int, T}}
+
+    DirectedHypergraph{T,V,Nothing,D}(
+        hg_in,
+        hg_out,
+        v_meta,
+        Vector{Nothing}(nothing, size(hg_in,2)),
+        Vector{Nothing}(nothing, size(hg_in,2))
+    )
+end
+
+function DirectedHypergraph{T,E,D}(
+    hg_in::SimpleHypergraph{T,D},
+    hg_out::SimpleHypergraph{T,D};
     he_meta_in::Vector{Union{Nothing,E}}=Vector{Union{Nothing,E}}(nothing, size(m,2)),
     he_meta_out::Vector{Union{Nothing,E}}=Vector{Union{Nothing,E}}(nothing, size(m,2))
-) end
+    ) where {T<:Real,E,D<:AbstractDict{Int, T}}
+
+    DirectedHypergraph{T,Nothing,E,D}(
+        hg_in,
+        hg_out,
+        Vector{Nothing}(nothing, size(hg_in,1)),
+        he_meta_in,
+        he_meta_out
+    )
+end
+
 
 function DirectedHypergraph{T,V,E,D}(
     hg_in::Hypergraph{T,V,E,D},
-    hg_out::Hypergraph{T,V,E,D};
-    merge_vertex_meta::Bool=false
-) end
+    hg_out::Hypergraph{T,V,E,D}
+)
+    @assert size(hg_in) == size(hg_out)
+
+    n, k = size(hg_in)
+    sgh_in = SimpleHypergraph(n, k)
+    sgh_out = SimpleHypergraph(n, k)
+
+    # TODO: test behavior on this
+    sgh_in .= hg_in
+    sgh_out .= hg_out
+
+    if all(hg_in.v_meta .== hg_out.v_meta)
+        DirectedHypergraph{T,V,E,D}(shg_in, shg_out, hg_in.v_meta, hg_in.he_meta, hg_out.he_meta)
+    else
+        throw(ArgumentError("Vertex metadata `v_meta` is different for ingoing and outgoing hypergraphs!"))
+    end
+end
+
 
 function DirectedHypergraph{T,V,E,D}(
         m_in::AbstractMatrix{Union{T, Nothing}},
@@ -335,48 +399,111 @@ function DirectedHypergraph{T,V,E,D}(
         he_meta_in::Vector{Union{Nothing,E}}=Vector{Union{Nothing,E}}(nothing, size(m,2)),
         he_meta_out::Vector{Union{Nothing,E}}=Vector{Union{Nothing,E}}(nothing, size(m,2))
     ) where {T<:Real,V,E,D<:AbstractDict{Int,T}}
-    
-    @assert size(m_in) == size(m_out)
-    @assert length(v_meta) == size(m_in,1)
-    @assert length(v_meta) == size(m_out,1)
-    @assert length(he_meta_in) == size(m_in,2)
-    @assert length(he_meta_out) == size(m_out,2)
 
     # Arbitrary, since sizes are identical
     n, k = size(m_in)
 
-    h_in = SimpleHypergraph{T,D}(n, k)
-    h_in .= m_in
+    hg_in = SimpleHypergraph{T,D}(n, k)
+    hg_in .= m_in
     
-    h_out = SimpleHypergraph{T,D}(n, k)
-    h_out .= m_out
+    hg_out = SimpleHypergraph{T,D}(n, k)
+    hg_out .= m_out
 
-    # TODO: finish this
-
+    DirectedHypergraph{T,V,E,D}(hg_in, hg_out, v_meta, he_meta_in, he_meta_out)
 end
 
-function Hypergraph{T,V,E}(m::AbstractMatrix{Union{T, Nothing}};
-                        v_meta::Vector{Union{Nothing,V}}=Vector{Union{Nothing,V}}(nothing, size(m,1)),
-                        he_meta::Vector{Union{Nothing,E}}=Vector{Union{Nothing,E}}(nothing, size(m,2))
-                        ) where {T<:Real,V,E}
-    Hypergraph{T,V,E,Dict{Int,T}}(m;v_meta=v_meta,he_meta=he_meta)
+function DirectedHypergraph{T,V,E}(
+    m_in::AbstractMatrix{Union{T, Nothing}},
+    m_out::AbstractMatrix{Union{T, Nothing}};
+    v_meta::Vector{Union{Nothing,V}}=Vector{Union{Nothing,V}}(nothing, size(m,1)),
+    he_meta_in::Vector{Union{Nothing,E}}=Vector{Union{Nothing,E}}(nothing, size(m,2)),
+    he_meta_out::Vector{Union{Nothing,E}}=Vector{Union{Nothing,E}}(nothing, size(m,2))
+) where {T<:Real,V,E}
+
+    # Arbitrary, since sizes are identical
+    n, k = size(m_in)
+
+    hg_in = SimpleHypergraph{T,Dict{Int,T}}(n, k)
+    hg_in .= m_in
+
+    hg_out = SimpleHypergraph{T,Dict{Int,T}}(n, k)
+    hg_out .= m_out
+
+    DirectedHypergraph{T,V,E,Dict{Int,T}}(hg_in, hg_out, v_meta, he_meta_in, he_meta_out)
 end
 
-function Hypergraph{T,V}(m::AbstractMatrix{Union{T, Nothing}};
-                        v_meta::Vector{Union{Nothing,V}}=Vector{Union{Nothing,V}}(nothing, size(m,1))
-                        ) where {T<:Real,V}
-    Hypergraph{T,V,Nothing,Dict{Int,T}}(m;v_meta=v_meta)
+function DirectedHypergraph{T,V}(
+    m_in::AbstractMatrix{Union{T, Nothing}},
+    m_out::AbstractMatrix{Union{T, Nothing}};
+    v_meta::Vector{Union{Nothing,V}}=Vector{Union{Nothing,V}}(nothing, size(m,1)),
+) where {T<:Real,V}
+
+    # Arbitrary, since sizes are identical
+    n, k = size(m_in)
+
+    hg_in = SimpleHypergraph{T,Dict{Int,T}}(n, k)
+    hg_in .= m_in
+
+    hg_out = SimpleHypergraph{T,Dict{Int,T}}(n, k)
+    hg_out .= m_out
+
+    DirectedHypergraph{T,V,Nothing,Dict{Int,T}}(
+        hg_in,
+        hg_out,
+        v_meta,
+        Vector{Nothing}(nothing, size(m_in,2)),
+        Vector{Nothing}(nothing, size(m_out,2))
+    )
 end
 
-function Hypergraph{T}(m::AbstractMatrix{Union{T, Nothing}}) where {T<:Real}
-    Hypergraph{T,Nothing,Nothing,Dict{Int,T}}(m)
+function DirectedHypergraph{T}(
+    m_in::AbstractMatrix{Union{T, Nothing}},
+    m_out::AbstractMatrix{Union{T, Nothing}}
+) where {T<:Real}
+
+    # Arbitrary, since sizes are identical
+    n, k = size(m_in)
+
+    hg_in = SimpleHypergraph{T,Dict{Int,T}}(n, k)
+    hg_in .= m_in
+
+    hg_out = SimpleHypergraph{T,Dict{Int,T}}(n, k)
+    hg_out .= m_out
+
+    DirectedHypergraph{T,Nothing,Nothing,Dict{Int,T}}(
+        hg_in,
+        hg_out,
+        Vector{Nothing}(nothing, size(m_in,1)),
+        Vector{Nothing}(nothing, size(m_in,2)),
+        Vector{Nothing}(nothing, size(m_out,2))
+    )
 end
 
-function Hypergraph(m::AbstractMatrix{Union{T, Nothing}}) where {T<:Real}
-    Hypergraph{T,Nothing,Nothing,Dict{Int,T}}(m)
+function DirectedHypergraph(
+    m_in::AbstractMatrix{Union{T, Nothing}},
+    m_out::AbstractMatrix{Union{T, Nothing}}
+) where {T<:Real}
+
+    # Arbitrary, since sizes are identical
+    n, k = size(m_in)
+
+    hg_in = SimpleHypergraph{T,Dict{Int,T}}(n, k)
+    hg_in .= m_in
+
+    hg_out = SimpleHypergraph{T,Dict{Int,T}}(n, k)
+    hg_out .= m_out
+
+    DirectedHypergraph{T,Nothing,Nothing,Dict{Int,T}}(
+        hg_in,
+        hg_out,
+        Vector{Nothing}(nothing, size(m_in,1)),
+        Vector{Nothing}(nothing, size(m_in,2)),
+        Vector{Nothing}(nothing, size(m_out,2))
+    )
 end
 
-
+# TODO: you are here
+# Digraph time, baby!
 function Hypergraph(g::Graphs.Graph)
     h = Hypergraph{Bool,Nothing,Nothing,SortedDict{Int,Bool}}(maximum(vertices(g)), ne(g))
     e = 0
