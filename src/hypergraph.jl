@@ -1,7 +1,7 @@
 """
-    Hypergraph{T} <: AbstractHypergraph{T}
+    Hypergraph{T} <: AbstractUndirectedHypergraph{T}
 
-A hypergraph storing information about vertices and hyperedges.
+An undirected hypergraph storing information about vertices and hyperedges.
 
 **Constructors**
 
@@ -20,7 +20,7 @@ A hypergraph storing information about vertices and hyperedges.
 
 Construct a hypergraph with a given number of vertices and hyperedges.
 Optionally, values of type `V` can be stored at vertices and values of type `E`
-can be stored at hyperedges. By default the hypegraph uses a `Dict{Int,T}` for
+can be stored at hyperedges. By default the hypergraph uses a `Dict{Int,T}` for
 the internal data storage, however a different dictionary such as `SortedDict`
 to ensure result replicability can be used (e.g. when doing stochastic
 simulations on hypergraphs).
@@ -41,7 +41,7 @@ simulations on hypergraphs).
 Construct a hypergraph using its matrix representation.
 In the matrix representation rows are vertices and columns are hyperedges.
 Optionally, values of type `V` can be stored at vertices and values of type `E`
-can be stored at hyperedges. By default the hypegraph uses a `Dict{Int,T}` for
+can be stored at hyperedges. By default the hypergraph uses a `Dict{Int,T}` for
 the internal data storage, however a different dictionary such as `SortedDict`
 to ensure result replicability can be used (e.g. when doing stochastic
 simulations on hypergraphs).
@@ -63,7 +63,7 @@ A `SortedDict` will be used for internal data storage of the hypergraph.
 * `g` : a graph representation of the hypergraph
 """
 
-struct Hypergraph{T<:Real,V,E,D<:AbstractDict{Int,T}} <: AbstractHypergraph{T}
+struct Hypergraph{T<:Real,V,E,D<:AbstractDict{Int,T}} <: AbstractUndirectedHypergraph{T}
     v2he::Vector{D}
     he2v::Vector{D}
     v_meta::Vector{Union{V,Nothing}}
@@ -75,7 +75,8 @@ struct Hypergraph{T<:Real,V,E,D<:AbstractDict{Int,T}} <: AbstractHypergraph{T}
     ) where {T<:Real,V,E,D<:AbstractDict{Int,T}} =
         new{T,V,E,D}(
             [D() for i in 1:n],[D() for i in 1:k],
-            v_meta, he_meta)
+            v_meta, he_meta
+        )
 end
 
 
@@ -134,20 +135,18 @@ end
 
 
 """
-    SimpleHypergraph{T} <: AbstractHypergraph{T}
+    SimpleHypergraph{T} <: AbstractUndirectedHypergraph{T}
 
-A hypergraph storing only incidence and weight information about vertices and
+An undirected hypergraph storing only incidence and weight information about vertices and
 hyperedges.
 
 **Constructors**
 
     SimpleHypergraph{T}(n::Integer,k::Integer) where {T<:Real}
-    SimpleHypergraph{T}(n::Integer, k::Integer) where {T<:Real}
-    SimpleHypergraph{T}(n::Integer, k::Integer) where {T<:Real}
     SimpleHypergraph{T,D}(n::Integer, k::Integer) where {T<:Real,D<:AbstractDict{Int,T}}
 
 Construct a hypergraph with a given number of vertices and hyperedges.
-By default the hypegraph uses a `Dict{Int,T}` for the internal data storage,
+By default the hypergraph uses a `Dict{Int,T}` for the internal data storage,
 however a different dictionary such as `SortedDict` to ensure result replicability
 can be used (e.g. when doing stochastic simulations on hypergraphs).
 
@@ -156,7 +155,7 @@ can be used (e.g. when doing stochastic simulations on hypergraphs).
 
 Construct a hypergraph using its matrix representation.
 In the matrix representation rows are vertices and columns are hyperedges.
-By default the hypegraph uses a `Dict{Int,T}` for the internal data storage,
+By default the hypergraph uses a `Dict{Int,T}` for the internal data storage,
 however a different dictionary such as `SortedDict` to ensure result
 replicability can be used (e.g. when doing stochastic simulations on
 hypergraphs).
@@ -176,7 +175,7 @@ A `SortedDict` will be used for internal data storage of the hypergraph.
 * `g` : a graph representation of the hypergraph
 """
 
-struct SimpleHypergraph{T<:Real,D<:AbstractDict{Int,T}} <: AbstractHypergraph{T}
+struct SimpleHypergraph{T<:Real,D<:AbstractDict{Int,T}} <: AbstractUndirectedHypergraph{T}
     v2he::Vector{D}
     he2v::Vector{D}
 
@@ -184,15 +183,112 @@ struct SimpleHypergraph{T<:Real,D<:AbstractDict{Int,T}} <: AbstractHypergraph{T}
         new{T,D}([D() for i in 1:n],[D() for i in 1:k])
 end
 
-# TODO: constructors
+SimpleHypergraph{T}(n::Integer, k::Integer) where {T<:Real} = SimpleHypergraph{T,Dict{Int,T}}(n, k)
 
+SimpleHypergraph(n::Integer, k::Integer) =  SimpleHypergraph{Bool,Dict{Int,Bool}}(n, k)
+
+
+function SimpleHypergraph{T,D}(m::AbstractMatrix{Union{T, Nothing}}) where {T<:Real,D<:AbstractDict{Int,T}}
+    n, k = size(m)
+    h = SimpleHypergraph{T,D}(n, k)
+    h .= m
+    h
+end
+
+function SimpleHypergraph{T}(m::AbstractMatrix{Union{T, Nothing}}) where {T<:Real}
+    SimpleHypergraph{T,Dict{Int,T}}(m)
+end
+
+
+function SimpleHypergraph(g::Graphs.Graph)
+    h = SimpleHypergraph{Bool,SortedDict{Int,Bool}}(maximum(vertices(g)), ne(g))
+    e = 0
+    for edge in edges(g)
+        e += 1
+        h[edge.src,e] = true
+        h[edge.dst,e] = true
+    end
+    h
+end
+
+"""
+    DirectedHypergraph{T} <: AbstractDirectedHypergraph{T}
+
+A directed hypergraph storing information about vertices and hyperedges.
+
+**Constructors**
+
+    DirectedHypergraph{T}(n::Integer,k::Integer) where {T<:Real}
+    DirectedHypergraph{T,V}(n::Integer, k::Integer;
+        v_meta=Vector{Union{V,Nothing}}(nothing, n)
+        ) where {T<:Real, V}
+    DirectedHypergraph{T,V,E}(n::Integer, k::Integer;
+        v_meta=Vector{Union{V,Nothing}}(nothing, n),
+        he_meta=Vector{Union{E,Nothing}}(nothing, k)
+        ) where {T<:Real, V, E}
+    DirectedHypergraph{T,V,E,D}(n::Integer, k::Integer,
+        v_meta=Vector{Union{V,Nothing}}(nothing, n),
+        he_meta=Vector{Union{E,Nothing}}(nothing, k)
+        ) where {T<:Real,V,E,D<:AbstractDict{Int,T}}
+
+Construct a hypergraph with a given number of vertices and hyperedges.
+Optionally, values of type `V` can be stored at vertices and values of type `E`
+can be stored at hyperedges. By default the hypergraph uses a `Dict{Int,T}` for
+the internal data storage, however a different dictionary such as `SortedDict`
+to ensure result replicability can be used (e.g. when doing stochastic
+simulations on hypergraphs).
+
+    TODO: fix these type signatures
+
+    DirectedHypergraph(m::AbstractMatrix{Union{T, Nothing}}) where {T<:Real}
+    DirectedHypergraph{T, V}(m::AbstractMatrix{Union{T, Nothing}};
+        v_meta=Vector{Union{V,Nothing}}(nothing, size(m,1))
+        ) where {T<:Real, V}
+    DirectedHypergraph{T, V, E}(m::AbstractMatrix{Union{T, Nothing}};
+        v_meta=Vector{Union{V,Nothing}}(nothing, size(m,1)),
+        he_meta=Vector{Union{E,Nothing}}(nothing, size(m,2))
+        ) where {T<:Real, V, E}
+    DirectedHypergraph{T, V, E, D}(m::AbstractMatrix{Union{T, Nothing}};
+        v_meta=Vector{Union{V,Nothing}}(nothing, size(m,1)),
+        he_meta=Vector{Union{E,Nothing}}(nothing, size(m,2))
+        ) where {T<:Real, V, E, D<:AbstractDict{Int,T}}
+
+Construct a hypergraph using its matrix representation.
+In the matrix representation rows are vertices and columns are hyperedges.
+Optionally, values of type `V` can be stored at vertices and values of type `E`
+can be stored at hyperedges. By default the hypergraph uses a `Dict{Int,T}` for
+the internal data storage, however a different dictionary such as `SortedDict`
+to ensure result replicability can be used (e.g. when doing stochastic
+simulations on hypergraphs).
+
+    DirectedHypergraph(g::Graphs.DiGraph)
+
+Constructs a hypergraph of degree 2 by making a deep copy of Graphs.DiGraph.
+A `SortedDict` will be used for internal data storage of the hypergraph.
+
+**Arguments**
+
+* `T` : type of weight values stored in the hypergraph's adjacency matrix
+* `V` : type of values stored in the vertices of the hypergraph
+* `E` : type of values stored in the edges of the hypergraph
+* `D` : dictionary for storing values the default is `Dict{Int, T}`
+* `n` : number of vertices
+* `k` : number of hyperedges
+* `m` : a matrix representation rows are vertices and columns are hyperedges
+* `g` : a (directed) graph representation of the hypergraph
+"""
 # Implementation based on guidance from Przemysław Szufel: https://github.com/pszufe/SimpleHypergraphs.jl/issues/45
-# Somewhat inefficient representation, as vertex information is copied
-# But, allows us to manipulate DirectedHypergraphs using Hypergraph functionality
+# Allows us to manipulate DirectedHypergraphs using Hypergraph functionality
+# Some risk of user manipulating individual `in` and `out` (undirected) hypergraphs
+# Is there a smart way to prevent this?
 # TODO: reconsider this design choice
-struct DirectedHypergraph{T<:Real,V,E,D<:AbstractDict{Int, T}} <: AbstractHypergraph{T}
-    in::Hypergraph{T,V,E,D}
-    out::Hypergraph{T,V,E,D}
+struct DirectedHypergraph{T<:Real,V,E,D<:AbstractDict{Int, T}} <: AbstractDirectedHypergraph{Tuple{T, T}}
+    hg_in::SimpleHypergraph{T,D}
+    hg_out::SimpleHypergraph{T,D}
+
+    v_meta::Vector{Union{V,Nothing}}
+    he_meta_in::Vector{Union{E,Nothing}}
+    he_meta_out::Vector{Union{E,Nothing}}
 
     DirectedHypergraph{T,V,E,D}(
         n::Integer, k::Integer,
@@ -201,12 +297,97 @@ struct DirectedHypergraph{T<:Real,V,E,D<:AbstractDict{Int, T}} <: AbstractHyperg
         he_meta_out=Vector{Union{E, Nothing}}(nothing, k)
         ) where {T<:Real,V,E,D<:AbstractDict{Int, T}} =
         new{T,V,E,D}(
-            Hypergraph(n, k, v_meta, he_meta_in),
-            Hypergraph(n, k, v_meta, he_meta_out)
+            SimpleHypergraph(n, k),
+            SimpleHypergraph(n, k),
+            v_meta, he_meta_in, he_meta_out
         )
 end
 
+DirectedHypergraph{T,V,E}(n::Integer, k::Integer) where {T<:Real, V, E} = DirectedHypergraph{T,V,E,Dict{Int,T}}(n, k)
+
+DirectedHypergraph{T,V}(n::Integer, k::Integer) where {T<:Real, V} = DirectedHypergraph{T,V,Nothing,Dict{Int,T}}(n, k)
+
+DirectedHypergraph{T}(n::Integer, k::Integer) where {T<:Real} = DirectedHypergraph{T,Nothing,Nothing,Dict{Int,T}}(n, k)
+
+DirectedHypergraph(n::Integer, k::Integer) = DirectedHypergraph{Bool,Nothing,Nothing,Dict{Int,Bool}}(n, k)
+
+# TODO: these and derivatives
+function DirectedHypergraph{T,V,E,D}(
+    shg_in::SimpleHypergraph{T,D},
+    shg_out::SimpleHypergraph{T,D};
+    v_meta::Vector{Union{Nothing,V}}=Vector{Union{Nothing,V}}(nothing, size(m,1)),
+    he_meta_in::Vector{Union{Nothing,E}}=Vector{Union{Nothing,E}}(nothing, size(m,2)),
+    he_meta_out::Vector{Union{Nothing,E}}=Vector{Union{Nothing,E}}(nothing, size(m,2))
+) end
+
+function DirectedHypergraph{T,V,E,D}(
+    hg_in::Hypergraph{T,V,E,D},
+    hg_out::Hypergraph{T,V,E,D};
+    merge_vertex_meta::Bool=false
+) end
+
+function DirectedHypergraph{T,V,E,D}(
+        m_in::AbstractMatrix{Union{T, Nothing}},
+        m_out::AbstractMatrix{Union{T, Nothing}};
+        v_meta::Vector{Union{Nothing,V}}=Vector{Union{Nothing,V}}(nothing, size(m,1)),
+        he_meta_in::Vector{Union{Nothing,E}}=Vector{Union{Nothing,E}}(nothing, size(m,2)),
+        he_meta_out::Vector{Union{Nothing,E}}=Vector{Union{Nothing,E}}(nothing, size(m,2))
+    ) where {T<:Real,V,E,D<:AbstractDict{Int,T}}
+    
+    @assert size(m_in) == size(m_out)
+    @assert length(v_meta) == size(m_in,1)
+    @assert length(v_meta) == size(m_out,1)
+    @assert length(he_meta_in) == size(m_in,2)
+    @assert length(he_meta_out) == size(m_out,2)
+
+    # Arbitrary, since sizes are identical
+    n, k = size(m_in)
+
+    h_in = SimpleHypergraph{T,D}(n, k)
+    h_in .= m_in
+    
+    h_out = SimpleHypergraph{T,D}(n, k)
+    h_out .= m_out
+
+    # TODO: finish this
+
+end
+
+function Hypergraph{T,V,E}(m::AbstractMatrix{Union{T, Nothing}};
+                        v_meta::Vector{Union{Nothing,V}}=Vector{Union{Nothing,V}}(nothing, size(m,1)),
+                        he_meta::Vector{Union{Nothing,E}}=Vector{Union{Nothing,E}}(nothing, size(m,2))
+                        ) where {T<:Real,V,E}
+    Hypergraph{T,V,E,Dict{Int,T}}(m;v_meta=v_meta,he_meta=he_meta)
+end
+
+function Hypergraph{T,V}(m::AbstractMatrix{Union{T, Nothing}};
+                        v_meta::Vector{Union{Nothing,V}}=Vector{Union{Nothing,V}}(nothing, size(m,1))
+                        ) where {T<:Real,V}
+    Hypergraph{T,V,Nothing,Dict{Int,T}}(m;v_meta=v_meta)
+end
+
+function Hypergraph{T}(m::AbstractMatrix{Union{T, Nothing}}) where {T<:Real}
+    Hypergraph{T,Nothing,Nothing,Dict{Int,T}}(m)
+end
+
+function Hypergraph(m::AbstractMatrix{Union{T, Nothing}}) where {T<:Real}
+    Hypergraph{T,Nothing,Nothing,Dict{Int,T}}(m)
+end
+
+
+function Hypergraph(g::Graphs.Graph)
+    h = Hypergraph{Bool,Nothing,Nothing,SortedDict{Int,Bool}}(maximum(vertices(g)), ne(g))
+    e = 0
+    for edge in edges(g)
+        e+=1
+        h[edge.src,e] = true
+        h[edge.dst,e] = true
+    end
+    h
+end
+
 # TODO: constructors
+# TODO: abstract array methods
 
 struct SimpleDirectedHypergraph{T<:Real,D<:AbstractDict{Int, T}} <: AbstractHypergraph{T}
     in::SimpleHypergraph{T,D}
@@ -436,7 +617,7 @@ end
     set_vertex_meta!(h::Hypergraph{T, V, E, D}, new_value::Union{V,Nothing},
         id::Int) where {T <: Real, V, E, D <: AbstractDict{Int,T}}
 
-Sets a new meta value `new_value` for the vertex `id` in the hypegraph `h`.
+Sets a new meta value `new_value` for the vertex `id` in the hypergraph `h`.
 
 """
 function set_vertex_meta!(h::Hypergraph{T, V, E, D},
@@ -467,7 +648,7 @@ end
         new_value::Union{E,Nothing}, id::Int
         ) where {T <: Real, V, E, D <: AbstractDict{Int,T}}
 
-Sets a new meta value `new_value` for the hyperedge `id` in the hypegraph `h`.
+Sets a new meta value `new_value` for the hyperedge `id` in the hypergraph `h`.
 
 """
 function set_hyperedge_meta!(h::Hypergraph{T, V, E, D},
@@ -666,11 +847,8 @@ end
 
 
 # build unions of types for easier dispatch
-const DirectedStructs = Union{DirectedHypergraph, SimpleDirectedHypergraph}
 const HasMetaStructs = Union{Hypergraph, DirectedHypergraph}
 
 # implementing traits on types
-@traitimpl IsDirected{DirectedStructs}
-isdirected(::Type{T}) where {T<:DirectedStructs} = true
 @traitimpl HasMeta{HasMetastructs}
 hasmeta(::Type{T}) where {T<:HasMetaStructs} = true
