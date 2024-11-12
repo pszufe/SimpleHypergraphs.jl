@@ -1,4 +1,3 @@
-# TODO: since "simple" has a specific mathematical meaning, should we pick a different name?
 # TODO: think more carefully about ensuring that metadata vectors are of appropriate lengths
 # TODO: make sure there are constructors for empty (unspecified) types
 
@@ -13,6 +12,9 @@ An undirected hypergraph storing information about vertices and hyperedges.
     Hypergraph{T,V}(n::Integer, k::Integer;
         v_meta=Vector{Union{V,Nothing}}(nothing, n)
         ) where {T<:Real, V}
+    Hypergraph{T,E}(n::Integer, k::Integer;
+        he_meta=Vector{Union{E,Nothing}}(nothing, n)
+        ) where {T<:Real, E}
     Hypergraph{T,V,E}(n::Integer, k::Integer;
         v_meta=Vector{Union{V,Nothing}}(nothing, n),
         he_meta=Vector{Union{E,Nothing}}(nothing, k)
@@ -30,14 +32,17 @@ to ensure result replicability can be used (e.g. when doing stochastic
 simulations on hypergraphs).
 
     Hypergraph(m::AbstractMatrix{Union{T, Nothing}}) where {T<:Real}
-    Hypergraph{T, V}(m::AbstractMatrix{Union{T, Nothing}};
+    Hypergraph{T,V}(m::AbstractMatrix{Union{T, Nothing}};
         v_meta=Vector{Union{V,Nothing}}(nothing, size(m,1))
         ) where {T<:Real, V}
-    Hypergraph{T, V, E}(m::AbstractMatrix{Union{T, Nothing}};
+    Hypergraph{T,E}(m::AbstractMatrix{Union{T, Nothing}};
+        he_meta=Vector{Union{E,Nothing}}(nothing, size(m,2))
+        ) where {T<:Real, E}
+    Hypergraph{T,V,E}(m::AbstractMatrix{Union{T, Nothing}};
         v_meta=Vector{Union{V,Nothing}}(nothing, size(m,1)),
         he_meta=Vector{Union{E,Nothing}}(nothing, size(m,2))
         ) where {T<:Real, V, E}
-    Hypergraph{T, V, E, D}(m::AbstractMatrix{Union{T, Nothing}};
+    Hypergraph{T,V,E,D}(m::AbstractMatrix{Union{T, Nothing}};
         v_meta=Vector{Union{V,Nothing}}(nothing, size(m,1)),
         he_meta=Vector{Union{E,Nothing}}(nothing, size(m,2))
         ) where {T<:Real, V, E, D<:AbstractDict{Int,T}}
@@ -86,7 +91,10 @@ end
 
 Hypergraph{T,V,E}(n::Integer, k::Integer) where {T<:Real, V, E} = Hypergraph{T,V,E,Dict{Int,T}}(n, k)
 
-Hypergraph{T,V}(n::Integer, k::Integer) where {T<:Real, V} = Hypergraph{T,V,Nothing,Dict{Int,T}}(n, k)
+Hypergraph{T,V}(n::Integer, k::Integer; v_meta=Vector{Union{V,Nothing}}(nothing, n)) where {T<:Real, V} = Hypergraph{T,V,Nothing,Dict{Int,T}}(n, k; v_meta=v_meta)
+
+# Why was this not included before?
+Hypergraph{T,E}(n::Integer, k::Integer; he_meta=Vector{Union{E,Nothing}}(nothing, k)) where {T<:Real, E} = Hypergraph{T,Nothing,E,Dict{Int,T}}(n, k; he_meta=he_meta)
 
 Hypergraph{T}(n::Integer, k::Integer) where {T<:Real} =  Hypergraph{T,Nothing,Nothing,Dict{Int,T}}(n, k)
 
@@ -117,6 +125,12 @@ function Hypergraph{T,V}(m::AbstractMatrix{Union{T, Nothing}};
     Hypergraph{T,V,Nothing,Dict{Int,T}}(m;v_meta=v_meta)
 end
 
+function Hypergraph{T,E}(m::AbstractMatrix{Union{T, Nothing}};
+    he_meta::Vector{Union{Nothing,E}}=Vector{Union{Nothing,E}}(nothing, size(m,2))
+    ) where {T<:Real,E}
+    Hypergraph{T,Nothing,E,Dict{Int,T}}(m;he_meta=he_meta)
+end
+
 function Hypergraph{T}(m::AbstractMatrix{Union{T, Nothing}}) where {T<:Real}
     Hypergraph{T,Nothing,Nothing,Dict{Int,T}}(m)
 end
@@ -139,23 +153,23 @@ end
 
 
 """
-    SimpleHypergraph{T} <: AbstractUndirectedHypergraph{T}
+    BasicHypergraph{T} <: AbstractUndirectedHypergraph{T}
 
 An undirected hypergraph storing only incidence and weight information about vertices and
-hyperedges.
+hyperedges, without additional features/metadata.
 
 **Constructors**
 
-    SimpleHypergraph{T}(n::Integer,k::Integer) where {T<:Real}
-    SimpleHypergraph{T,D}(n::Integer, k::Integer) where {T<:Real,D<:AbstractDict{Int,T}}
+    BasicHypergraph{T}(n::Integer,k::Integer) where {T<:Real}
+    BasicHypergraph{T,D}(n::Integer, k::Integer) where {T<:Real,D<:AbstractDict{Int,T}}
 
 Construct a hypergraph with a given number of vertices and hyperedges.
 By default the hypergraph uses a `Dict{Int,T}` for the internal data storage,
 however a different dictionary such as `SortedDict` to ensure result replicability
 can be used (e.g. when doing stochastic simulations on hypergraphs).
 
-    SimpleHypergraph(m::AbstractMatrix{Union{T, Nothing}}) where {T<:Real}
-    SimpleHypergraph{T, D}(m::AbstractMatrix{Union{T, Nothing}}) where {T<:Real,D<:AbstractDict{Int,T}}
+    BasicHypergraph(m::AbstractMatrix{Union{T, Nothing}}) where {T<:Real}
+    BasicHypergraph{T, D}(m::AbstractMatrix{Union{T, Nothing}}) where {T<:Real,D<:AbstractDict{Int,T}}
 
 Construct a hypergraph using its matrix representation.
 In the matrix representation rows are vertices and columns are hyperedges.
@@ -164,7 +178,7 @@ however a different dictionary such as `SortedDict` to ensure result
 replicability can be used (e.g. when doing stochastic simulations on
 hypergraphs).
 
-    SimpleHypergraph(g::Graphs.Graph)
+    BasicHypergraph(g::Graphs.Graph)
 
 Constructs a hypergraph of degree 2 by making a deep copy of Graphs.Graph.
 A `SortedDict` will be used for internal data storage of the hypergraph.
@@ -179,33 +193,33 @@ A `SortedDict` will be used for internal data storage of the hypergraph.
 * `g` : a graph representation of the hypergraph
 """
 
-struct SimpleHypergraph{T<:Real,D<:AbstractDict{Int,T}} <: AbstractUndirectedHypergraph{T}
+struct BasicHypergraph{T<:Real,D<:AbstractDict{Int,T}} <: AbstractUndirectedHypergraph{T}
     v2he::Vector{D}
     he2v::Vector{D}
 
-    SimpleHypergraph{T,D}(n::Integer, k::Integer) where {T<:Real,D<:AbstractDict{Int,T}} =
+    BasicHypergraph{T,D}(n::Integer, k::Integer) where {T<:Real,D<:AbstractDict{Int,T}} =
         new{T,D}([D() for i in 1:n],[D() for i in 1:k])
 end
 
-SimpleHypergraph{T}(n::Integer, k::Integer) where {T<:Real} = SimpleHypergraph{T,Dict{Int,T}}(n, k)
+BasicHypergraph{T}(n::Integer, k::Integer) where {T<:Real} = BasicHypergraph{T,Dict{Int,T}}(n, k)
 
-SimpleHypergraph(n::Integer, k::Integer) =  SimpleHypergraph{Bool,Dict{Int,Bool}}(n, k)
+BasicHypergraph(n::Integer, k::Integer) =  BasicHypergraph{Bool,Dict{Int,Bool}}(n, k)
 
 
-function SimpleHypergraph{T,D}(m::AbstractMatrix{Union{T, Nothing}}) where {T<:Real,D<:AbstractDict{Int,T}}
+function BasicHypergraph{T,D}(m::AbstractMatrix{Union{T, Nothing}}) where {T<:Real,D<:AbstractDict{Int,T}}
     n, k = size(m)
-    h = SimpleHypergraph{T,D}(n, k)
+    h = BasicHypergraph{T,D}(n, k)
     h .= m
     h
 end
 
-function SimpleHypergraph{T}(m::AbstractMatrix{Union{T, Nothing}}) where {T<:Real}
-    SimpleHypergraph{T,Dict{Int,T}}(m)
+function BasicHypergraph{T}(m::AbstractMatrix{Union{T, Nothing}}) where {T<:Real}
+    BasicHypergraph{T,Dict{Int,T}}(m)
 end
 
 
-function SimpleHypergraph(g::Graphs.Graph)
-    h = SimpleHypergraph{Bool,SortedDict{Int,Bool}}(maximum(vertices(g)), ne(g))
+function BasicHypergraph(g::Graphs.Graph)
+    h = BasicHypergraph{Bool,SortedDict{Int,Bool}}(maximum(vertices(g)), ne(g))
     e = 0
     for edge in edges(g)
         e += 1
@@ -287,8 +301,8 @@ A `SortedDict` will be used for internal data storage of the hypergraph.
 # Is there a smart way to prevent this?
 # TODO: reconsider this design choice
 struct DirectedHypergraph{T<:Real,V,E,D<:AbstractDict{Int, T}} <: AbstractDirectedHypergraph{Tuple{T, T}}
-    hg_in::SimpleHypergraph{T,D}
-    hg_out::SimpleHypergraph{T,D}
+    hg_in::BasicHypergraph{T,D}
+    hg_out::BasicHypergraph{T,D}
 
     v_meta::Vector{Union{V,Nothing}}
     he_meta_in::Vector{Union{E,Nothing}}
@@ -301,14 +315,14 @@ struct DirectedHypergraph{T<:Real,V,E,D<:AbstractDict{Int, T}} <: AbstractDirect
         he_meta_out=Vector{Union{E, Nothing}}(nothing, k)
         ) where {T<:Real,V,E,D<:AbstractDict{Int, T}} = 
         new{T,V,E,D}(
-            SimpleHypergraph(n, k),
-            SimpleHypergraph(n, k),
+            BasicHypergraph(n, k),
+            BasicHypergraph(n, k),
             v_meta, he_meta_in, he_meta_out
         )
 
     function DirectedHypergraph{T,V,E,D}(
-        hg_in::SimpleHypergraph{T,D},
-        hg_out::SimpleHypergraph{T,D};
+        hg_in::BasicHypergraph{T,D},
+        hg_out::BasicHypergraph{T,D};
         v_meta::Vector{Union{Nothing,V}}=Vector{Union{Nothing,V}}(nothing, size(m,1)),
         he_meta_in::Vector{Union{Nothing,E}}=Vector{Union{Nothing,E}}(nothing, size(m,2)),
         he_meta_out::Vector{Union{Nothing,E}}=Vector{Union{Nothing,E}}(nothing, size(m,2))
@@ -339,8 +353,8 @@ DirectedHypergraph(n::Integer, k::Integer) = DirectedHypergraph{Bool,Nothing,Not
 
 
 function DirectedHypergraph{T,V,D}(
-    hg_in::SimpleHypergraph{T,D},
-    hg_out::SimpleHypergraph{T,D};
+    hg_in::BasicHypergraph{T,D},
+    hg_out::BasicHypergraph{T,D};
     v_meta::Vector{Union{Nothing,V}}=Vector{Union{Nothing,V}}(nothing, size(m,1)),
     ) where {T<:Real,V,D<:AbstractDict{Int, T}}
 
@@ -354,8 +368,8 @@ function DirectedHypergraph{T,V,D}(
 end
 
 function DirectedHypergraph{T,E,D}(
-    hg_in::SimpleHypergraph{T,D},
-    hg_out::SimpleHypergraph{T,D};
+    hg_in::BasicHypergraph{T,D},
+    hg_out::BasicHypergraph{T,D};
     he_meta_in::Vector{Union{Nothing,E}}=Vector{Union{Nothing,E}}(nothing, size(m,2)),
     he_meta_out::Vector{Union{Nothing,E}}=Vector{Union{Nothing,E}}(nothing, size(m,2))
     ) where {T<:Real,E,D<:AbstractDict{Int, T}}
@@ -377,8 +391,8 @@ function DirectedHypergraph{T,V,E,D}(
     @assert size(hg_in) == size(hg_out)
 
     n, k = size(hg_in)
-    sgh_in = SimpleHypergraph(n, k)
-    sgh_out = SimpleHypergraph(n, k)
+    sgh_in = BasicHypergraph(n, k)
+    sgh_out = BasicHypergraph(n, k)
 
     # TODO: test behavior on this
     sgh_in .= hg_in
@@ -403,10 +417,10 @@ function DirectedHypergraph{T,V,E,D}(
     # Arbitrary, since sizes are identical
     n, k = size(m_in)
 
-    hg_in = SimpleHypergraph{T,D}(n, k)
+    hg_in = BasicHypergraph{T,D}(n, k)
     hg_in .= m_in
     
-    hg_out = SimpleHypergraph{T,D}(n, k)
+    hg_out = BasicHypergraph{T,D}(n, k)
     hg_out .= m_out
 
     DirectedHypergraph{T,V,E,D}(hg_in, hg_out, v_meta, he_meta_in, he_meta_out)
@@ -423,10 +437,10 @@ function DirectedHypergraph{T,V,E}(
     # Arbitrary, since sizes are identical
     n, k = size(m_in)
 
-    hg_in = SimpleHypergraph{T,Dict{Int,T}}(n, k)
+    hg_in = BasicHypergraph{T,Dict{Int,T}}(n, k)
     hg_in .= m_in
 
-    hg_out = SimpleHypergraph{T,Dict{Int,T}}(n, k)
+    hg_out = BasicHypergraph{T,Dict{Int,T}}(n, k)
     hg_out .= m_out
 
     DirectedHypergraph{T,V,E,Dict{Int,T}}(hg_in, hg_out, v_meta, he_meta_in, he_meta_out)
@@ -441,10 +455,10 @@ function DirectedHypergraph{T,V}(
     # Arbitrary, since sizes are identical
     n, k = size(m_in)
 
-    hg_in = SimpleHypergraph{T,Dict{Int,T}}(n, k)
+    hg_in = BasicHypergraph{T,Dict{Int,T}}(n, k)
     hg_in .= m_in
 
-    hg_out = SimpleHypergraph{T,Dict{Int,T}}(n, k)
+    hg_out = BasicHypergraph{T,Dict{Int,T}}(n, k)
     hg_out .= m_out
 
     DirectedHypergraph{T,V,Nothing,Dict{Int,T}}(
@@ -464,10 +478,10 @@ function DirectedHypergraph{T}(
     # Arbitrary, since sizes are identical
     n, k = size(m_in)
 
-    hg_in = SimpleHypergraph{T,Dict{Int,T}}(n, k)
+    hg_in = BasicHypergraph{T,Dict{Int,T}}(n, k)
     hg_in .= m_in
 
-    hg_out = SimpleHypergraph{T,Dict{Int,T}}(n, k)
+    hg_out = BasicHypergraph{T,Dict{Int,T}}(n, k)
     hg_out .= m_out
 
     DirectedHypergraph{T,Nothing,Nothing,Dict{Int,T}}(
@@ -487,10 +501,10 @@ function DirectedHypergraph(
     # Arbitrary, since sizes are identical
     n, k = size(m_in)
 
-    hg_in = SimpleHypergraph{T,Dict{Int,T}}(n, k)
+    hg_in = BasicHypergraph{T,Dict{Int,T}}(n, k)
     hg_in .= m_in
 
-    hg_out = SimpleHypergraph{T,Dict{Int,T}}(n, k)
+    hg_out = BasicHypergraph{T,Dict{Int,T}}(n, k)
     hg_out .= m_out
 
     DirectedHypergraph{T,Nothing,Nothing,Dict{Int,T}}(
@@ -518,16 +532,16 @@ end
 # TODO: constructors
 # TODO: abstract array methods
 
-struct SimpleDirectedHypergraph{T<:Real,D<:AbstractDict{Int, T}} <: AbstractHypergraph{T}
-    in::SimpleHypergraph{T,D}
-    out::SimpleHypergraph{T,D}
+struct BasicDirectedHypergraph{T<:Real,D<:AbstractDict{Int, T}} <: AbstractHypergraph{T}
+    in::BasicHypergraph{T,D}
+    out::BasicHypergraph{T,D}
 
-    SimpleDirectedHypergraph{T,D}(
+    BasicDirectedHypergraph{T,D}(
         n::Integer, k::Integer,
         ) where {T<:Real,D<:AbstractDict{Int, T}} =
         new{T,D}(
-            SimpleHypergraph(n, k),
-            SimpleHypergraph(n, k)
+            BasicHypergraph(n, k),
+            BasicHypergraph(n, k)
         )
 end
 
