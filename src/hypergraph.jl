@@ -725,7 +725,7 @@ verticies.
 * `hg_out`: an undirected hypergraph representing the outgoing half of
     the directed hypergraph
 """
-struct BasicDirectedHypergraph{T<:Real,D<:AbstractDict{Int, T}} <: AbstractHypergraph{T}
+struct BasicDirectedHypergraph{T<:Real,D<:AbstractDict{Int, T}} <: AbstractDirectedHypergraph{T}
     hg_in::BasicHypergraph{T,D}
     hg_out::BasicHypergraph{T,D}
 
@@ -804,28 +804,48 @@ function BasicDirectedHypergraph(g::Graphs.DiGraph)
 end
 
 
-# TODO: abstract array methods
-# TODO: make these all more general
+# Do I need these, or can I just use the abstract types and assume that all implementations will follow a similar structure
+const ConcreteUndirected = Union{Hypergraph, BasicHypergraph}
+const ConcreteDirected = Union{DirectedHypergraph, BasicDirectedHypergraph}
+
 
 """
-    Base.size(h::Hypergraph)
+    Base.size(h::AbstractHypergraph)
 
-Returns the size of Hypergraph `h`.
+Returns the size of hypergraph `h`.
 The result is a tuple of the number of vertices and the number of hyperedges
 
 """
-Base.size(h::Hypergraph) = (nhv(h), nhe(h))
+Base.size(h::AbstractHypergraph) = (nhv(h), nhe(h))
+
 
 """
-    Base.getindex(h::Hypergraph, idx::Vararg{Int,2})
+    Base.getindex(h::Union{Hypergraph, BasicHypergraph}, idx::Vararg{Int,2})
 
-Returns a value for a given vertex-hyperedge pair `idx` for a hypergraph `h`.
+Returns a value for a given vertex-hyperedge pair `idx` for an undirected hypergraph `h`.
 If a vertex does not belong to a hyperedge `nothing` is returned.
 
 """
-@inline function Base.getindex(h::Hypergraph, idx::Vararg{Int,2})
+@inline function Base.getindex(h::ConcreteUndirected, idx::Vararg{Int,2})
     @boundscheck checkbounds(h, idx...)
     get(h.v2he[idx[1]], idx[2], nothing)
+end
+
+"""
+    Base.getindex(h::Union{DirectedHypergraph, BasicDirectedHypergraph}, idx::Vararg{Int,2})
+
+Returns a value for a given vertex-hyperedge pair `idx` for a directed hypergraph `h`.
+If a vertex does not belong to a hyperedge `nothing` is returned.
+
+"""
+@inline function Base.getindex(h::ConcreteDirected, idx::Vararg{Int,2})
+    @boundscheck checkbounds(h.hg_in, idx...)
+    @boundscheck checkbounds(h.hg_out, idx...)
+
+    in_value = get(h.hg_in.v2he[idx[1]], idx[2], nothing)
+    out_value = get(h.hg_in.v2he[idx[1]], idx[2], nothing)
+
+    (in_value, out_value)
 end
 
 
