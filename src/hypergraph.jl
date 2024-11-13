@@ -1,5 +1,5 @@
 # TODO: think more carefully about ensuring that metadata vectors are of appropriate lengths
-# TODO: make sure there are constructors for empty (unspecified) types
+# TODO: make sure that vertices can't be in ingoing and outgoing sides of a directed hyperedge?
 
 """
     Hypergraph{T} <: AbstractUndirectedHypergraph{T}
@@ -269,7 +269,14 @@ the internal data storage, however a different dictionary such as `SortedDict`
 to ensure result replicability can be used (e.g. when doing stochastic
 simulations on hypergraphs).
 
-    DirectedHypergraph(m::AbstractMatrix{Union{T, Nothing}}) where {T<:Real}
+    DirectedHypergraph(
+        m_in::AbstractMatrix{Union{T, Nothing}},
+        m_out::AbstractMatrix{Union{T, Nothing}}
+    ) where {T<:Real}    
+    DirectedHypergraph{T}(
+        m_in::AbstractMatrix{Union{T, Nothing}},
+        m_out::AbstractMatrix{Union{T, Nothing}}
+    ) where {T<:Real}
     DirectedHypergraph{T,V}(
         m_in::AbstractMatrix{Union{T, Nothing}},
         m_out::AbstractMatrix{Union{T, Nothing}};
@@ -430,10 +437,23 @@ DirectedHypergraph{T,E}(
         he_meta_out=he_meta_out
     )
 
+DirectedHypergraph{T,D}(n::Integer, k::Integer) where {T<:Real, D<:AbstractDict{Int, T}} = DirectedHypergraph{T,Nothing,Nothing,D}(n, k)
+
 DirectedHypergraph{T}(n::Integer, k::Integer) where {T<:Real} = DirectedHypergraph{T,Nothing,Nothing,Dict{Int,T}}(n, k)
 
 DirectedHypergraph(n::Integer, k::Integer) = DirectedHypergraph{Bool,Nothing,Nothing,Dict{Int,Bool}}(n, k)
 
+
+function DirectedHypergraph{T,D}(
+    hg_in::BasicHypergraph{T,D},
+    hg_out::BasicHypergraph{T,D}
+    ) where {T<:Real,D<:AbstractDict{Int, T}}
+
+    DirectedHypergraph{T,Nothing,Nothing,D}(
+        hg_in,
+        hg_out
+    )
+end
 
 function DirectedHypergraph{T,V,D}(
     hg_in::BasicHypergraph{T,D},
@@ -615,32 +635,99 @@ function DirectedHypergraph(
 
     DirectedHypergraph{T,Nothing,Nothing,Dict{Int,T}}(
         hg_in,
-        hg_out,
-        Vector{Nothing}(nothing, size(m_in,1)),
-        Vector{Nothing}(nothing, size(m_in,2)),
-        Vector{Nothing}(nothing, size(m_out,2))
+        hg_out
     )
 end
 
-# TODO: you are here
-# Digraph time, baby!
-function Hypergraph(g::Graphs.Graph)
-    h = Hypergraph{Bool,Nothing,Nothing,SortedDict{Int,Bool}}(maximum(vertices(g)), ne(g))
+
+function DirectedHypergraph(g::Graphs.DiGraph)
+    h = DirectedHypergraph{Bool,Nothing,Nothing,SortedDict{Int,Bool}}(maximum(vertices(g)), ne(g))
     e = 0
     for edge in edges(g)
         e+=1
-        h[edge.src,e] = true
-        h[edge.dst,e] = true
+        h[1,edge.src,e] = true
+        h[2,edge.dst,e] = true
     end
     h
 end
 
-# TODO: constructors
-# TODO: abstract array methods
 
+"""
+    BasicDirectedHypergraph{T} <: AbstractDirectedHypergraph{T}
+
+A directed hypergraph storing vertices and hyperedges, with no additional
+information other than weight.
+
+This implementation is based on guidance from Przemysław Szufel;
+    see https://github.com/pszufe/SimpleHypergraphs.jl/issues/45
+This allows us to manipulate DirectedHypergraphs using Hypergraph functionality
+There is danger of a user manipulating individual `hg_in` and `hg_out` (undirected) hypergraphs
+Is there a smart way to prevent this?
+TODO: reconsider this design choice
+
+**Constructors**
+
+    BasicDirectedHypergraph{T}(n::Integer,k::Integer) where {T<:Real}
+    BasicDirectedHypergraph{T,D}(n::Integer, k::Integer) where {T<:Real,D<:AbstractDict{Int,T}}
+
+Construct a hypergraph with a given number of vertices and hyperedges.
+By default the hypergraph uses a `Dict{Int,T}` for
+the internal data storage, however a different dictionary such as `SortedDict`
+to ensure result replicability can be used (e.g. when doing stochastic
+simulations on hypergraphs).
+
+    BasicDirectedHypergraph(
+        m_in::AbstractMatrix{Union{T, Nothing}},
+        m_out::AbstractMatrix{Union{T, Nothing}}
+    ) where {T<:Real}
+    BasicDirectedHypergraph{T}(
+        m_in::AbstractMatrix{Union{T, Nothing}},
+        m_out::AbstractMatrix{Union{T, Nothing}}
+    ) where {T<:Real}
+    BasicDirectedHypergraph{T,D}(
+        m_in::AbstractMatrix{Union{T, Nothing}},
+        m_out::AbstractMatrix{Union{T, Nothing}}
+    ) where {T<:Real,D<:AbstractDict{Int,T}}
+
+Construct a directed hypergraph using its matrix representation.
+In the matrix representation rows are vertices and columns are hyperedges.
+By default the hypergraph uses a `Dict{Int,T}` for the internal data storage,
+however a different dictionary such as `SortedDict` to ensure result
+replicability can be used (e.g. when doing stochastic simulations on hypergraphs).
+
+    DirectedHypergraph(g::Graphs.DiGraph)
+
+Constructs a directed hypergraph of degree 2 by making a deep copy of a
+Graphs.DiGraph. A `SortedDict` will be used for internal data storage of the
+hypergraph.
+
+    DirectedHypergraph{T,D}(
+        hg_in::BasicHypergraph{T,D},
+        hg_out::BasicHypergraph{T,D}
+    ) where {T<:Real,D<:AbstractDict{Int, T}}
+
+Constructs a directed hypergraph from two undirected basic hypergraphs, one with hyperedges
+containing "incoming" vertices and one with hyperedges containing "outgoing"
+verticies.
+
+**Arguments**
+
+* `T` : type of weight values stored in the hypergraph's adjacency matrix
+* `V` : type of values stored in the vertices of the hypergraph
+* `E` : type of values stored in the edges of the hypergraph
+* `D` : dictionary for storing values the default is `Dict{Int, T}`
+* `n` : number of vertices
+* `k` : number of hyperedges
+* `m` : a matrix representation rows are vertices and columns are hyperedges
+* `g` : a (directed) graph representation of the hypergraph
+* `hg_in`: an undirected hypergraph representing the incoming half of
+    the directed hypergraph
+* `hg_out`: an undirected hypergraph representing the outgoing half of
+    the directed hypergraph
+"""
 struct BasicDirectedHypergraph{T<:Real,D<:AbstractDict{Int, T}} <: AbstractHypergraph{T}
-    in::BasicHypergraph{T,D}
-    out::BasicHypergraph{T,D}
+    hg_in::BasicHypergraph{T,D}
+    hg_out::BasicHypergraph{T,D}
 
     BasicDirectedHypergraph{T,D}(
         n::Integer, k::Integer,
@@ -649,11 +736,75 @@ struct BasicDirectedHypergraph{T<:Real,D<:AbstractDict{Int, T}} <: AbstractHyper
             BasicHypergraph(n, k),
             BasicHypergraph(n, k)
         )
+
+    function BasicDirectedHypergraph{T,D}(
+        hg_in::BasicHypergraph{T,D},
+        hg_out::BasicHypergraph{T,D}
+        ) where {T<:Real,D<:AbstractDict{Int, T}}
+        
+        @assert size(hg_in) == size(hg_out)
+
+        new{T,D}(hg_in, hg_out)
+    end
 end
 
-# TODO: constructors
+
+BasicDirectedHypergraph{T}(n::Integer, k::Integer) where {T<:Real} = BasicDirectedHypergraph{T,Dict{Int,T}}(n, k)
+
+BasicDirectedHypergraph(n::Integer, k::Integer) = BasicDirectedHypergraph{Bool,Dict{Int,Bool}}(n, k)
 
 
+function BasicDirectedHypergraph{T}(
+    m_in::AbstractMatrix{Union{T, Nothing}},
+    m_out::AbstractMatrix{Union{T, Nothing}}
+) where {T<:Real}
+
+    # Arbitrary, since sizes are identical
+    n, k = size(m_in)
+
+    hg_in = BasicHypergraph{T,Dict{Int,T}}(n, k)
+    hg_in .= m_in
+
+    hg_out = BasicHypergraph{T,Dict{Int,T}}(n, k)
+    hg_out .= m_out
+
+    BasicDirectedHypergraph{T,Dict{Int,T}}(hg_in, hg_out)
+end
+
+function BasicDirectedHypergraph(
+    m_in::AbstractMatrix{Union{T, Nothing}},
+    m_out::AbstractMatrix{Union{T, Nothing}}
+) where {T<:Real}
+
+    # Arbitrary, since sizes are identical
+    n, k = size(m_in)
+
+    hg_in = BasicHypergraph{T,Dict{Int,T}}(n, k)
+    hg_in .= m_in
+
+    hg_out = BasicHypergraph{T,Dict{Int,T}}(n, k)
+    hg_out .= m_out
+
+    BasicDirectedHypergraph{T,Dict{Int,T}}(
+        hg_in,
+        hg_out
+    )
+end
+
+
+function BasicDirectedHypergraph(g::Graphs.DiGraph)
+    h = BasicDirectedHypergraph{Bool,SortedDict{Int,Bool}}(maximum(vertices(g)), ne(g))
+    e = 0
+    for edge in edges(g)
+        e+=1
+        h[1,edge.src,e] = true
+        h[2,edge.dst,e] = true
+    end
+    h
+end
+
+
+# TODO: abstract array methods
 # TODO: make these all more general
 
 """
