@@ -804,10 +804,20 @@ function BasicDirectedHypergraph(g::Graphs.DiGraph)
 end
 
 
-# Do I need these, or can I just use the abstract types and assume that all implementations will follow a similar structure
-const ConcreteUndirected = Union{Hypergraph, BasicHypergraph}
-const ConcreteDirected = Union{DirectedHypergraph, BasicDirectedHypergraph}
+# build unions of types for easier dispatch
+const HasMetaHGs = Union{Hypergraph, DirectedHypergraph}
+const NoMetaHGs = Union{BasicHypergraph, BasicDirectedHypergraph}
 
+# implementing traits on types
+@traitimpl HasMeta{HasMetaStructs}
+hasmeta(::Type{T}) where {T<:HasMetaStructs} = true
+
+# Do I need these, or can I just use the abstract types and assume that all implementations will follow a similar structure
+const ConcreteUndirectedHGs = Union{Hypergraph, BasicHypergraph}
+const ConcreteDirectedHGs = Union{DirectedHypergraph, BasicDirectedHypergraph}
+
+
+# AbstractArray interface functions
 
 """
     Base.size(h::AbstractHypergraph)
@@ -826,7 +836,7 @@ Returns a value for a given vertex-hyperedge pair `idx` for an undirected hyperg
 If a vertex does not belong to a hyperedge `nothing` is returned.
 
 """
-@inline function Base.getindex(h::ConcreteUndirected, idx::Vararg{Int,2})
+@inline function Base.getindex(h::ConcreteUndirectedHGs, idx::Vararg{Int,2})
     @boundscheck checkbounds(h, idx...)
     get(h.v2he[idx[1]], idx[2], nothing)
 end
@@ -838,25 +848,25 @@ Returns a value for a given vertex-hyperedge pair `idx` for a directed hypergrap
 If a vertex does not belong to a hyperedge `nothing` is returned.
 
 """
-@inline function Base.getindex(h::ConcreteDirected, idx::Vararg{Int,2})
+@inline function Base.getindex(h::ConcreteDirectedHGs, idx::Vararg{Int,2})
     @boundscheck checkbounds(h.hg_in, idx...)
     @boundscheck checkbounds(h.hg_out, idx...)
 
     in_value = get(h.hg_in.v2he[idx[1]], idx[2], nothing)
-    out_value = get(h.hg_in.v2he[idx[1]], idx[2], nothing)
+    out_value = get(h.hg_out.v2he[idx[1]], idx[2], nothing)
 
     (in_value, out_value)
 end
 
 
 """
-    Base.setindex!(h::Hypergraph, ::Nothing, idx::Vararg{Int,2})
+    Base.setindex!(h::Union{Hypergraph, BasicHypergraph}, ::Nothing, idx::Vararg{Int,2})
 
-Removes a vertex from a given hyperedge for a hypergraph `h` and a given vertex-hyperedge pair `idx`.
+Removes a vertex from a given hyperedge for an undirected hypergraph `h` and a given vertex-hyperedge pair `idx`.
 Note that trying to remove a vertex from a hyperedge when it is not present will not throw an error.
 
 """
-@inline function Base.setindex!(h::Hypergraph, ::Nothing, idx::Vararg{Int,2})
+@inline function Base.setindex!(h::ConcreteUndirectedHGs, ::Nothing, idx::Vararg{Int,2})
     @boundscheck checkbounds(h, idx...)
     pop!(h.v2he[idx[1]], idx[2], nothing)
     pop!(h.he2v[idx[2]], idx[1], nothing)
@@ -865,13 +875,13 @@ end
 
 
 """
-    Base.setindex!(h::Hypergraph, v::Real, idx::Vararg{Int,2})
+    Base.setindex!(h::Union{Hypergraph, BasicHypergraph}, v::Real, idx::Vararg{Int,2})
 
-Adds a vertex to a hyperedge (represented by indices `idx`) and assigns value
+Adds a vertex to an undirected hyperedge (represented by indices `idx`) and assigns value
 `v` to be stored with that assignment.
 
 """
-@inline function Base.setindex!(h::Hypergraph, v::Real, idx::Vararg{Int,2})
+@inline function Base.setindex!(h::ConcreteUndirectedHGs, v::Real, idx::Vararg{Int,2})
     @boundscheck checkbounds(h, idx...)
     h.v2he[idx[1]][idx[2]] = v
     h.he2v[idx[2]][idx[1]] = v
@@ -880,22 +890,103 @@ end
 
 
 """
-    getvertices(h::Hypergraph, he_id::Int)
+    Base.setindex!(h::Union{DirectedHypergraph, BasicDirectedHypergraph}, ::Nothing, idx::Vararg{Int,2})
 
-Returns vertices from a hypergraph `a` for a given hyperedge `he_id`.
-
-"""
-@inline getvertices(h::Hypergraph, he_id::Int) = h.he2v[he_id]
-
+Removes a vertex from a given hyperedge for a directed hypergraph `h` and a given vertex-hyperedge pair `idx`.
+Note that trying to remove a vertex from a hyperedge when it is not present will not throw an error.
 
 """
-    gethyperedges(h::Hypergraph, v_id::Int)
+@inline function Base.setindex!(h::ConcreteDirectedHGs, ::Nothing, idx::Vararg{Int,2})
+    @boundscheck checkbounds(h.hg_in, idx...)
+    @boundscheck checkbounds(h.hg_out, idx...)
+    setindex!(h.hg_in, nothing, idx)
+    setindex!(h.hg_out, nothing, idx)
+    h
+end
 
-Returns hyperedges for a given vertex `v_id` in a hypergraph `h`.
 
 """
-@inline gethyperedges(h::Hypergraph, v_id::Int) = h.v2he[v_id]
+    Base.setindex!(h::Union{DirectedHypergraph, BasicDirectedHypergraph}, v::Real, idx::Vararg{Int,2})
 
+Adds a vertex to a hyperedge (represented by indices `idx`) and assigns value
+`v` to be stored with that assignment.
+
+"""
+@inline function Base.setindex!(h::ConcreteDirectedHGs, v::Real, idx::Vararg{Int,2})
+    @boundscheck checkbounds(h.hg_in, idx...)
+    @boundscheck checkbounds(h.hg_out, idx...)
+
+    setindex!(h.hg_in, v, idx)
+    setindex!(h.hg_out, v, idx)
+    h
+end
+
+
+"""
+    Base.setindex!(h::ConcreteDirectedHGs, v::Tuple{Union{Real, Nothing}, Union{Real, Nothing}}, idx::Vararg{Int,2})
+
+Manipulates a hyperedge (represented by indices `idx`), either adding a vertex to the 
+ingoing and/or outgoing sides of the hyperedge and assigning a value associated with that assignment,
+or else removing a vertex from the ingoing/outgoing sides of the hyperedge.
+
+Here, `v` is a 2-tuple where the first element is the value that will be assigned to the ingoing part of the hyperedge
+and the second element is the value that will be assigned to the outgoing part. A value of `nothing` means that the
+vertex will be removed from that side of the hyperedge.
+
+"""
+@inline function Base.setindex!(h::ConcreteDirectedHGs, v::Tuple{Union{Real, Nothing}, Union{Real, Nothing}}, idx::Vararg{Int,2})
+    @boundscheck checkbounds(h.hg_in, idx...)
+    @boundscheck checkbounds(h.hg_out, idx...)
+    
+    setindex!(h.hg_in, v[1], idx)
+    setindex!(h.hg_out, v[2], idx)
+
+    h
+end
+
+
+"""
+    getvertices(h::Union{Hypergraph, BasicHypergraph}, he_id::Int)
+
+Returns vertices from an undirected hypergraph `a` for a given hyperedge `he_id`.
+
+"""
+@inline getvertices(h::ConcreteUndirectedHGs, he_id::Int) = h.he2v[he_id]
+
+
+"""
+    getvertices(h::Union{DirectedHypergraph, BasicDirectedHypergraph}, he_id::Int)
+
+Returns vertices from a directed hypergraph `a` for a given hyperedge `he_id`.
+Vertex indices are given in a tuple `(in, out)`, where `in` are the incoming vertices
+and `out` are the outgoing vertices
+
+"""
+@inline getvertices(h::ConcreteDirectedHGs, he_id::Int) = (h.hg_in.he2v[he_id], h.hg_out.he2v[he_id])
+
+
+"""
+    gethyperedges(h::Union{Hypergraph, BasicHypergraph}, v_id::Int)
+
+Returns hyperedges for a given vertex `v_id` in an undirected hypergraph `h`.
+
+"""
+@inline gethyperedges(h::ConcreteUndirectedHGs, v_id::Int) = h.v2he[v_id]
+
+
+"""
+    gethyperedges(h::Union{DirectedHypergraph, BasicDirectedHypergraph}, v_id::Int)
+
+Returns hyperedges for a given vertex `v_id` in a directed hypergraph `h`.
+Hyperedge indices are given in a tuple `(in, out)`, where `in` are the hyperedges where
+vertex `v_ind` is on the ingoing side and `out` are the hyperedges where `v_ind` is on
+the outgoing side.
+
+"""
+@inline gethyperedges(h::ConcreteDirectedHGs, v_id::Int) = (h.hg_in.v2he[v_id], h.hg_out.v2he[v_id])
+
+
+# TODO: you are here
 
 """
     add_vertex!(h::Hypergraph{T, V, E, D};
@@ -1264,11 +1355,3 @@ end
 
 # TODO find connected components without recurrence
 # TODO needs validate_hypergraph!(h::Hypergraph{T})
-
-
-# build unions of types for easier dispatch
-const HasMetaStructs = Union{Hypergraph, DirectedHypergraph}
-
-# implementing traits on types
-@traitimpl HasMeta{HasMetastructs}
-hasmeta(::Type{T}) where {T<:HasMetaStructs} = true
