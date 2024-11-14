@@ -1,5 +1,4 @@
 # TODO: think more carefully about ensuring that metadata vectors are of appropriate lengths
-# TODO: make sure that vertices can't be in ingoing and outgoing sides of a directed hyperedge?
 
 """
     Hypergraph{T} <: AbstractUndirectedHypergraph{T}
@@ -816,6 +815,8 @@ hasmeta(::Type{T}) where {T<:HasMetaStructs} = true
 const ConcreteUndirectedHGs = Union{Hypergraph, BasicHypergraph}
 const ConcreteDirectedHGs = Union{DirectedHypergraph, BasicDirectedHypergraph}
 
+const DIRECTED_HYPERGRAPH_VALID_FIRST_INDICES = [1,2]
+
 
 # AbstractArray interface functions
 
@@ -857,6 +858,8 @@ If a vertex does not belong to a hyperedge `nothing` is returned.
 
     (in_value, out_value)
 end
+
+#TODO: getindex implementation with idx::Vararg{Int, 2}?
 
 
 """
@@ -946,6 +949,57 @@ end
 
 
 """
+    Base.setindex!(h::Union{DirectedHypergraph, BasicDirectedHypergraph}, ::Nothing, idx::Vararg{Int,3})
+
+Removes a vertex from a given hyperedge for a directed hypergraph `h` and a given side-vertex-hyperedge pair `idx`.
+If the first index of `idx` is 1, then the vertex will be removed from the incoming hyperedge; if `idx` is 2, then
+the vertex will be removed from the outgoing hyperedge. 
+Note that trying to remove a vertex from a hyperedge when it is not present will not throw an error.
+
+"""
+@inline function Base.setindex!(h::ConcreteDirectedHGs, ::Nothing, idx::Vararg{Int,3})
+    @boundscheck checkbounds(DIRECTED_HYPERGRAPH_VALID_FIRST_INDICES, idx[1])
+
+    if idx[1] == 1
+        side = h.hg_in
+    else
+        side = h.hg_out
+    end
+    
+    @boundscheck checkbounds(side, idx[2:end]...)
+    
+    setindex!(side, nothing, idx[2:end])
+
+    h
+end
+
+
+"""
+    Base.setindex!(h::Union{DirectedHypergraph, BasicDirectedHypergraph}, v::Real, idx::Vararg{Int,3})
+
+Adds a vertex to a hyperedge (represented by indices `idx`, where the first index must be either
+1 - referring to an incoming hyperedge - or 2 - referring to an outgoing hyperedge) and assigns value
+`v` to be stored with that assignment.
+
+"""
+@inline function Base.setindex!(h::ConcreteDirectedHGs, v::Real, idx::Vararg{Int,3})
+    @boundscheck checkbounds(DIRECTED_HYPERGRAPH_VALID_FIRST_INDICES, idx[1])
+
+    if idx[1] == 1
+        side = h.hg_in
+    else
+        side = h.hg_out
+    end
+    
+    @boundscheck checkbounds(side, idx[2:end]...)
+    
+    setindex!(side, v, idx[2:end])
+
+    h
+end
+
+
+"""
     getvertices(h::Union{Hypergraph, BasicHypergraph}, he_id::Int)
 
 Returns vertices from an undirected hypergraph `a` for a given hyperedge `he_id`.
@@ -986,14 +1040,14 @@ the outgoing side.
 @inline gethyperedges(h::ConcreteDirectedHGs, v_id::Int) = (h.hg_in.v2he[v_id], h.hg_out.v2he[v_id])
 
 
-# TODO: you are here
 
+#TODO: should there be a way to add hyperedge metadata as well as vertex metadata?
 """
     add_vertex!(h::Hypergraph{T, V, E, D};
                 hyperedges::D = D(), v_meta::Union{V,Nothing} = nothing
                 ) where {T <: Real, V, E, D <: AbstractDict{Int,T}}
 
-Adds a vertex to a given hypergraph `h`. Optionally, the vertex can be added
+Adds a vertex to a given undirected hypergraph `h`. Optionally, the vertex can be added
 to existing hyperedges. The `hyperedges` parameter presents a dictionary
 of hyperedge identifiers and values stored at the hyperedges.
 Additionally, a value can be stored with the vertex using the `v_meta` keyword
@@ -1013,13 +1067,108 @@ function add_vertex!(h::Hypergraph{T, V, E, D};
     ix
 end
 
+"""
+    add_vertex!(h::BasicHypergraph{T, D};
+                hyperedges::D = D()
+                ) where {T <: Real, D <: AbstractDict{Int,T}}
+
+Adds a vertex to a given undirected hypergraph `h`. Optionally, the vertex can be added
+to existing hyperedges. The `hyperedges` parameter presents a dictionary
+of hyperedge identifiers and values stored at the hyperedges.
+
+"""
+function add_vertex!(h::BasicHypergraph{T, D};
+                     hyperedges::D = D()
+                    ) where {T <: Real, D <: AbstractDict{Int,T}}
+    @boundscheck (checkbounds(h,1,k) for k in keys(hyperedges))
+    push!(h.v2he,hyperedges)
+    ix = length(h.v2he)
+    for k in keys(hyperedges)
+        h[ix,k]=hyperedges[k]
+    end
+    ix
+end
+
+
+"""
+    add_vertex!(h::DirectedHypergraph{T, V, E, D};
+                hyperedges_in::D = D(), hyperedges_out::D = D(), v_meta::Union{V,Nothing} = nothing
+                ) where {T <: Real, V, E, D <: AbstractDict{Int,T}}
+
+Adds a vertex to a given directed hypergraph `h`. Optionally, the vertex can be added
+to existing hyperedges. The `hyperedges_in` parameter presents a dictionary
+of hyperedge identifiers and values stored at the ingoing side of hyperedges, and
+the `hyperedges_out` parameter presents a dictionary of hyperedge identifiers and
+values stored at the outgoing side of hyperedges.
+Additionally, a value can be stored with the vertex using the `v_meta` keyword
+parameter.
+
+"""
+function add_vertex!(h::DirectedHypergraph{T, V, E, D};
+                     hyperedges_in::D = D(), hyperedges_out::D = D(), v_meta::Union{V,Nothing} = nothing
+                    ) where {T <: Real, V, E, D <: AbstractDict{Int,T}}
+    @boundscheck (checkbounds(h.hg_in,1,k) for k in keys(hyperedges_in))
+    @boundscheck (checkbounds(h.hg_out,1,k) for k in keys(hyperedges_out))
+
+    push!(h.hg_in.v2he,hyperedges_in)
+    push!(h.hg_out.v2he,hyperedges_out)
+
+    # Should always be identical to h.hg_out.v2he
+    ix = length(h.hg_in.v2he)
+
+    for k in keys(hyperedges_in)
+        h[1,ix,k]=hyperedges_in[k]
+    end
+
+    for k in keys(hyperedges_out)
+        h[2,ix,k]=hyperedges_out[k]
+    end
+
+    push!(h.v_meta, v_meta)
+    ix
+end
+
+"""
+    add_vertex!(h::BasicDirectedHypergraph{T, D};
+                hyperedges_in::D = D(), hyperedges_out::D = D()
+                ) where {T <: Real, D <: AbstractDict{Int,T}}
+
+Adds a vertex to a given directed hypergraph `h`. Optionally, the vertex can be added
+to existing hyperedges. The `hyperedges_in` parameter presents a dictionary
+of hyperedge identifiers and values stored at the ingoing side of hyperedges, and
+the `hyperedges_out` parameter presents a dictionary of hyperedge identifiers and
+values stored at the outgoing side of hyperedges.
+
+"""
+function add_vertex!(h::BasicDirectedHypergraph{T, D};
+                     hyperedges::D = D()
+                    ) where {T <: Real, D <: AbstractDict{Int,T}}
+    @boundscheck (checkbounds(h.hg_in,1,k) for k in keys(hyperedges_in))
+    @boundscheck (checkbounds(h.hg_out,1,k) for k in keys(hyperedges_out))
+
+    push!(h.hg_in.v2he,hyperedges_in)
+    push!(h.hg_out.v2he,hyperedges_out)
+    
+    ix = length(h.hg_in.v2he)
+
+    for k in keys(hyperedges_in)
+        h[1,ix,k]=hyperedges_in[k]
+    end
+
+    for k in keys(hyperedges_out)
+        h[2,ix,k]=hyperedges_out[k]
+    end
+
+    ix
+end
+
 
 """
     remove_vertex!(h::Hypergraph, v::Int)
 
-Removes the vertex `v` from a given hypergraph `h`.
+Removes the vertex `v` from a given undirected hypergraph `h`.
 Note that running this function will cause reordering of vertices in the
-hypergraph: the vertex `v` will replaced by the last vertex of the hypergraph
+hypergraph; the vertex `v` will replaced by the last vertex of the hypergraph
 and the list of vertices will be shrunk.
 """
 function remove_vertex!(h::Hypergraph, v::Int)
@@ -1027,6 +1176,76 @@ function remove_vertex!(h::Hypergraph, v::Int)
     if v < n
         h.v2he[v] = h.v2he[n]
         h.v_meta[v] = h.v_meta[n]
+    end
+
+    for hv in h.he2v
+        if v < n && haskey(hv, n)
+            hv[v] = hv[n]
+            delete!(hv, n)
+        else
+            delete!(hv, v)
+        end
+    end
+    resize!(h.v2he, length(h.v2he) - 1)
+    resize!(h.v_meta, length(h.v_meta) - 1)
+    h
+end
+
+"""
+    remove_vertex!(h::BasicHypergraph, v::Int)
+
+Removes the vertex `v` from a given undirected hypergraph `h`.
+Note that running this function will cause reordering of vertices in the
+hypergraph; the vertex `v` will replaced by the last vertex of the hypergraph
+and the list of vertices will be shrunk.
+"""
+function remove_vertex!(h::BasicHypergraph, v::Int)
+    n = nhv(h)
+    if v < n
+        h.v2he[v] = h.v2he[n]
+    end
+
+    for hv in h.he2v
+        if v < n && haskey(hv, n)
+            hv[v] = hv[n]
+            delete!(hv, n)
+        else
+            delete!(hv, v)
+        end
+    end
+    resize!(h.v2he, length(h.v2he) - 1)
+    h
+end
+
+
+"""
+    remove_vertex!(h::Union{DirectedHypergraph, BasicDirectedHypergraph}, v::Int)
+
+Removes the vertex `v` from a given directed hypergraph `h`.
+Note that running this function will cause reordering of vertices in the
+hypergraph; the vertex `v` will replaced by the last vertex of the hypergraph
+and the list of vertices will be shrunk.
+"""
+function remove_vertex!(h::ConcreteDirectedHGs, v::Int)
+    remove_vertex!(h.hg_in, v)
+    remove_vertex!(h.hg_out, v)
+
+    h
+end
+
+
+"""
+    remove_vertex!(h::BasicDirectedHypergraph, v::Int)
+
+Removes the vertex `v` from a given undirected hypergraph `h`.
+Note that running this function will cause reordering of vertices in the
+hypergraph; the vertex `v` will replaced by the last vertex of the hypergraph
+and the list of vertices will be shrunk.
+"""
+function remove_vertex!(h::BasicDirectedHypergraph, v::Int)
+    n = nhv(h)
+    if v < n
+        h.v2he[v] = h.v2he[n]
     end
 
     for hv in h.he2v
@@ -1047,7 +1266,7 @@ end
                    vertices::D = D(), he_meta::Union{E,Nothing}=nothing
                    ) where {T <: Real, V, E, D <: AbstractDict{Int,T}}
 
-Adds a hyperedge to a given hypergraph `h`.
+Adds a hyperedge to a given undirected hypergraph `h`.
 Optionally, existing vertices can be added to the created hyperedge.
 The paramater `vertices` represents a dictionary of vertex identifiers and
 values stored at the hyperedges. Additionally, a value can be stored with the
@@ -1068,6 +1287,107 @@ function add_hyperedge!(h::Hypergraph{T, V, E, D};
 end
 
 
+"""
+    add_hyperedge!(h::BasicHypergraph{T, D};
+                   vertices::D = D()
+                   ) where {T <: Real, D <: AbstractDict{Int,T}}
+
+Adds a hyperedge to a given undirected hypergraph `h`.
+Optionally, existing vertices can be added to the created hyperedge.
+The paramater `vertices` represents a dictionary of vertex identifiers and
+values stored at the hyperedges.
+
+"""
+function add_hyperedge!(h::BasicHypergraph{T, D};
+                        vertices::D = D()
+                        ) where {T <: Real, D <: AbstractDict{Int,T}}
+    @boundscheck (checkbounds(h,k,1) for k in keys(vertices))
+    push!(h.he2v,vertices)
+    ix = length(h.he2v)
+    for k in keys(vertices)
+        h[k,ix]=vertices[k]
+    end
+
+    ix
+end
+
+
+"""
+    add_hyperedge!(h::DirectedHypergraph{T, V, E, D};
+                   vertices_in::D = D(), vertices_out::D = D(),
+                   he_meta_in::Union{E,Nothing}=nothing, he_meta_out::Union{E,Nothing}=nothing
+                   ) where {T <: Real, V, E, D <: AbstractDict{Int,T}}
+
+Adds a hyperedge to a given directed hypergraph `h`.
+Optionally, existing vertices can be added to the created hyperedge in the
+incoming or outgoing directions.
+The paramater `vertices_in` represents a dictionary of vertex identifiers and
+values stored at the incoming hyperedge; `vertices_out` represented the vertex
+identifiers and values stored at the outcoming side of the hyperedge. Additionally, 
+a value can be stored with the hyperedge using the `he_meta_in` and `he_meta_out`
+keyword parameters.
+
+"""
+function add_hyperedge!(h::DirectedHypergraph{T, V, E, D};
+                        vertices_in::D = D(), vertices_out::D = D(),
+                        he_meta_in::Union{E,Nothing}=nothing, he_meta_out::Union{E,Nothing}=nothing
+                        ) where {T <: Real, V, E, D <: AbstractDict{Int,T}}
+    @boundscheck (checkbounds(h.hg_in,k,1) for k in keys(vertices_in))
+    @boundscheck (checkbounds(h.hg_out,1,k) for k in keys(vertices_out))
+    
+    push!(h.hg_in.he2v,vertices_in)
+    push!(h.hg_out.he2v, vertices_out)
+
+    # Should always be identical to length(h.hg_out.he2v)
+    ix = length(h.hg_in.he2v)
+    for k in keys(vertices_in)
+        h[1,k,ix]=vertices_in[k]
+    end
+    for k in keys(vertices_out)
+        h[2,k,ix]=vertices_out[k]
+    end
+    push!(h.hg_in.he_meta, he_meta_in)
+    push!(h.hg_out.he_meta, he_meta_out)
+    ix
+end
+
+
+"""
+    add_hyperedge!(h::BasicDirectedHypergraph{T, D};
+                   vertices::D = D()
+                   ) where {T <: Real, D <: AbstractDict{Int,T}}
+
+Adds a hyperedge to a given directed hypergraph `h`.
+Optionally, existing vertices can be added to the created hyperedge in the
+incoming or outgoing directions.
+The paramater `vertices_in` represents a dictionary of vertex identifiers and
+values stored at the incoming hyperedge; `vertices_out` represented the vertex
+identifiers and values stored at the outcoming side of the hyperedge.
+
+"""
+function add_hyperedge!(h::BasicDirectedHypergraph{T, D};
+                        vertices_in::D = D(), vertices_out::D = D()
+                        ) where {T <: Real, D <: AbstractDict{Int,T}}
+    @boundscheck (checkbounds(h.hg_in,k,1) for k in keys(vertices_in))
+    @boundscheck (checkbounds(h.hg_out,1,k) for k in keys(vertices_out))
+    
+    push!(h.hg_in.he2v,vertices_in)
+    push!(h.hg_out.he2v, vertices_out)
+
+    # Should always be identical to length(h.hg_out.he2v)
+    ix = length(h.hg_in.he2v)
+    for k in keys(vertices_in)
+        h[1,k,ix]=vertices_in[k]
+    end
+    for k in keys(vertices_out)
+        h[2,k,ix]=vertices_out[k]
+    end
+
+    ix
+end
+
+
+# TODO: you are here
 """
     remove_hyperedge!(h::Hypergraph, e::Int)
 Removes the heyperedge `e` from a given hypergraph `h`.
