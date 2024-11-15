@@ -1687,27 +1687,47 @@ get_hyperedge_meta(::BasicDirectedHypergraph, ::Int) = throw("Not implemented!")
 get_hyperedge_meta(::BasicDirectedHypergraph, ::Int, ::HyperedgeDirection) = throw("Not implemented!")
 
 
-# TODO: you are here
 """
-    nhe(h::Hypergraph)
+    nhe(h::Union{Hypergraph,BasicHypergraph})
 
-Return the number of hyperedges in the hypergraph `h`.
+Return the number of hyperedges in the undirected hypergraph `h`.
 """
-function nhe(h::Hypergraph)
+function nhe(h::ConcreteUndirectedHGs)
     length(h.he2v)
 end
 
 
 """
-    nhv(h::Hypergraph)
+    nhe(h::Union{DirectedHypergraph,BasicDirectedHypergraph})
 
-Return the number of vertices in the hypergraph `h`.
+Return the number of hyperedges in the directed hypergraph `h`.
 """
-function nhv(h::Hypergraph)
+function nhe(h::ConcreteDirectedHGs)
+    (length(h.hg_in.he2v) == length(h.hg_out.he2v)) ? length(h.hg_in.he2v) : throw("Incoming and outgoing sides of hypergraph have different numbers of hyperedges!")
+end
+
+
+"""
+    nhv(h::Union{Hypergraph,BasicHypergraph})
+
+Return the number of vertices in the undirected hypergraph `h`.
+"""
+function nhv(h::ConcreteUndirectedHGs)
     length(h.v2he)
 end
 
 
+"""
+    nhv(h::Union{DirectedHypergraph,BasicDirectedHypergraph})
+
+Return the number of vertices in the directed hypergraph `h`.
+"""
+function nhe(h::ConcreteDirectedHGs)
+    (length(h.hg_in.v2he) == length(h.hg_out.v2he)) ? length(h.hg_in.v2he) : throw("Incoming and outgoing sides of hypergraph have different numbers of hyperedges!")
+end
+
+
+# TODO: you are here
 function _default_heselect(h::Hypergraph, v::Int)
     hes = gethyperedges(h, v)
     sort!(collect(keys(hes))), ones(length(hes))
