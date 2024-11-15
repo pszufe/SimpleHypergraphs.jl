@@ -815,7 +815,14 @@ hasmeta(::Type{T}) where {T<:HasMetaStructs} = true
 const ConcreteUndirectedHGs = Union{Hypergraph, BasicHypergraph}
 const ConcreteDirectedHGs = Union{DirectedHypergraph, BasicDirectedHypergraph}
 
+# TODO: god this is awkward...
 const DIRECTED_HYPERGRAPH_VALID_FIRST_INDICES = [1,2]
+
+# TODO: can this entirely replace the above? Index setting seems problematic...
+@enum HyperedgeDirection begin
+    incoming = 1
+    outgoing = 2
+end
 
 
 # AbstractArray interface functions
@@ -1171,6 +1178,7 @@ Note that running this function will cause reordering of vertices in the
 hypergraph; the vertex `v` will replaced by the last vertex of the hypergraph
 and the list of vertices will be shrunk.
 """
+
 function remove_vertex!(h::Hypergraph, v::Int)
     n = nhv(h)
     if v < n
@@ -1219,16 +1227,23 @@ end
 
 
 """
-    remove_vertex!(h::Union{DirectedHypergraph, BasicDirectedHypergraph}, v::Int)
+    remove_vertex!(h::DirectedHypergraph, v::Int)
 
 Removes the vertex `v` from a given directed hypergraph `h`.
 Note that running this function will cause reordering of vertices in the
 hypergraph; the vertex `v` will replaced by the last vertex of the hypergraph
 and the list of vertices will be shrunk.
 """
-function remove_vertex!(h::ConcreteDirectedHGs, v::Int)
+function remove_vertex!(h::DirectedHypergraph, v::Int)
+    n = nhv(h)
+    if v < n
+        h.v_meta[v] = h.v_meta[n]
+    end
+    
     remove_vertex!(h.hg_in, v)
     remove_vertex!(h.hg_out, v)
+
+    resize!(h.v_meta, length(h.v_meta) - 1)
 
     h
 end
@@ -1237,26 +1252,15 @@ end
 """
     remove_vertex!(h::BasicDirectedHypergraph, v::Int)
 
-Removes the vertex `v` from a given undirected hypergraph `h`.
+Removes the vertex `v` from a given directed hypergraph `h`.
 Note that running this function will cause reordering of vertices in the
 hypergraph; the vertex `v` will replaced by the last vertex of the hypergraph
 and the list of vertices will be shrunk.
 """
 function remove_vertex!(h::BasicDirectedHypergraph, v::Int)
-    n = nhv(h)
-    if v < n
-        h.v2he[v] = h.v2he[n]
-    end
+    remove_vertex!(h.hg_in, v)
+    remove_vertex!(h.hg_out, v)
 
-    for hv in h.he2v
-        if v < n && haskey(hv, n)
-            hv[v] = hv[n]
-            delete!(hv, n)
-        else
-            delete!(hv, v)
-        end
-    end
-    resize!(h.v2he, length(h.v2he) - 1)
     h
 end
 
@@ -1346,8 +1350,8 @@ function add_hyperedge!(h::DirectedHypergraph{T, V, E, D};
     for k in keys(vertices_out)
         h[2,k,ix]=vertices_out[k]
     end
-    push!(h.hg_in.he_meta, he_meta_in)
-    push!(h.hg_out.he_meta, he_meta_out)
+    push!(h.he_meta_in, he_meta_in)
+    push!(h.he_meta_out, he_meta_out)
     ix
 end
 
@@ -1387,13 +1391,12 @@ function add_hyperedge!(h::BasicDirectedHypergraph{T, D};
 end
 
 
-# TODO: you are here
 """
     remove_hyperedge!(h::Hypergraph, e::Int)
-Removes the heyperedge `e` from a given hypergraph `h`.
+Removes the hyperedge `e` from a given undirected hypergraph `h`.
 Note that running this function will cause reordering of hyperedges in the
 hypergraph: the hyperedge `e` will replaced by the last hyperedge of the hypergraph
-and the list of hyperedges will be shrunk.
+and the list of hyperedges (and hyperedge metadata) will be shrunk.
 """
 function remove_hyperedge!(h::Hypergraph, e::Int)
     ne = nhe(h)
@@ -1412,46 +1415,132 @@ function remove_hyperedge!(h::Hypergraph, e::Int)
 		end
     end
     resize!(h.he2v, length(h.he2v) - 1)
+    resize!(h.he_meta, length(h.he_meta) - 1)
     h
 end
 
 
 """
-    prune_hypergraph!(h::Hypergraph)
+    remove_hyperedge!(h::BasicHypergraph, e::Int)
+Removes the hyperedge `e` from a given undirected hypergraph `h`.
+Note that running this function will cause reordering of hyperedges in the
+hypergraph: the hyperedge `e` will replaced by the last hyperedge of the hypergraph
+and the list of hyperedges will be shrunk.
+"""
+function remove_hyperedge!(h::BasicHypergraph, e::Int)
+    ne = nhe(h)
+	@assert(e <= ne)
+	if e < ne
+	    h.he2v[e] = h.he2v[ne]
+	end
+
+    for he in h.v2he
+	    if e < ne && haskey(he, ne)
+		    he[e] = he[ne]
+            delete!(he, ne)
+		else
+			delete!(he, e)
+		end
+    end
+    resize!(h.he2v, length(h.he2v) - 1)
+    h
+end
+
+
+"""
+    remove_hyperedge!(h::DirectedHypergraph, e::Int)
+Removes the hyperedge `e` from a given directed hypergraph `h`.
+Note that running this function will cause reordering of hyperedges in the
+hypergraph: the hyperedge `e` will replaced by the last hyperedge of the hypergraph
+and the list of hyperedges (and hyperedge metadata) will be shrunk.
+"""
+function remove_hyperedge!(h::DirectedHypergraph, e::Int)
+    ne = nhe(h)
+	@assert(e <= ne)
+	if e < ne
+	    h.he_meta_in[e] = h.he_meta_in[ne]
+        h.he_meta_out[e] = h.he_meta_out[ne]
+	end
+
+    remove_hyperedge!(h.hg_in, e)
+    remove_hyperedge!(h.hg_out, e)
+
+    resize!(h.he_meta_in, length(h.he_meta_in) - 1)
+    resize!(h.he_meta_out, length(h.he_meta_out) - 1)
+
+    h
+end
+
+
+"""
+    remove_hyperedge!(h::BasicDirectedHypergraph, e::Int)
+Removes the hyperedge `e` from a given directed hypergraph `h`.
+Note that running this function will cause reordering of hyperedges in the
+hypergraph: the hyperedge `e` will replaced by the last hyperedge of the hypergraph
+and the list of hyperedges (and hyperedge metadata) will be shrunk.
+"""
+function remove_hyperedge!(h::BasicDirectedHypergraph, e::Int)
+    remove_hyperedge!(h.hg_in, e)
+    remove_hyperedge!(h.hg_out, e)
+
+    h
+end
+
+
+"""
+    prune_hypergraph!(h::Union{Hypergraph, BasicHypergraph})
 
 Remove all vertices with degree 0 and all hyperedges of size 0.
 
 """
-function prune_hypergraph!(h::Hypergraph)
+function prune_hypergraph!(h::ConcreteUndirectedHGs)
 	for e in reverse(1:nhe(h))
         length(h.he2v[e]) == 0 && remove_hyperedge!(h,e)
     end
 	for v in reverse(1:nhv(h))
-    	length(h.v2he[v]) == 0 && 	remove_vertex!(h,v)
+    	length(h.v2he[v]) == 0 && remove_vertex!(h,v)
     end
 	h
 end
 
 
 """
-    prune_hypergraph(h::Hypergraph)
+    prune_hypergraph!(h::Union{DirectedHypergraph, BasicDirectedHypergraph})
+
+Remove all vertices with degree 0 and all hyperedges of size 0.
+
+"""
+function prune_hypergraph!(h::ConcreteDirectedHGs)
+	for e in reverse(1:nhe(h))
+        length(h.hg_in.he2v[e]) == 0 && length(h.hg_out.he2v[e]) && remove_hyperedge!(h,e)
+    end
+	for v in reverse(1:nhv(h))
+    	length(h.hg_in.v2he[v]) == 0 && length(h.hg_in.v2he[v]) == 0 && remove_vertex!(h,v)
+    end
+	h
+end
+
+
+"""
+    prune_hypergraph(h::H) where {H <: AbstractHypergraph}
 
 Return a pruned copy of `h`, removing all vertices with degree 0 and
 all hyperedges of size 0.
 
 """
-function prune_hypergraph(h::Hypergraph)
+function prune_hypergraph(h::H) where {H <: AbstractHypergraph}
     prune_hypergraph!(deepcopy(h))
 end
 
+
 """
-    set_vertex_meta!(h::Hypergraph{T, V, E, D}, new_value::Union{V,Nothing},
+    set_vertex_meta!(h::Union{Hypergraph{T, V, E, D}, DirectedHypergraph{T, V, E, D}}, new_value::Union{V,Nothing},
         id::Int) where {T <: Real, V, E, D <: AbstractDict{Int,T}}
 
 Sets a new meta value `new_value` for the vertex `id` in the hypergraph `h`.
 
 """
-function set_vertex_meta!(h::Hypergraph{T, V, E, D},
+function set_vertex_meta!(h::Union{Hypergraph{T, V, E, D}, DirectedHypergraph{T, V, E, D}},
         new_value::Union{V,Nothing}, id::Int
         ) where {T <: Real, V, E, D <: AbstractDict{Int,T}}
     checkbounds(h.v_meta, id)
@@ -1460,18 +1549,24 @@ function set_vertex_meta!(h::Hypergraph{T, V, E, D},
 end
 
 
+set_vertex_meta!(::NoMetaHGs, ::Any, ::Int) = throw("Not implemented!")
+
+
 """
-    get_vertex_meta(h::Hypergraph{T, V, E, D}, id::Int
+    get_vertex_meta(h::Union{Hypergraph{T, V, E, D}, DirectedHypergraph{T, V, E, D}}, id::Int
                     ) where {T <: Real, V, E, D <: AbstractDict{Int,T}}
 
-Returns a meta value stored at the vertex `id` in the hypergraph `h`.
+Returns a meta value stored at the vertex `id` in the undirected hypergraph `h`.
 
 """
-function get_vertex_meta(h::Hypergraph{T, V, E, D}, id::Int
+function get_vertex_meta(h::Union{Hypergraph{T, V, E, D}, DirectedHypergraph{T, V, E, D}}, id::Int
                          ) where {T <: Real, V, E, D <: AbstractDict{Int,T}}
     checkbounds(h.v_meta, id)
     h.v_meta[id]
 end
+
+
+get_vertex_meta(::NoMetaHGs, ::Int) = throw("Not implemented!")
 
 
 """
@@ -1479,7 +1574,7 @@ end
         new_value::Union{E,Nothing}, id::Int
         ) where {T <: Real, V, E, D <: AbstractDict{Int,T}}
 
-Sets a new meta value `new_value` for the hyperedge `id` in the hypergraph `h`.
+Sets a new meta value `new_value` for the hyperedge `id` in the undirected hypergraph `h`.
 
 """
 function set_hyperedge_meta!(h::Hypergraph{T, V, E, D},
@@ -1492,9 +1587,60 @@ end
 
 
 """
+    set_hyperedge_meta!(h::DirectedHypergraph{T, V, E, D},
+        new_value_in::Union{E,Nothing}, new_value_out::Union{E,Nothing}, id::Int
+        ) where {T <: Real, V, E, D <: AbstractDict{Int,T}}
+
+Sets a new meta value `new_value` for the hyperedge `id` in the directed hypergraph `h`.
+
+"""
+function set_hyperedge_meta!(h::DirectedHypergraph{T, V, E, D},
+                             new_value_in::Union{E,Nothing}, new_value_out::Union{E,Nothing}, id::Int
+                             ) where {T <: Real, V, E, D <: AbstractDict{Int,T}}
+    checkbounds(h.he_meta_in, id)
+    checkbounds(h.he_meta_out, id)
+
+    h.he_meta_in[id] = new_value_in
+    h.he_meta_out[id] = new_value_out
+
+    (h.he_meta_in, h.he_meta_out)
+end
+
+
+"""
+    set_hyperedge_meta!(h::DirectedHypergraph{T, V, E, D},
+        new_value::Union{E,Nothing}, id::Int, side::HyperedgeDirection
+        ) where {T <: Real, V, E, D <: AbstractDict{Int,T}}
+
+Sets a new meta value `new_value` for the hyperedge `id` in the direction `side`
+    for a directed hypergraph `h`.
+
+"""
+function set_hyperedge_meta!(h::DirectedHypergraph{T, V, E, D},
+                             new_value::Union{E,Nothing}, id::Int, side::HyperedgeDirection
+                             ) where {T <: Real, V, E, D <: AbstractDict{Int,T}}
+    
+    if side == incoming
+        checkbounds(h.he_meta_in, id)
+        h.he_meta_in[id] = new_value
+        h.he_meta_in
+    else
+        checkbounds(h.he_meta_out, id)
+        h.he_meta_out[id] = new_value
+        h.he_meta_out
+
+end
+
+
+set_hyperedge_meta!(::BasicHypergraph, ::Any, ::Int) = throw("Not implemented!")
+set_hyperedge_meta!(::BasicDirectedHypergraph, ::Any, ::Any, ::Int) = throw("Not implemented!")
+set_hyperedge_meta!(::BasicDirectedHypergraph, ::Any, ::Int, ::HyperedgeDirection) = throw("Not implemented!")
+
+
+"""
     get_hyperedge_meta(h::Hypergraph{T, V, E, D}, id::Int)
         where {T <: Real, V, E, D <: AbstractDict{Int,T}}
-Returns a meta value stored at the hyperedge `id` in the hypergraph `h`.
+Returns a meta value stored at the hyperedge `id` in the undirected hypergraph `h`.
 
 """
 function get_hyperedge_meta(h::Hypergraph{T, V, E, D}, id::Int
@@ -1504,6 +1650,44 @@ function get_hyperedge_meta(h::Hypergraph{T, V, E, D}, id::Int
 end
 
 
+"""
+    get_hyperedge_meta(h::DirectedHypergraph{T, V, E, D}, id::Int)
+        where {T <: Real, V, E, D <: AbstractDict{Int,T}}
+Returns a meta value stored at the hyperedge `id` in the directed hypergraph `h`.
+
+"""
+function get_hyperedge_meta(h::DirectedHypergraph{T, V, E, D}, id::Int
+                            ) where {T <: Real, V, E, D <: AbstractDict{Int,T}}
+    checkbounds(h.he_meta_in, id)
+    checkbounds(h.he_meta_out, id)
+
+    (h.he_meta_in[id], h.he_meta_out[id])
+end
+
+
+"""
+    get_hyperedge_meta(h::DirectedHypergraph{T, V, E, D}, id::Int, side::HyperedgeDirection)
+        where {T <: Real, V, E, D <: AbstractDict{Int,T}}
+Returns a meta value stored at the hyperedge `id` in the directed hypergraph `h`.
+
+"""
+function get_hyperedge_meta(h::DirectedHypergraph{T, V, E, D}, id::Int, side::HyperedgeDirection
+                            ) where {T <: Real, V, E, D <: AbstractDict{Int,T}}
+
+    if side == incoming
+        checkbounds(h.he_meta_in, id)
+        h.he_meta_in[id]
+    else
+        checkbounds(h.he_meta_out, id)
+        h.he_meta_out[id]
+end
+
+get_hyperedge_meta(::BasicHypergraph, ::Int) = throw("Not implemented!")
+get_hyperedge_meta(::BasicDirectedHypergraph, ::Int) = throw("Not implemented!")
+get_hyperedge_meta(::BasicDirectedHypergraph, ::Int, ::HyperedgeDirection) = throw("Not implemented!")
+
+
+# TODO: you are here
 """
     nhe(h::Hypergraph)
 
