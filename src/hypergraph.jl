@@ -341,7 +341,7 @@ hypergraph.
     ) where {T<:Real,V,E,D<:AbstractDict{Int, T}}
 
 Constructs a directed hypergraph from two undirected basic hypergraphs, one with hyperedges
-containing "incoming" vertices and one with hyperedges containing "outgoing"
+containing "tail" vertices and one with hyperedges containing "head"
 verticies.
 
     DirectedHypergraph{T,V,E,D}(
@@ -362,9 +362,9 @@ an error if the vertex metadata of the two hypergraphs is not element-for-elemen
 * `k` : number of hyperedges
 * `m` : a matrix representation rows are vertices and columns are hyperedges
 * `g` : a (directed) graph representation of the hypergraph
-* `hg_tail`: an undirected hypergraph representing the incoming half of
+* `hg_tail`: an undirected hypergraph representing the tail half of
     the directed hypergraph
-* `hg_head`: an undirected hypergraph representing the outgoing half of
+* `hg_head`: an undirected hypergraph representing the head half of
     the directed hypergraph
 """
 
@@ -505,7 +505,7 @@ function DirectedHypergraph{T,V,E,D}(
     if all(hg_tail.v_meta .== hg_head.v_meta)
         DirectedHypergraph{T,V,E,D}(shg_tail, shg_head; hg_tail.v_meta, hg_tail.he_meta, hg_head.he_meta)
     else
-        throw(ArgumentError("Vertex metadata `v_meta` is different for ingoing and outgoing hypergraphs!"))
+        throw(ArgumentError("Vertex metadata `v_meta` is different for ingoing and head hypergraphs!"))
     end
 end
 
@@ -711,7 +711,7 @@ hypergraph.
     ) where {T<:Real,D<:AbstractDict{Int, T}}
 
 Constructs a directed hypergraph from two undirected basic hypergraphs, one with hyperedges
-containing "incoming" vertices and one with hyperedges containing "outgoing"
+containing "tail" vertices and one with hyperedges containing "head"
 verticies.
 
 **Arguments**
@@ -724,9 +724,9 @@ verticies.
 * `k` : number of hyperedges
 * `m` : a matrix representation rows are vertices and columns are hyperedges
 * `g` : a (directed) graph representation of the hypergraph
-* `hg_tail`: an undirected hypergraph representing the incoming half of
+* `hg_tail`: an undirected hypergraph representing the tail half of
     the directed hypergraph
-* `hg_head`: an undirected hypergraph representing the outgoing half of
+* `hg_head`: an undirected hypergraph representing the head half of
     the directed hypergraph
 """
 struct BasicDirectedHypergraph{T<:Real,D<:AbstractDict{Int, T}} <: AbstractDirectedHypergraph{T}
@@ -825,8 +825,8 @@ const DIRECTED_HYPERGRAPH_VALID_FIRST_INDICES = [1,2]
 
 # TODO: can this entirely replace the above? Index setting seems problematic...
 @enum HyperedgeDirection begin
-    incoming = 1
-    outgoing = 2
+    tail = 1
+    head = 2
 end
 
 
@@ -940,11 +940,11 @@ end
     Base.setindex!(h::ConcreteDirectedHGs, v::Tuple{Union{Real, Nothing}, Union{Real, Nothing}}, idx::Vararg{Int,2})
 
 Manipulates a hyperedge (represented by indices `idx`), either adding a vertex to the 
-ingoing and/or outgoing sides of the hyperedge and assigning a value associated with that assignment,
-or else removing a vertex from the ingoing/outgoing sides of the hyperedge.
+ingoing and/or head sides of the hyperedge and assigning a value associated with that assignment,
+or else removing a vertex from the ingoing/head sides of the hyperedge.
 
 Here, `v` is a 2-tuple where the first element is the value that will be assigned to the ingoing part of the hyperedge
-and the second element is the value that will be assigned to the outgoing part. A value of `nothing` means that the
+and the second element is the value that will be assigned to the head part. A value of `nothing` means that the
 vertex will be removed from that side of the hyperedge.
 
 """
@@ -963,8 +963,8 @@ end
     Base.setindex!(h::Union{DirectedHypergraph, BasicDirectedHypergraph}, ::Nothing, idx::Vararg{Int,3})
 
 Removes a vertex from a given hyperedge for a directed hypergraph `h` and a given side-vertex-hyperedge pair `idx`.
-If the first index of `idx` is 1, then the vertex will be removed from the incoming hyperedge; if `idx` is 2, then
-the vertex will be removed from the outgoing hyperedge. 
+If the first index of `idx` is 1, then the vertex will be removed from the tail hyperedge; if `idx` is 2, then
+the vertex will be removed from the head hyperedge. 
 Note that trying to remove a vertex from a hyperedge when it is not present will not throw an error.
 
 """
@@ -989,7 +989,7 @@ end
     Base.setindex!(h::Union{DirectedHypergraph, BasicDirectedHypergraph}, v::Real, idx::Vararg{Int,3})
 
 Adds a vertex to a hyperedge (represented by indices `idx`, where the first index must be either
-1 - referring to an incoming hyperedge - or 2 - referring to an outgoing hyperedge) and assigns value
+1 - referring to an tail hyperedge - or 2 - referring to an head hyperedge) and assigns value
 `v` to be stored with that assignment.
 
 """
@@ -1023,8 +1023,8 @@ Returns vertices from an undirected hypergraph `a` for a given hyperedge `he_id`
     getvertices(h::Union{DirectedHypergraph, BasicDirectedHypergraph}, he_id::Int)
 
 Returns vertices from a directed hypergraph `a` for a given hyperedge `he_id`.
-Vertex indices are given in a tuple `(in, out)`, where `in` are the incoming vertices
-and `out` are the outgoing vertices
+Vertex indices are given in a tuple `(in, out)`, where `in` are the tail vertices
+and `out` are the head vertices
 
 """
 @inline getvertices(h::ConcreteDirectedHGs, he_id::Int) = (h.hg_tail.he2v[he_id], h.hg_head.he2v[he_id])
@@ -1045,14 +1045,14 @@ Returns hyperedges for a given vertex `v_id` in an undirected hypergraph `h`.
 Returns hyperedges for a given vertex `v_id` in a directed hypergraph `h`.
 Hyperedge indices are given in a tuple `(in, out)`, where `in` are the hyperedges where
 vertex `v_ind` is on the ingoing side and `out` are the hyperedges where `v_ind` is on
-the outgoing side.
+the head side.
 
 """
 @inline gethyperedges(h::ConcreteDirectedHGs, v_id::Int) = (h.hg_tail.v2he[v_id], h.hg_head.v2he[v_id])
 
 """
 Basic logic:
-- Combine incoming and outgoing 
+- Combine 
 """
 function to_undirected(h::ConcreteDirectedHGs)
 
@@ -1122,7 +1122,7 @@ Adds a vertex to a given directed hypergraph `h`. Optionally, the vertex can be 
 to existing hyperedges. The `hyperedges_tail` parameter presents a dictionary
 of hyperedge identifiers and values stored at the ingoing side of hyperedges, and
 the `hyperedges_head` parameter presents a dictionary of hyperedge identifiers and
-values stored at the outgoing side of hyperedges.
+values stored at the head side of hyperedges.
 Additionally, a value can be stored with the vertex using the `v_meta` keyword
 parameter.
 
@@ -1160,7 +1160,7 @@ Adds a vertex to a given directed hypergraph `h`. Optionally, the vertex can be 
 to existing hyperedges. The `hyperedges_tail` parameter presents a dictionary
 of hyperedge identifiers and values stored at the ingoing side of hyperedges, and
 the `hyperedges_head` parameter presents a dictionary of hyperedge identifiers and
-values stored at the outgoing side of hyperedges.
+values stored at the head side of hyperedges.
 
 """
 function add_vertex!(h::BasicDirectedHypergraph{T, D};
@@ -1340,9 +1340,9 @@ end
 
 Adds a hyperedge to a given directed hypergraph `h`.
 Optionally, existing vertices can be added to the created hyperedge in the
-incoming or outgoing directions.
+tail or head directions.
 The paramater `vertices_tail` represents a dictionary of vertex identifiers and
-values stored at the incoming hyperedge; `vertices_head` represented the vertex
+values stored at the tail hyperedge; `vertices_head` represented the vertex
 identifiers and values stored at the outcoming side of the hyperedge. Additionally, 
 a value can be stored with the hyperedge using the `he_meta_tail` and `he_meta_head`
 keyword parameters.
@@ -1379,9 +1379,9 @@ end
 
 Adds a hyperedge to a given directed hypergraph `h`.
 Optionally, existing vertices can be added to the created hyperedge in the
-incoming or outgoing directions.
+tail or head directions.
 The paramater `vertices_tail` represents a dictionary of vertex identifiers and
-values stored at the incoming hyperedge; `vertices_head` represented the vertex
+values stored at the tail hyperedge; `vertices_head` represented the vertex
 identifiers and values stored at the outcoming side of the hyperedge.
 
 """
@@ -1636,7 +1636,7 @@ function set_hyperedge_meta!(h::DirectedHypergraph{T, V, E, D},
                              new_value::Union{E,Nothing}, id::Int, side::HyperedgeDirection
                              ) where {T <: Real, V, E, D <: AbstractDict{Int,T}}
     
-    if side == incoming
+    if side == tail
         checkbounds(h.he_meta_tail, id)
         h.he_meta_tail[id] = new_value
         h.he_meta_tail
@@ -1691,7 +1691,7 @@ Returns a meta value stored at the hyperedge `id` in the directed hypergraph `h`
 function get_hyperedge_meta(h::DirectedHypergraph{T, V, E, D}, id::Int, side::HyperedgeDirection
                             ) where {T <: Real, V, E, D <: AbstractDict{Int,T}}
 
-    if side == incoming
+    if side == tail
         checkbounds(h.he_meta_tail, id)
         h.he_meta_tail[id]
     else
@@ -1720,7 +1720,7 @@ end
 Return the number of hyperedges in the directed hypergraph `h`.
 """
 function nhe(h::ConcreteDirectedHGs)
-    (length(h.hg_tail.he2v) == length(h.hg_head.he2v)) ? length(h.hg_tail.he2v) : throw("Incoming and outgoing sides of hypergraph have different numbers of hyperedges!")
+    (length(h.hg_tail.he2v) == length(h.hg_head.he2v)) ? length(h.hg_tail.he2v) : throw("Tail and head sides of hypergraph have different numbers of hyperedges!")
 end
 
 
@@ -1740,7 +1740,7 @@ end
 Return the number of vertices in the directed hypergraph `h`.
 """
 function nhe(h::ConcreteDirectedHGs)
-    (length(h.hg_tail.v2he) == length(h.hg_head.v2he)) ? length(h.hg_tail.v2he) : throw("Incoming and outgoing sides of hypergraph have different numbers of hyperedges!")
+    (length(h.hg_tail.v2he) == length(h.hg_head.v2he)) ? length(h.hg_tail.v2he) : throw("Tail and head sides of hypergraph have different numbers of hyperedges!")
 end
 
 
