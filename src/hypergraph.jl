@@ -1,4 +1,9 @@
 # TODO: think more carefully about ensuring that metadata vectors are of appropriate lengths
+# TODO: are we ensuring that neither head nor tail sides of hyperarcs are empty?
+# TODO: weakly and strongly connected components:
+#   - Weak: naive solution is to convert directed hg into undirected hg and calculate undirected hg's connected components
+#   - Strong: ???
+# TODO: B- and F-components and associated algorithms?
 
 """
     Hypergraph{T} <: AbstractUndirectedHypergraph{T}
@@ -236,7 +241,7 @@ A directed hypergraph storing information about vertices and hyperedges.
 This implementation is based on guidance from Przemysław Szufel;
     see https://github.com/pszufe/SimpleHypergraphs.jl/issues/45
 This allows us to manipulate DirectedHypergraphs using Hypergraph functionality
-There is danger of a user manipulating individual `hg_in` and `hg_out` (undirected) hypergraphs
+There is danger of a user manipulating individual `hg_tail` and `hg_head` (undirected) hypergraphs
 Is there a smart way to prevent this?
 TODO: reconsider this design choice
 
@@ -247,18 +252,18 @@ TODO: reconsider this design choice
         v_meta=Vector{Union{V,Nothing}}(nothing, n)
         ) where {T<:Real, V}
     DirectedHypergraph{T,E}(n::Integer, k::Integer;
-        he_meta_in=Vector{Union{E,Nothing}}(nothing, k),
-        he_meta_out=Vector{Union{E,Nothing}}(nothing, k)
+        he_meta_tail=Vector{Union{E,Nothing}}(nothing, k),
+        he_meta_head=Vector{Union{E,Nothing}}(nothing, k)
         ) where {T<:Real, E}
     DirectedHypergraph{T,V,E}(n::Integer, k::Integer;
         v_meta=Vector{Union{V,Nothing}}(nothing, n),
-        he_meta_in=Vector{Union{E,Nothing}}(nothing, k),
-        he_meta_out=Vector{Union{E,Nothing}}(nothing, k)
+        he_meta_tail=Vector{Union{E,Nothing}}(nothing, k),
+        he_meta_head=Vector{Union{E,Nothing}}(nothing, k)
         ) where {T<:Real, V, E}
     DirectedHypergraph{T,V,E,D}(n::Integer, k::Integer,
         v_meta=Vector{Union{V,Nothing}}(nothing, n),
-        he_meta_in=Vector{Union{E,Nothing}}(nothing, k),
-        he_meta_out=Vector{Union{E,Nothing}}(nothing, k)
+        he_meta_tail=Vector{Union{E,Nothing}}(nothing, k),
+        he_meta_head=Vector{Union{E,Nothing}}(nothing, k)
         ) where {T<:Real,V,E,D<:AbstractDict{Int,T}}
 
 Construct a hypergraph with a given number of vertices and hyperedges.
@@ -269,37 +274,37 @@ to ensure result replicability can be used (e.g. when doing stochastic
 simulations on hypergraphs).
 
     DirectedHypergraph(
-        m_in::AbstractMatrix{Union{T, Nothing}},
-        m_out::AbstractMatrix{Union{T, Nothing}}
+        m_tail::AbstractMatrix{Union{T, Nothing}},
+        m_head::AbstractMatrix{Union{T, Nothing}}
     ) where {T<:Real}    
     DirectedHypergraph{T}(
-        m_in::AbstractMatrix{Union{T, Nothing}},
-        m_out::AbstractMatrix{Union{T, Nothing}}
+        m_tail::AbstractMatrix{Union{T, Nothing}},
+        m_head::AbstractMatrix{Union{T, Nothing}}
     ) where {T<:Real}
     DirectedHypergraph{T,V}(
-        m_in::AbstractMatrix{Union{T, Nothing}},
-        m_out::AbstractMatrix{Union{T, Nothing}};
+        m_tail::AbstractMatrix{Union{T, Nothing}},
+        m_head::AbstractMatrix{Union{T, Nothing}};
         v_meta::Vector{Union{Nothing,V}}=Vector{Union{Nothing,V}}(nothing, size(m,1)),
     ) where {T<:Real,V}
     DirectedHypergraph{T,E}(
-        m_in::AbstractMatrix{Union{T, Nothing}},
-        m_out::AbstractMatrix{Union{T, Nothing}};
-        he_meta_in::Vector{Union{Nothing,E}}=Vector{Union{Nothing,E}}(nothing, size(m,2)),
-        he_meta_out::Vector{Union{Nothing,E}}=Vector{Union{Nothing,E}}(nothing, size(m,2))
+        m_tail::AbstractMatrix{Union{T, Nothing}},
+        m_head::AbstractMatrix{Union{T, Nothing}};
+        he_meta_tail::Vector{Union{Nothing,E}}=Vector{Union{Nothing,E}}(nothing, size(m,2)),
+        he_meta_head::Vector{Union{Nothing,E}}=Vector{Union{Nothing,E}}(nothing, size(m,2))
     ) where {T<:Real,E}
     DirectedHypergraph{T,V,E}(
-        m_in::AbstractMatrix{Union{T, Nothing}},
-        m_out::AbstractMatrix{Union{T, Nothing}};
+        m_tail::AbstractMatrix{Union{T, Nothing}},
+        m_head::AbstractMatrix{Union{T, Nothing}};
         v_meta::Vector{Union{Nothing,V}}=Vector{Union{Nothing,V}}(nothing, size(m,1)),
-        he_meta_in::Vector{Union{Nothing,E}}=Vector{Union{Nothing,E}}(nothing, size(m,2)),
-        he_meta_out::Vector{Union{Nothing,E}}=Vector{Union{Nothing,E}}(nothing, size(m,2))
+        he_meta_tail::Vector{Union{Nothing,E}}=Vector{Union{Nothing,E}}(nothing, size(m,2)),
+        he_meta_head::Vector{Union{Nothing,E}}=Vector{Union{Nothing,E}}(nothing, size(m,2))
     ) where {T<:Real,V,E}
     DirectedHypergraph{T,V,E,D}(
-        m_in::AbstractMatrix{Union{T, Nothing}},
-        m_out::AbstractMatrix{Union{T, Nothing}};
+        m_tail::AbstractMatrix{Union{T, Nothing}},
+        m_head::AbstractMatrix{Union{T, Nothing}};
         v_meta::Vector{Union{Nothing,V}}=Vector{Union{Nothing,V}}(nothing, size(m,1)),
-        he_meta_in::Vector{Union{Nothing,E}}=Vector{Union{Nothing,E}}(nothing, size(m,2)),
-        he_meta_out::Vector{Union{Nothing,E}}=Vector{Union{Nothing,E}}(nothing, size(m,2))
+        he_meta_tail::Vector{Union{Nothing,E}}=Vector{Union{Nothing,E}}(nothing, size(m,2)),
+        he_meta_head::Vector{Union{Nothing,E}}=Vector{Union{Nothing,E}}(nothing, size(m,2))
     ) where {T<:Real,V,E,D<:AbstractDict{Int,T}}
 
 Construct a directed hypergraph using its matrix representation.
@@ -317,22 +322,22 @@ Graphs.DiGraph. A `SortedDict` will be used for internal data storage of the
 hypergraph.
 
     DirectedHypergraph{T,V,D}(
-        hg_in::BasicHypergraph{T,D},
-        hg_out::BasicHypergraph{T,D};
+        hg_tail::BasicHypergraph{T,D},
+        hg_head::BasicHypergraph{T,D};
         v_meta::Vector{Union{Nothing,V}}=Vector{Union{Nothing,V}}(nothing, size(m,1)),
     ) where {T<:Real,V,D<:AbstractDict{Int, T}}
     DirectedHypergraph{T,E,D}(
-        hg_in::BasicHypergraph{T,D},
-        hg_out::BasicHypergraph{T,D};
-        he_meta_in::Vector{Union{Nothing,E}}=Vector{Union{Nothing,E}}(nothing, size(m,2)),
-        he_meta_out::Vector{Union{Nothing,E}}=Vector{Union{Nothing,E}}(nothing, size(m,2))
+        hg_tail::BasicHypergraph{T,D},
+        hg_head::BasicHypergraph{T,D};
+        he_meta_tail::Vector{Union{Nothing,E}}=Vector{Union{Nothing,E}}(nothing, size(m,2)),
+        he_meta_head::Vector{Union{Nothing,E}}=Vector{Union{Nothing,E}}(nothing, size(m,2))
     ) where {T<:Real,E,D<:AbstractDict{Int, T}}
     DirectedHypergraph{T,V,E,D}(
-        hg_in::BasicHypergraph{T,D},
-        hg_out::BasicHypergraph{T,D};
+        hg_tail::BasicHypergraph{T,D},
+        hg_head::BasicHypergraph{T,D};
         v_meta::Vector{Union{Nothing,V}}=Vector{Union{Nothing,V}}(nothing, size(m,1)),
-        he_meta_in::Vector{Union{Nothing,E}}=Vector{Union{Nothing,E}}(nothing, size(m,2)),
-        he_meta_out::Vector{Union{Nothing,E}}=Vector{Union{Nothing,E}}(nothing, size(m,2))
+        he_meta_tail::Vector{Union{Nothing,E}}=Vector{Union{Nothing,E}}(nothing, size(m,2)),
+        he_meta_head::Vector{Union{Nothing,E}}=Vector{Union{Nothing,E}}(nothing, size(m,2))
     ) where {T<:Real,V,E,D<:AbstractDict{Int, T}}
 
 Constructs a directed hypergraph from two undirected basic hypergraphs, one with hyperedges
@@ -340,8 +345,8 @@ containing "incoming" vertices and one with hyperedges containing "outgoing"
 verticies.
 
     DirectedHypergraph{T,V,E,D}(
-        hg_in::Hypergraph{T,V,E,D},
-        hg_out::Hypergraph{T,V,E,D}
+        hg_tail::Hypergraph{T,V,E,D},
+        hg_head::Hypergraph{T,V,E,D}
     ) where {T<:Real,V,E,D<:AbstractDict{Int, T}}
 
 Constructs a directed hypergraph from two hypergraphs potentially containing metadata. Throws
@@ -357,51 +362,51 @@ an error if the vertex metadata of the two hypergraphs is not element-for-elemen
 * `k` : number of hyperedges
 * `m` : a matrix representation rows are vertices and columns are hyperedges
 * `g` : a (directed) graph representation of the hypergraph
-* `hg_in`: an undirected hypergraph representing the incoming half of
+* `hg_tail`: an undirected hypergraph representing the incoming half of
     the directed hypergraph
-* `hg_out`: an undirected hypergraph representing the outgoing half of
+* `hg_head`: an undirected hypergraph representing the outgoing half of
     the directed hypergraph
 """
 
 struct DirectedHypergraph{T<:Real,V,E,D<:AbstractDict{Int, T}} <: AbstractDirectedHypergraph{Tuple{T, T}}
-    hg_in::BasicHypergraph{T,D}
-    hg_out::BasicHypergraph{T,D}
+    hg_tail::BasicHypergraph{T,D}
+    hg_head::BasicHypergraph{T,D}
 
     v_meta::Vector{Union{V,Nothing}}
-    he_meta_in::Vector{Union{E,Nothing}}
-    he_meta_out::Vector{Union{E,Nothing}}
+    he_meta_tail::Vector{Union{E,Nothing}}
+    he_meta_head::Vector{Union{E,Nothing}}
 
     DirectedHypergraph{T,V,E,D}(
         n::Integer, k::Integer,
         v_meta=Vector{Union{V, Nothing}}(nothing, n),
-        he_meta_in=Vector{Union{E, Nothing}}(nothing, k),
-        he_meta_out=Vector{Union{E, Nothing}}(nothing, k)
+        he_meta_tail=Vector{Union{E, Nothing}}(nothing, k),
+        he_meta_head=Vector{Union{E, Nothing}}(nothing, k)
         ) where {T<:Real,V,E,D<:AbstractDict{Int, T}} = 
         new{T,V,E,D}(
             BasicHypergraph(n, k),
             BasicHypergraph(n, k),
-            v_meta, he_meta_in, he_meta_out
+            v_meta, he_meta_tail, he_meta_head
         )
 
     function DirectedHypergraph{T,V,E,D}(
-        hg_in::BasicHypergraph{T,D},
-        hg_out::BasicHypergraph{T,D};
+        hg_tail::BasicHypergraph{T,D},
+        hg_head::BasicHypergraph{T,D};
         v_meta::Vector{Union{Nothing,V}}=Vector{Union{Nothing,V}}(nothing, size(m,1)),
-        he_meta_in::Vector{Union{Nothing,E}}=Vector{Union{Nothing,E}}(nothing, size(m,2)),
-        he_meta_out::Vector{Union{Nothing,E}}=Vector{Union{Nothing,E}}(nothing, size(m,2))
+        he_meta_tail::Vector{Union{Nothing,E}}=Vector{Union{Nothing,E}}(nothing, size(m,2)),
+        he_meta_head::Vector{Union{Nothing,E}}=Vector{Union{Nothing,E}}(nothing, size(m,2))
         ) where {T<:Real,V,E,D<:AbstractDict{Int, T}}
-        @assert size(hg_in) == size(hg_out)
+        @assert size(hg_tail) == size(hg_head)
 
-        @assert length(v_meta) == size(hg_in,1)
-        @assert length(he_meta_in) == size(hg_in,2)
-        @assert length(he_meta_out) == size(hg_out,2)
+        @assert length(v_meta) == size(hg_tail,1)
+        @assert length(he_meta_tail) == size(hg_tail,2)
+        @assert length(he_meta_head) == size(hg_head,2)
 
         new{T,V,E,D}(
-            hg_in,
-            hg_out,
+            hg_tail,
+            hg_head,
             v_meta,
-            he_meta_in,
-            he_meta_out
+            he_meta_tail,
+            he_meta_head
         )
     end
 end
@@ -409,13 +414,13 @@ end
 DirectedHypergraph{T,V,E}(
     n::Integer, k::Integer;
     v_meta::Vector{Union{Nothing,V}}=Vector{Union{Nothing,V}}(nothing, size(m,1)),
-    he_meta_in::Vector{Union{Nothing,E}}=Vector{Union{Nothing,E}}(nothing, size(m,2)),
-    he_meta_out::Vector{Union{Nothing,E}}=Vector{Union{Nothing,E}}(nothing, size(m,2))
+    he_meta_tail::Vector{Union{Nothing,E}}=Vector{Union{Nothing,E}}(nothing, size(m,2)),
+    he_meta_head::Vector{Union{Nothing,E}}=Vector{Union{Nothing,E}}(nothing, size(m,2))
     ) where {T<:Real, V, E} = DirectedHypergraph{T,V,E,Dict{Int,T}}(
         n, k;
         v_meta=v_meta,
-        he_meta_in=he_meta_in,
-        he_meta_out=he_meta_out
+        he_meta_tail=he_meta_tail,
+        he_meta_head=he_meta_head
     )
 
 DirectedHypergraph{T,V}(
@@ -428,12 +433,12 @@ DirectedHypergraph{T,V}(
 
 DirectedHypergraph{T,E}(
     n::Integer, k::Integer;
-    he_meta_in::Vector{Union{Nothing,E}}=Vector{Union{Nothing,E}}(nothing, size(m,2)),
-    he_meta_out::Vector{Union{Nothing,E}}=Vector{Union{Nothing,E}}(nothing, size(m,2))
+    he_meta_tail::Vector{Union{Nothing,E}}=Vector{Union{Nothing,E}}(nothing, size(m,2)),
+    he_meta_head::Vector{Union{Nothing,E}}=Vector{Union{Nothing,E}}(nothing, size(m,2))
     ) where {T<:Real, V} = DirectedHypergraph{T,V,Nothing,Dict{Int,T}}(
         n, k;
-        he_meta_in=he_meta_in,
-        he_meta_out=he_meta_out
+        he_meta_tail=he_meta_tail,
+        he_meta_head=he_meta_head
     )
 
 DirectedHypergraph{T,D}(n::Integer, k::Integer) where {T<:Real, D<:AbstractDict{Int, T}} = DirectedHypergraph{T,Nothing,Nothing,D}(n, k)
@@ -444,61 +449,61 @@ DirectedHypergraph(n::Integer, k::Integer) = DirectedHypergraph{Bool,Nothing,Not
 
 
 function DirectedHypergraph{T,D}(
-    hg_in::BasicHypergraph{T,D},
-    hg_out::BasicHypergraph{T,D}
+    hg_tail::BasicHypergraph{T,D},
+    hg_head::BasicHypergraph{T,D}
     ) where {T<:Real,D<:AbstractDict{Int, T}}
 
     DirectedHypergraph{T,Nothing,Nothing,D}(
-        hg_in,
-        hg_out
+        hg_tail,
+        hg_head
     )
 end
 
 function DirectedHypergraph{T,V,D}(
-    hg_in::BasicHypergraph{T,D},
-    hg_out::BasicHypergraph{T,D};
+    hg_tail::BasicHypergraph{T,D},
+    hg_head::BasicHypergraph{T,D};
     v_meta::Vector{Union{Nothing,V}}=Vector{Union{Nothing,V}}(nothing, size(m,1)),
     ) where {T<:Real,V,D<:AbstractDict{Int, T}}
 
     DirectedHypergraph{T,V,Nothing,D}(
-        hg_in,
-        hg_out;
+        hg_tail,
+        hg_head;
         v_meta=v_meta
     )
 end
 
 function DirectedHypergraph{T,E,D}(
-    hg_in::BasicHypergraph{T,D},
-    hg_out::BasicHypergraph{T,D};
-    he_meta_in::Vector{Union{Nothing,E}}=Vector{Union{Nothing,E}}(nothing, size(m,2)),
-    he_meta_out::Vector{Union{Nothing,E}}=Vector{Union{Nothing,E}}(nothing, size(m,2))
+    hg_tail::BasicHypergraph{T,D},
+    hg_head::BasicHypergraph{T,D};
+    he_meta_tail::Vector{Union{Nothing,E}}=Vector{Union{Nothing,E}}(nothing, size(m,2)),
+    he_meta_head::Vector{Union{Nothing,E}}=Vector{Union{Nothing,E}}(nothing, size(m,2))
     ) where {T<:Real,E,D<:AbstractDict{Int, T}}
 
     DirectedHypergraph{T,Nothing,E,D}(
-        hg_in,
-        hg_out;
-        he_meta_in=he_meta_in,
-        he_meta_out=he_meta_out
+        hg_tail,
+        hg_head;
+        he_meta_tail=he_meta_tail,
+        he_meta_head=he_meta_head
     )
 end
 
 
 function DirectedHypergraph{T,V,E,D}(
-    hg_in::Hypergraph{T,V,E,D},
-    hg_out::Hypergraph{T,V,E,D}
+    hg_tail::Hypergraph{T,V,E,D},
+    hg_head::Hypergraph{T,V,E,D}
 ) where {T<:Real,V,E,D<:AbstractDict{Int, T}}
-    @assert size(hg_in) == size(hg_out)
+    @assert size(hg_tail) == size(hg_head)
 
-    n, k = size(hg_in)
-    sgh_in = BasicHypergraph(n, k)
-    sgh_out = BasicHypergraph(n, k)
+    n, k = size(hg_tail)
+    sgh_tail = BasicHypergraph(n, k)
+    sgh_head = BasicHypergraph(n, k)
 
     # TODO: test behavior on this
-    sgh_in .= hg_in
-    sgh_out .= hg_out
+    sgh_tail .= hg_tail
+    sgh_head .= hg_head
 
-    if all(hg_in.v_meta .== hg_out.v_meta)
-        DirectedHypergraph{T,V,E,D}(shg_in, shg_out; hg_in.v_meta, hg_in.he_meta, hg_out.he_meta)
+    if all(hg_tail.v_meta .== hg_head.v_meta)
+        DirectedHypergraph{T,V,E,D}(shg_tail, shg_head; hg_tail.v_meta, hg_tail.he_meta, hg_head.he_meta)
     else
         throw(ArgumentError("Vertex metadata `v_meta` is different for ingoing and outgoing hypergraphs!"))
     end
@@ -506,135 +511,135 @@ end
 
 
 function DirectedHypergraph{T,V,E,D}(
-        m_in::AbstractMatrix{Union{T, Nothing}},
-        m_out::AbstractMatrix{Union{T, Nothing}};
+        m_tail::AbstractMatrix{Union{T, Nothing}},
+        m_head::AbstractMatrix{Union{T, Nothing}};
         v_meta::Vector{Union{Nothing,V}}=Vector{Union{Nothing,V}}(nothing, size(m,1)),
-        he_meta_in::Vector{Union{Nothing,E}}=Vector{Union{Nothing,E}}(nothing, size(m,2)),
-        he_meta_out::Vector{Union{Nothing,E}}=Vector{Union{Nothing,E}}(nothing, size(m,2))
+        he_meta_tail::Vector{Union{Nothing,E}}=Vector{Union{Nothing,E}}(nothing, size(m,2)),
+        he_meta_head::Vector{Union{Nothing,E}}=Vector{Union{Nothing,E}}(nothing, size(m,2))
     ) where {T<:Real,V,E,D<:AbstractDict{Int,T}}
 
     # Arbitrary, since sizes are identical
-    n, k = size(m_in)
+    n, k = size(m_tail)
 
-    hg_in = BasicHypergraph{T,D}(n, k)
-    hg_in .= m_in
+    hg_tail = BasicHypergraph{T,D}(n, k)
+    hg_tail .= m_tail
     
-    hg_out = BasicHypergraph{T,D}(n, k)
-    hg_out .= m_out
+    hg_head = BasicHypergraph{T,D}(n, k)
+    hg_head .= m_head
 
     DirectedHypergraph{T,V,E,D}(
-        hg_in, hg_out;
+        hg_tail, hg_head;
         v_meta=v_meta,
-        he_meta_in=he_meta_in,
-        he_meta_out=he_meta_out
+        he_meta_tail=he_meta_tail,
+        he_meta_head=he_meta_head
     )
 end
 
 function DirectedHypergraph{T,V,E}(
-    m_in::AbstractMatrix{Union{T, Nothing}},
-    m_out::AbstractMatrix{Union{T, Nothing}};
+    m_tail::AbstractMatrix{Union{T, Nothing}},
+    m_head::AbstractMatrix{Union{T, Nothing}};
     v_meta::Vector{Union{Nothing,V}}=Vector{Union{Nothing,V}}(nothing, size(m,1)),
-    he_meta_in::Vector{Union{Nothing,E}}=Vector{Union{Nothing,E}}(nothing, size(m,2)),
-    he_meta_out::Vector{Union{Nothing,E}}=Vector{Union{Nothing,E}}(nothing, size(m,2))
+    he_meta_tail::Vector{Union{Nothing,E}}=Vector{Union{Nothing,E}}(nothing, size(m,2)),
+    he_meta_head::Vector{Union{Nothing,E}}=Vector{Union{Nothing,E}}(nothing, size(m,2))
 ) where {T<:Real,V,E}
 
     # Arbitrary, since sizes are identical
-    n, k = size(m_in)
+    n, k = size(m_tail)
 
-    hg_in = BasicHypergraph{T,Dict{Int,T}}(n, k)
-    hg_in .= m_in
+    hg_tail = BasicHypergraph{T,Dict{Int,T}}(n, k)
+    hg_tail .= m_tail
 
-    hg_out = BasicHypergraph{T,Dict{Int,T}}(n, k)
-    hg_out .= m_out
+    hg_head = BasicHypergraph{T,Dict{Int,T}}(n, k)
+    hg_head .= m_head
 
     DirectedHypergraph{T,V,E,Dict{Int,T}}(
-        hg_in, hg_out;
+        hg_tail, hg_head;
         v_meta=v_meta,
-        he_meta_in=he_meta_in,
-        he_meta_out=he_meta_out
+        he_meta_tail=he_meta_tail,
+        he_meta_head=he_meta_head
     )
 end
 
 function DirectedHypergraph{T,V}(
-    m_in::AbstractMatrix{Union{T, Nothing}},
-    m_out::AbstractMatrix{Union{T, Nothing}};
+    m_tail::AbstractMatrix{Union{T, Nothing}},
+    m_head::AbstractMatrix{Union{T, Nothing}};
     v_meta::Vector{Union{Nothing,V}}=Vector{Union{Nothing,V}}(nothing, size(m,1)),
 ) where {T<:Real,V}
 
     # Arbitrary, since sizes are identical
-    n, k = size(m_in)
+    n, k = size(m_tail)
 
-    hg_in = BasicHypergraph{T,Dict{Int,T}}(n, k)
-    hg_in .= m_in
+    hg_tail = BasicHypergraph{T,Dict{Int,T}}(n, k)
+    hg_tail .= m_tail
 
-    hg_out = BasicHypergraph{T,Dict{Int,T}}(n, k)
-    hg_out .= m_out
+    hg_head = BasicHypergraph{T,Dict{Int,T}}(n, k)
+    hg_head .= m_head
 
     DirectedHypergraph{T,V,Nothing,Dict{Int,T}}(
-        hg_in,
-        hg_out;
+        hg_tail,
+        hg_head;
         v_meta=v_meta
     )
 end
 
 function DirectedHypergraph{T,E}(
-    m_in::AbstractMatrix{Union{T, Nothing}},
-    m_out::AbstractMatrix{Union{T, Nothing}};
-    he_meta_in::Vector{Union{Nothing,E}}=Vector{Union{Nothing,E}}(nothing, size(m,2)),
-    he_meta_out::Vector{Union{Nothing,E}}=Vector{Union{Nothing,E}}(nothing, size(m,2))
+    m_tail::AbstractMatrix{Union{T, Nothing}},
+    m_head::AbstractMatrix{Union{T, Nothing}};
+    he_meta_tail::Vector{Union{Nothing,E}}=Vector{Union{Nothing,E}}(nothing, size(m,2)),
+    he_meta_head::Vector{Union{Nothing,E}}=Vector{Union{Nothing,E}}(nothing, size(m,2))
 ) where {T<:Real,V}
 
     # Arbitrary, since sizes are identical
-    n, k = size(m_in)
+    n, k = size(m_tail)
 
-    hg_in = BasicHypergraph{T,Dict{Int,T}}(n, k)
-    hg_in .= m_in
+    hg_tail = BasicHypergraph{T,Dict{Int,T}}(n, k)
+    hg_tail .= m_tail
 
-    hg_out = BasicHypergraph{T,Dict{Int,T}}(n, k)
-    hg_out .= m_out
+    hg_head = BasicHypergraph{T,Dict{Int,T}}(n, k)
+    hg_head .= m_head
 
     DirectedHypergraph{T,V,Nothing,Dict{Int,T}}(
-        hg_in,
-        hg_out;
-        he_meta_in=he_meta_in,
-        he_meta_out=he_meta_out
+        hg_tail,
+        hg_head;
+        he_meta_tail=he_meta_tail,
+        he_meta_head=he_meta_head
     )
 end
 
 function DirectedHypergraph{T}(
-    m_in::AbstractMatrix{Union{T, Nothing}},
-    m_out::AbstractMatrix{Union{T, Nothing}}
+    m_tail::AbstractMatrix{Union{T, Nothing}},
+    m_head::AbstractMatrix{Union{T, Nothing}}
 ) where {T<:Real}
 
     # Arbitrary, since sizes are identical
-    n, k = size(m_in)
+    n, k = size(m_tail)
 
-    hg_in = BasicHypergraph{T,Dict{Int,T}}(n, k)
-    hg_in .= m_in
+    hg_tail = BasicHypergraph{T,Dict{Int,T}}(n, k)
+    hg_tail .= m_tail
 
-    hg_out = BasicHypergraph{T,Dict{Int,T}}(n, k)
-    hg_out .= m_out
+    hg_head = BasicHypergraph{T,Dict{Int,T}}(n, k)
+    hg_head .= m_head
 
-    DirectedHypergraph{T,Nothing,Nothing,Dict{Int,T}}(hg_in, hg_out)
+    DirectedHypergraph{T,Nothing,Nothing,Dict{Int,T}}(hg_tail, hg_head)
 end
 
 function DirectedHypergraph(
-    m_in::AbstractMatrix{Union{T, Nothing}},
-    m_out::AbstractMatrix{Union{T, Nothing}}
+    m_tail::AbstractMatrix{Union{T, Nothing}},
+    m_head::AbstractMatrix{Union{T, Nothing}}
 ) where {T<:Real}
 
     # Arbitrary, since sizes are identical
-    n, k = size(m_in)
+    n, k = size(m_tail)
 
-    hg_in = BasicHypergraph{T,Dict{Int,T}}(n, k)
-    hg_in .= m_in
+    hg_tail = BasicHypergraph{T,Dict{Int,T}}(n, k)
+    hg_tail .= m_tail
 
-    hg_out = BasicHypergraph{T,Dict{Int,T}}(n, k)
-    hg_out .= m_out
+    hg_head = BasicHypergraph{T,Dict{Int,T}}(n, k)
+    hg_head .= m_head
 
     DirectedHypergraph{T,Nothing,Nothing,Dict{Int,T}}(
-        hg_in,
-        hg_out
+        hg_tail,
+        hg_head
     )
 end
 
@@ -660,7 +665,7 @@ information other than weight.
 This implementation is based on guidance from Przemysław Szufel;
     see https://github.com/pszufe/SimpleHypergraphs.jl/issues/45
 This allows us to manipulate DirectedHypergraphs using Hypergraph functionality
-There is danger of a user manipulating individual `hg_in` and `hg_out` (undirected) hypergraphs
+There is danger of a user manipulating individual `hg_tail` and `hg_head` (undirected) hypergraphs
 Is there a smart way to prevent this?
 TODO: reconsider this design choice
 
@@ -676,16 +681,16 @@ to ensure result replicability can be used (e.g. when doing stochastic
 simulations on hypergraphs).
 
     BasicDirectedHypergraph(
-        m_in::AbstractMatrix{Union{T, Nothing}},
-        m_out::AbstractMatrix{Union{T, Nothing}}
+        m_tail::AbstractMatrix{Union{T, Nothing}},
+        m_head::AbstractMatrix{Union{T, Nothing}}
     ) where {T<:Real}
     BasicDirectedHypergraph{T}(
-        m_in::AbstractMatrix{Union{T, Nothing}},
-        m_out::AbstractMatrix{Union{T, Nothing}}
+        m_tail::AbstractMatrix{Union{T, Nothing}},
+        m_head::AbstractMatrix{Union{T, Nothing}}
     ) where {T<:Real}
     BasicDirectedHypergraph{T,D}(
-        m_in::AbstractMatrix{Union{T, Nothing}},
-        m_out::AbstractMatrix{Union{T, Nothing}}
+        m_tail::AbstractMatrix{Union{T, Nothing}},
+        m_head::AbstractMatrix{Union{T, Nothing}}
     ) where {T<:Real,D<:AbstractDict{Int,T}}
 
 Construct a directed hypergraph using its matrix representation.
@@ -701,8 +706,8 @@ Graphs.DiGraph. A `SortedDict` will be used for internal data storage of the
 hypergraph.
 
     DirectedHypergraph{T,D}(
-        hg_in::BasicHypergraph{T,D},
-        hg_out::BasicHypergraph{T,D}
+        hg_tail::BasicHypergraph{T,D},
+        hg_head::BasicHypergraph{T,D}
     ) where {T<:Real,D<:AbstractDict{Int, T}}
 
 Constructs a directed hypergraph from two undirected basic hypergraphs, one with hyperedges
@@ -719,14 +724,14 @@ verticies.
 * `k` : number of hyperedges
 * `m` : a matrix representation rows are vertices and columns are hyperedges
 * `g` : a (directed) graph representation of the hypergraph
-* `hg_in`: an undirected hypergraph representing the incoming half of
+* `hg_tail`: an undirected hypergraph representing the incoming half of
     the directed hypergraph
-* `hg_out`: an undirected hypergraph representing the outgoing half of
+* `hg_head`: an undirected hypergraph representing the outgoing half of
     the directed hypergraph
 """
 struct BasicDirectedHypergraph{T<:Real,D<:AbstractDict{Int, T}} <: AbstractDirectedHypergraph{T}
-    hg_in::BasicHypergraph{T,D}
-    hg_out::BasicHypergraph{T,D}
+    hg_tail::BasicHypergraph{T,D}
+    hg_head::BasicHypergraph{T,D}
 
     BasicDirectedHypergraph{T,D}(
         n::Integer, k::Integer,
@@ -737,13 +742,13 @@ struct BasicDirectedHypergraph{T<:Real,D<:AbstractDict{Int, T}} <: AbstractDirec
         )
 
     function BasicDirectedHypergraph{T,D}(
-        hg_in::BasicHypergraph{T,D},
-        hg_out::BasicHypergraph{T,D}
+        hg_tail::BasicHypergraph{T,D},
+        hg_head::BasicHypergraph{T,D}
         ) where {T<:Real,D<:AbstractDict{Int, T}}
         
-        @assert size(hg_in) == size(hg_out)
+        @assert size(hg_tail) == size(hg_head)
 
-        new{T,D}(hg_in, hg_out)
+        new{T,D}(hg_tail, hg_head)
     end
 end
 
@@ -754,39 +759,39 @@ BasicDirectedHypergraph(n::Integer, k::Integer) = BasicDirectedHypergraph{Bool,D
 
 
 function BasicDirectedHypergraph{T}(
-    m_in::AbstractMatrix{Union{T, Nothing}},
-    m_out::AbstractMatrix{Union{T, Nothing}}
+    m_tail::AbstractMatrix{Union{T, Nothing}},
+    m_head::AbstractMatrix{Union{T, Nothing}}
 ) where {T<:Real}
 
     # Arbitrary, since sizes are identical
-    n, k = size(m_in)
+    n, k = size(m_tail)
 
-    hg_in = BasicHypergraph{T,Dict{Int,T}}(n, k)
-    hg_in .= m_in
+    hg_tail = BasicHypergraph{T,Dict{Int,T}}(n, k)
+    hg_tail .= m_tail
 
-    hg_out = BasicHypergraph{T,Dict{Int,T}}(n, k)
-    hg_out .= m_out
+    hg_head = BasicHypergraph{T,Dict{Int,T}}(n, k)
+    hg_head .= m_head
 
-    BasicDirectedHypergraph{T,Dict{Int,T}}(hg_in, hg_out)
+    BasicDirectedHypergraph{T,Dict{Int,T}}(hg_tail, hg_head)
 end
 
 function BasicDirectedHypergraph(
-    m_in::AbstractMatrix{Union{T, Nothing}},
-    m_out::AbstractMatrix{Union{T, Nothing}}
+    m_tail::AbstractMatrix{Union{T, Nothing}},
+    m_head::AbstractMatrix{Union{T, Nothing}}
 ) where {T<:Real}
 
     # Arbitrary, since sizes are identical
-    n, k = size(m_in)
+    n, k = size(m_tail)
 
-    hg_in = BasicHypergraph{T,Dict{Int,T}}(n, k)
-    hg_in .= m_in
+    hg_tail = BasicHypergraph{T,Dict{Int,T}}(n, k)
+    hg_tail .= m_tail
 
-    hg_out = BasicHypergraph{T,Dict{Int,T}}(n, k)
-    hg_out .= m_out
+    hg_head = BasicHypergraph{T,Dict{Int,T}}(n, k)
+    hg_head .= m_head
 
     BasicDirectedHypergraph{T,Dict{Int,T}}(
-        hg_in,
-        hg_out
+        hg_tail,
+        hg_head
     )
 end
 
@@ -815,7 +820,7 @@ hasmeta(::Type{T}) where {T<:HasMetaStructs} = true
 const ConcreteUndirectedHGs = Union{Hypergraph, BasicHypergraph}
 const ConcreteDirectedHGs = Union{DirectedHypergraph, BasicDirectedHypergraph}
 
-# TODO: god this is awkward...
+# TODO: this is awkward...
 const DIRECTED_HYPERGRAPH_VALID_FIRST_INDICES = [1,2]
 
 # TODO: can this entirely replace the above? Index setting seems problematic...
@@ -857,16 +862,15 @@ If a vertex does not belong to a hyperedge `nothing` is returned.
 
 """
 @inline function Base.getindex(h::ConcreteDirectedHGs, idx::Vararg{Int,2})
-    @boundscheck checkbounds(h.hg_in, idx...)
-    @boundscheck checkbounds(h.hg_out, idx...)
+    @boundscheck checkbounds(h.hg_tail, idx...)
+    @boundscheck checkbounds(h.hg_head, idx...)
 
-    in_value = get(h.hg_in.v2he[idx[1]], idx[2], nothing)
-    out_value = get(h.hg_out.v2he[idx[1]], idx[2], nothing)
+    in_value = get(h.hg_tail.v2he[idx[1]], idx[2], nothing)
+    out_value = get(h.hg_head.v2he[idx[1]], idx[2], nothing)
 
     (in_value, out_value)
 end
 
-#TODO: getindex implementation with idx::Vararg{Int, 2}?
 
 
 """
@@ -907,10 +911,10 @@ Note that trying to remove a vertex from a hyperedge when it is not present will
 
 """
 @inline function Base.setindex!(h::ConcreteDirectedHGs, ::Nothing, idx::Vararg{Int,2})
-    @boundscheck checkbounds(h.hg_in, idx...)
-    @boundscheck checkbounds(h.hg_out, idx...)
-    setindex!(h.hg_in, nothing, idx)
-    setindex!(h.hg_out, nothing, idx)
+    @boundscheck checkbounds(h.hg_tail, idx...)
+    @boundscheck checkbounds(h.hg_head, idx...)
+    setindex!(h.hg_tail, nothing, idx)
+    setindex!(h.hg_head, nothing, idx)
     h
 end
 
@@ -923,11 +927,11 @@ Adds a vertex to a hyperedge (represented by indices `idx`) and assigns value
 
 """
 @inline function Base.setindex!(h::ConcreteDirectedHGs, v::Real, idx::Vararg{Int,2})
-    @boundscheck checkbounds(h.hg_in, idx...)
-    @boundscheck checkbounds(h.hg_out, idx...)
+    @boundscheck checkbounds(h.hg_tail, idx...)
+    @boundscheck checkbounds(h.hg_head, idx...)
 
-    setindex!(h.hg_in, v, idx)
-    setindex!(h.hg_out, v, idx)
+    setindex!(h.hg_tail, v, idx)
+    setindex!(h.hg_head, v, idx)
     h
 end
 
@@ -945,11 +949,11 @@ vertex will be removed from that side of the hyperedge.
 
 """
 @inline function Base.setindex!(h::ConcreteDirectedHGs, v::Tuple{Union{Real, Nothing}, Union{Real, Nothing}}, idx::Vararg{Int,2})
-    @boundscheck checkbounds(h.hg_in, idx...)
-    @boundscheck checkbounds(h.hg_out, idx...)
+    @boundscheck checkbounds(h.hg_tail, idx...)
+    @boundscheck checkbounds(h.hg_head, idx...)
     
-    setindex!(h.hg_in, v[1], idx)
-    setindex!(h.hg_out, v[2], idx)
+    setindex!(h.hg_tail, v[1], idx)
+    setindex!(h.hg_head, v[2], idx)
 
     h
 end
@@ -968,9 +972,9 @@ Note that trying to remove a vertex from a hyperedge when it is not present will
     @boundscheck checkbounds(DIRECTED_HYPERGRAPH_VALID_FIRST_INDICES, idx[1])
 
     if idx[1] == 1
-        side = h.hg_in
+        side = h.hg_tail
     else
-        side = h.hg_out
+        side = h.hg_head
     end
     
     @boundscheck checkbounds(side, idx[2:end]...)
@@ -993,9 +997,9 @@ Adds a vertex to a hyperedge (represented by indices `idx`, where the first inde
     @boundscheck checkbounds(DIRECTED_HYPERGRAPH_VALID_FIRST_INDICES, idx[1])
 
     if idx[1] == 1
-        side = h.hg_in
+        side = h.hg_tail
     else
-        side = h.hg_out
+        side = h.hg_head
     end
     
     @boundscheck checkbounds(side, idx[2:end]...)
@@ -1023,7 +1027,7 @@ Vertex indices are given in a tuple `(in, out)`, where `in` are the incoming ver
 and `out` are the outgoing vertices
 
 """
-@inline getvertices(h::ConcreteDirectedHGs, he_id::Int) = (h.hg_in.he2v[he_id], h.hg_out.he2v[he_id])
+@inline getvertices(h::ConcreteDirectedHGs, he_id::Int) = (h.hg_tail.he2v[he_id], h.hg_head.he2v[he_id])
 
 
 """
@@ -1044,8 +1048,20 @@ vertex `v_ind` is on the ingoing side and `out` are the hyperedges where `v_ind`
 the outgoing side.
 
 """
-@inline gethyperedges(h::ConcreteDirectedHGs, v_id::Int) = (h.hg_in.v2he[v_id], h.hg_out.v2he[v_id])
+@inline gethyperedges(h::ConcreteDirectedHGs, v_id::Int) = (h.hg_tail.v2he[v_id], h.hg_head.v2he[v_id])
 
+"""
+Basic logic:
+- Combine incoming and outgoing 
+"""
+function to_undirected(h::ConcreteDirectedHGs)
+
+end
+
+
+function approximate_graph(h::ConcreteDirectedHGs)
+
+end
 
 
 #TODO: should there be a way to add hyperedge metadata as well as vertex metadata?
@@ -1099,36 +1115,36 @@ end
 
 """
     add_vertex!(h::DirectedHypergraph{T, V, E, D};
-                hyperedges_in::D = D(), hyperedges_out::D = D(), v_meta::Union{V,Nothing} = nothing
+                hyperedges_tail::D = D(), hyperedges_head::D = D(), v_meta::Union{V,Nothing} = nothing
                 ) where {T <: Real, V, E, D <: AbstractDict{Int,T}}
 
 Adds a vertex to a given directed hypergraph `h`. Optionally, the vertex can be added
-to existing hyperedges. The `hyperedges_in` parameter presents a dictionary
+to existing hyperedges. The `hyperedges_tail` parameter presents a dictionary
 of hyperedge identifiers and values stored at the ingoing side of hyperedges, and
-the `hyperedges_out` parameter presents a dictionary of hyperedge identifiers and
+the `hyperedges_head` parameter presents a dictionary of hyperedge identifiers and
 values stored at the outgoing side of hyperedges.
 Additionally, a value can be stored with the vertex using the `v_meta` keyword
 parameter.
 
 """
 function add_vertex!(h::DirectedHypergraph{T, V, E, D};
-                     hyperedges_in::D = D(), hyperedges_out::D = D(), v_meta::Union{V,Nothing} = nothing
+                     hyperedges_tail::D = D(), hyperedges_head::D = D(), v_meta::Union{V,Nothing} = nothing
                     ) where {T <: Real, V, E, D <: AbstractDict{Int,T}}
-    @boundscheck (checkbounds(h.hg_in,1,k) for k in keys(hyperedges_in))
-    @boundscheck (checkbounds(h.hg_out,1,k) for k in keys(hyperedges_out))
+    @boundscheck (checkbounds(h.hg_tail,1,k) for k in keys(hyperedges_tail))
+    @boundscheck (checkbounds(h.hg_head,1,k) for k in keys(hyperedges_head))
 
-    push!(h.hg_in.v2he,hyperedges_in)
-    push!(h.hg_out.v2he,hyperedges_out)
+    push!(h.hg_tail.v2he,hyperedges_tail)
+    push!(h.hg_head.v2he,hyperedges_head)
 
-    # Should always be identical to h.hg_out.v2he
-    ix = length(h.hg_in.v2he)
+    # Should always be identical to h.hg_head.v2he
+    ix = length(h.hg_tail.v2he)
 
-    for k in keys(hyperedges_in)
-        h[1,ix,k]=hyperedges_in[k]
+    for k in keys(hyperedges_tail)
+        h[1,ix,k]=hyperedges_tail[k]
     end
 
-    for k in keys(hyperedges_out)
-        h[2,ix,k]=hyperedges_out[k]
+    for k in keys(hyperedges_head)
+        h[2,ix,k]=hyperedges_head[k]
     end
 
     push!(h.v_meta, v_meta)
@@ -1137,33 +1153,33 @@ end
 
 """
     add_vertex!(h::BasicDirectedHypergraph{T, D};
-                hyperedges_in::D = D(), hyperedges_out::D = D()
+                hyperedges_tail::D = D(), hyperedges_head::D = D()
                 ) where {T <: Real, D <: AbstractDict{Int,T}}
 
 Adds a vertex to a given directed hypergraph `h`. Optionally, the vertex can be added
-to existing hyperedges. The `hyperedges_in` parameter presents a dictionary
+to existing hyperedges. The `hyperedges_tail` parameter presents a dictionary
 of hyperedge identifiers and values stored at the ingoing side of hyperedges, and
-the `hyperedges_out` parameter presents a dictionary of hyperedge identifiers and
+the `hyperedges_head` parameter presents a dictionary of hyperedge identifiers and
 values stored at the outgoing side of hyperedges.
 
 """
 function add_vertex!(h::BasicDirectedHypergraph{T, D};
                      hyperedges::D = D()
                     ) where {T <: Real, D <: AbstractDict{Int,T}}
-    @boundscheck (checkbounds(h.hg_in,1,k) for k in keys(hyperedges_in))
-    @boundscheck (checkbounds(h.hg_out,1,k) for k in keys(hyperedges_out))
+    @boundscheck (checkbounds(h.hg_tail,1,k) for k in keys(hyperedges_tail))
+    @boundscheck (checkbounds(h.hg_head,1,k) for k in keys(hyperedges_head))
 
-    push!(h.hg_in.v2he,hyperedges_in)
-    push!(h.hg_out.v2he,hyperedges_out)
+    push!(h.hg_tail.v2he,hyperedges_tail)
+    push!(h.hg_head.v2he,hyperedges_head)
     
-    ix = length(h.hg_in.v2he)
+    ix = length(h.hg_tail.v2he)
 
-    for k in keys(hyperedges_in)
-        h[1,ix,k]=hyperedges_in[k]
+    for k in keys(hyperedges_tail)
+        h[1,ix,k]=hyperedges_tail[k]
     end
 
-    for k in keys(hyperedges_out)
-        h[2,ix,k]=hyperedges_out[k]
+    for k in keys(hyperedges_head)
+        h[2,ix,k]=hyperedges_head[k]
     end
 
     ix
@@ -1240,8 +1256,8 @@ function remove_vertex!(h::DirectedHypergraph, v::Int)
         h.v_meta[v] = h.v_meta[n]
     end
     
-    remove_vertex!(h.hg_in, v)
-    remove_vertex!(h.hg_out, v)
+    remove_vertex!(h.hg_tail, v)
+    remove_vertex!(h.hg_head, v)
 
     resize!(h.v_meta, length(h.v_meta) - 1)
 
@@ -1258,8 +1274,8 @@ hypergraph; the vertex `v` will replaced by the last vertex of the hypergraph
 and the list of vertices will be shrunk.
 """
 function remove_vertex!(h::BasicDirectedHypergraph, v::Int)
-    remove_vertex!(h.hg_in, v)
-    remove_vertex!(h.hg_out, v)
+    remove_vertex!(h.hg_tail, v)
+    remove_vertex!(h.hg_head, v)
 
     h
 end
@@ -1318,40 +1334,40 @@ end
 
 """
     add_hyperedge!(h::DirectedHypergraph{T, V, E, D};
-                   vertices_in::D = D(), vertices_out::D = D(),
-                   he_meta_in::Union{E,Nothing}=nothing, he_meta_out::Union{E,Nothing}=nothing
+                   vertices_tail::D = D(), vertices_head::D = D(),
+                   he_meta_tail::Union{E,Nothing}=nothing, he_meta_head::Union{E,Nothing}=nothing
                    ) where {T <: Real, V, E, D <: AbstractDict{Int,T}}
 
 Adds a hyperedge to a given directed hypergraph `h`.
 Optionally, existing vertices can be added to the created hyperedge in the
 incoming or outgoing directions.
-The paramater `vertices_in` represents a dictionary of vertex identifiers and
-values stored at the incoming hyperedge; `vertices_out` represented the vertex
+The paramater `vertices_tail` represents a dictionary of vertex identifiers and
+values stored at the incoming hyperedge; `vertices_head` represented the vertex
 identifiers and values stored at the outcoming side of the hyperedge. Additionally, 
-a value can be stored with the hyperedge using the `he_meta_in` and `he_meta_out`
+a value can be stored with the hyperedge using the `he_meta_tail` and `he_meta_head`
 keyword parameters.
 
 """
 function add_hyperedge!(h::DirectedHypergraph{T, V, E, D};
-                        vertices_in::D = D(), vertices_out::D = D(),
-                        he_meta_in::Union{E,Nothing}=nothing, he_meta_out::Union{E,Nothing}=nothing
+                        vertices_tail::D = D(), vertices_head::D = D(),
+                        he_meta_tail::Union{E,Nothing}=nothing, he_meta_head::Union{E,Nothing}=nothing
                         ) where {T <: Real, V, E, D <: AbstractDict{Int,T}}
-    @boundscheck (checkbounds(h.hg_in,k,1) for k in keys(vertices_in))
-    @boundscheck (checkbounds(h.hg_out,1,k) for k in keys(vertices_out))
+    @boundscheck (checkbounds(h.hg_tail,k,1) for k in keys(vertices_tail))
+    @boundscheck (checkbounds(h.hg_head,1,k) for k in keys(vertices_head))
     
-    push!(h.hg_in.he2v,vertices_in)
-    push!(h.hg_out.he2v, vertices_out)
+    push!(h.hg_tail.he2v,vertices_tail)
+    push!(h.hg_head.he2v, vertices_head)
 
-    # Should always be identical to length(h.hg_out.he2v)
-    ix = length(h.hg_in.he2v)
-    for k in keys(vertices_in)
-        h[1,k,ix]=vertices_in[k]
+    # Should always be identical to length(h.hg_head.he2v)
+    ix = length(h.hg_tail.he2v)
+    for k in keys(vertices_tail)
+        h[1,k,ix]=vertices_tail[k]
     end
-    for k in keys(vertices_out)
-        h[2,k,ix]=vertices_out[k]
+    for k in keys(vertices_head)
+        h[2,k,ix]=vertices_head[k]
     end
-    push!(h.he_meta_in, he_meta_in)
-    push!(h.he_meta_out, he_meta_out)
+    push!(h.he_meta_tail, he_meta_tail)
+    push!(h.he_meta_head, he_meta_head)
     ix
 end
 
@@ -1364,27 +1380,27 @@ end
 Adds a hyperedge to a given directed hypergraph `h`.
 Optionally, existing vertices can be added to the created hyperedge in the
 incoming or outgoing directions.
-The paramater `vertices_in` represents a dictionary of vertex identifiers and
-values stored at the incoming hyperedge; `vertices_out` represented the vertex
+The paramater `vertices_tail` represents a dictionary of vertex identifiers and
+values stored at the incoming hyperedge; `vertices_head` represented the vertex
 identifiers and values stored at the outcoming side of the hyperedge.
 
 """
 function add_hyperedge!(h::BasicDirectedHypergraph{T, D};
-                        vertices_in::D = D(), vertices_out::D = D()
+                        vertices_tail::D = D(), vertices_head::D = D()
                         ) where {T <: Real, D <: AbstractDict{Int,T}}
-    @boundscheck (checkbounds(h.hg_in,k,1) for k in keys(vertices_in))
-    @boundscheck (checkbounds(h.hg_out,1,k) for k in keys(vertices_out))
+    @boundscheck (checkbounds(h.hg_tail,k,1) for k in keys(vertices_tail))
+    @boundscheck (checkbounds(h.hg_head,1,k) for k in keys(vertices_head))
     
-    push!(h.hg_in.he2v,vertices_in)
-    push!(h.hg_out.he2v, vertices_out)
+    push!(h.hg_tail.he2v,vertices_tail)
+    push!(h.hg_head.he2v, vertices_head)
 
-    # Should always be identical to length(h.hg_out.he2v)
-    ix = length(h.hg_in.he2v)
-    for k in keys(vertices_in)
-        h[1,k,ix]=vertices_in[k]
+    # Should always be identical to length(h.hg_head.he2v)
+    ix = length(h.hg_tail.he2v)
+    for k in keys(vertices_tail)
+        h[1,k,ix]=vertices_tail[k]
     end
-    for k in keys(vertices_out)
-        h[2,k,ix]=vertices_out[k]
+    for k in keys(vertices_head)
+        h[2,k,ix]=vertices_head[k]
     end
 
     ix
@@ -1458,15 +1474,15 @@ function remove_hyperedge!(h::DirectedHypergraph, e::Int)
     ne = nhe(h)
 	@assert(e <= ne)
 	if e < ne
-	    h.he_meta_in[e] = h.he_meta_in[ne]
-        h.he_meta_out[e] = h.he_meta_out[ne]
+	    h.he_meta_tail[e] = h.he_meta_tail[ne]
+        h.he_meta_head[e] = h.he_meta_head[ne]
 	end
 
-    remove_hyperedge!(h.hg_in, e)
-    remove_hyperedge!(h.hg_out, e)
+    remove_hyperedge!(h.hg_tail, e)
+    remove_hyperedge!(h.hg_head, e)
 
-    resize!(h.he_meta_in, length(h.he_meta_in) - 1)
-    resize!(h.he_meta_out, length(h.he_meta_out) - 1)
+    resize!(h.he_meta_tail, length(h.he_meta_tail) - 1)
+    resize!(h.he_meta_head, length(h.he_meta_head) - 1)
 
     h
 end
@@ -1480,8 +1496,8 @@ hypergraph: the hyperedge `e` will replaced by the last hyperedge of the hypergr
 and the list of hyperedges (and hyperedge metadata) will be shrunk.
 """
 function remove_hyperedge!(h::BasicDirectedHypergraph, e::Int)
-    remove_hyperedge!(h.hg_in, e)
-    remove_hyperedge!(h.hg_out, e)
+    remove_hyperedge!(h.hg_tail, e)
+    remove_hyperedge!(h.hg_head, e)
 
     h
 end
@@ -1512,10 +1528,10 @@ Remove all vertices with degree 0 and all hyperedges of size 0.
 """
 function prune_hypergraph!(h::ConcreteDirectedHGs)
 	for e in reverse(1:nhe(h))
-        length(h.hg_in.he2v[e]) == 0 && length(h.hg_out.he2v[e]) && remove_hyperedge!(h,e)
+        length(h.hg_tail.he2v[e]) == 0 && length(h.hg_head.he2v[e]) && remove_hyperedge!(h,e)
     end
 	for v in reverse(1:nhv(h))
-    	length(h.hg_in.v2he[v]) == 0 && length(h.hg_in.v2he[v]) == 0 && remove_vertex!(h,v)
+    	length(h.hg_tail.v2he[v]) == 0 && length(h.hg_tail.v2he[v]) == 0 && remove_vertex!(h,v)
     end
 	h
 end
@@ -1588,22 +1604,22 @@ end
 
 """
     set_hyperedge_meta!(h::DirectedHypergraph{T, V, E, D},
-        new_value_in::Union{E,Nothing}, new_value_out::Union{E,Nothing}, id::Int
+        new_value_tail::Union{E,Nothing}, new_value_head::Union{E,Nothing}, id::Int
         ) where {T <: Real, V, E, D <: AbstractDict{Int,T}}
 
 Sets a new meta value `new_value` for the hyperedge `id` in the directed hypergraph `h`.
 
 """
 function set_hyperedge_meta!(h::DirectedHypergraph{T, V, E, D},
-                             new_value_in::Union{E,Nothing}, new_value_out::Union{E,Nothing}, id::Int
+                             new_value_tail::Union{E,Nothing}, new_value_head::Union{E,Nothing}, id::Int
                              ) where {T <: Real, V, E, D <: AbstractDict{Int,T}}
-    checkbounds(h.he_meta_in, id)
-    checkbounds(h.he_meta_out, id)
+    checkbounds(h.he_meta_tail, id)
+    checkbounds(h.he_meta_head, id)
 
-    h.he_meta_in[id] = new_value_in
-    h.he_meta_out[id] = new_value_out
+    h.he_meta_tail[id] = new_value_tail
+    h.he_meta_head[id] = new_value_head
 
-    (h.he_meta_in, h.he_meta_out)
+    (h.he_meta_tail, h.he_meta_head)
 end
 
 
@@ -1621,13 +1637,14 @@ function set_hyperedge_meta!(h::DirectedHypergraph{T, V, E, D},
                              ) where {T <: Real, V, E, D <: AbstractDict{Int,T}}
     
     if side == incoming
-        checkbounds(h.he_meta_in, id)
-        h.he_meta_in[id] = new_value
-        h.he_meta_in
+        checkbounds(h.he_meta_tail, id)
+        h.he_meta_tail[id] = new_value
+        h.he_meta_tail
     else
-        checkbounds(h.he_meta_out, id)
-        h.he_meta_out[id] = new_value
-        h.he_meta_out
+        checkbounds(h.he_meta_head, id)
+        h.he_meta_head[id] = new_value
+        h.he_meta_head
+    end
 
 end
 
@@ -1658,10 +1675,10 @@ Returns a meta value stored at the hyperedge `id` in the directed hypergraph `h`
 """
 function get_hyperedge_meta(h::DirectedHypergraph{T, V, E, D}, id::Int
                             ) where {T <: Real, V, E, D <: AbstractDict{Int,T}}
-    checkbounds(h.he_meta_in, id)
-    checkbounds(h.he_meta_out, id)
+    checkbounds(h.he_meta_tail, id)
+    checkbounds(h.he_meta_head, id)
 
-    (h.he_meta_in[id], h.he_meta_out[id])
+    (h.he_meta_tail[id], h.he_meta_head[id])
 end
 
 
@@ -1675,11 +1692,11 @@ function get_hyperedge_meta(h::DirectedHypergraph{T, V, E, D}, id::Int, side::Hy
                             ) where {T <: Real, V, E, D <: AbstractDict{Int,T}}
 
     if side == incoming
-        checkbounds(h.he_meta_in, id)
-        h.he_meta_in[id]
+        checkbounds(h.he_meta_tail, id)
+        h.he_meta_tail[id]
     else
-        checkbounds(h.he_meta_out, id)
-        h.he_meta_out[id]
+        checkbounds(h.he_meta_head, id)
+        h.he_meta_head[id]
 end
 
 get_hyperedge_meta(::BasicHypergraph, ::Int) = throw("Not implemented!")
@@ -1703,7 +1720,7 @@ end
 Return the number of hyperedges in the directed hypergraph `h`.
 """
 function nhe(h::ConcreteDirectedHGs)
-    (length(h.hg_in.he2v) == length(h.hg_out.he2v)) ? length(h.hg_in.he2v) : throw("Incoming and outgoing sides of hypergraph have different numbers of hyperedges!")
+    (length(h.hg_tail.he2v) == length(h.hg_head.he2v)) ? length(h.hg_tail.he2v) : throw("Incoming and outgoing sides of hypergraph have different numbers of hyperedges!")
 end
 
 
@@ -1723,25 +1740,54 @@ end
 Return the number of vertices in the directed hypergraph `h`.
 """
 function nhe(h::ConcreteDirectedHGs)
-    (length(h.hg_in.v2he) == length(h.hg_out.v2he)) ? length(h.hg_in.v2he) : throw("Incoming and outgoing sides of hypergraph have different numbers of hyperedges!")
+    (length(h.hg_tail.v2he) == length(h.hg_head.v2he)) ? length(h.hg_tail.v2he) : throw("Incoming and outgoing sides of hypergraph have different numbers of hyperedges!")
 end
 
 
-# TODO: you are here
-function _default_heselect(h::Hypergraph, v::Int)
+function _default_heselect(h::ConcreteUndirectedHGs, v::Int)
     hes = gethyperedges(h, v)
     sort!(collect(keys(hes))), ones(length(hes))
 end
 
+function _default_heselect(h::ConcreteDirectedHGs, v::Int; reverse::Bool=false)
+    he_tail, he_head = gethyperedges(h, v)
 
-function _default_vselect(h::Hypergraph, he::Int)
+    if reverse
+        hes = he_tail
+    else
+        hes = he_head
+    end
+
+    sort!(collect(keys(hes))), ones(length(hes))
+end
+
+
+function _default_vselect(h::ConcreteUndirectedHGs, he::Int)
     vs = getvertices(h, he)
     sort!(collect(keys(vs))), ones(length(vs))
 end
 
+function _default_vselect(h::ConcreteDirectedHGs, he::Int; reverse::Bool=false)
+    vs_tail, vs_head = getvertices(h, he)
+
+    if reverse
+        vs = vs_tail
+    else
+        vs = vs_head
+    end
+
+    sort!(collect(keys(vs))), ones(length(vs))
+
+end
+
 
 """
-    random_walk(h::Hypergraph, start::Int; heselect::Function, vselect::Function)
+    random_walk(
+        h::Union{Hypergraph, BasicHypergraph},
+        start::Int;
+        heselect::Function,
+        vselect::Function,
+    )
 
 Return a next vertex visited in assuming a random walk starting from vertex `start`.
 First a hyperedge is sampled with weights proportional to `heselect` function
@@ -1753,13 +1799,43 @@ Next a vertex within hyperedge is with weights proportional to `vselect` functio
 a vertex identifier or a hyperedge identifier. The return values of both functions
 should be respectively a list of hyperedges or vertices and their weights.
 """
-function random_walk(h::Hypergraph, start::Int;
+function random_walk(h::ConcreteUndirectedHGs, start::Int;
                      heselect::Function=_default_heselect,
                      vselect::Function=_default_vselect)
     1 <= start <= nhv(h) || throw(ArgumentError("invalid start vertex index"))
     hes, hew = heselect(h, start)
     he = sample(hes, Weights(hew))
     ves, vw = vselect(h, he)
+    return sample(ves, Weights(vw))
+end
+
+"""
+    random_walk(
+        h::Union{DirectedHypergraph, BasicDirectedHypergraph},
+        start::Int;
+        heselect::Function,
+        vselect::Function,
+        reverse::bool
+    )
+
+Return a next vertex visited in assuming a random walk starting from vertex `start`.
+First a hyperedge is sampled with weights proportional to `heselect` function
+(by default each hyperedge is sampled with the same probability).
+Next a vertex within hyperedge is with weights proportional to `vselect` function
+(by default each vertex, including the source, is sampled with the same probability).
+
+`heselect` and `vselect` functions take two arguments a `Hypergraph` and respectively
+a vertex identifier or a hyperedge identifier. The return values of both functions
+should be respectively a list of hyperedges or vertices and their weights.
+"""
+function random_walk(h::Union{ConcreteUndirectedHGs}, start::Int;
+                     heselect::Function=_default_heselect,
+                     vselect::Function=_default_vselect,
+                     reverse::Bool=false)
+    1 <= start <= nhv(h) || throw(ArgumentError("invalid start vertex index"))
+    hes, hew = heselect(h, start, reverse=reverse)
+    he = sample(hes, Weights(hew))
+    ves, vw = vselect(h, he, reverse=reverse)
     return sample(ves, Weights(vw))
 end
 
@@ -1782,12 +1858,12 @@ end
 
 
 """
-    get_connected_components(h::Hypergraph)
+    get_connected_components(h::Union{Hypergraph, BasicHypergraph})
 
 Return an array of connected components in the hypergraph `h`
 (array of vectors of vertices) using recurrence.
 """
-function get_connected_components(h::Hypergraph)
+function get_connected_components(h::ConcreteUndirectedHGs)
     visited = falses(nhv(h))
     cc = Vector{Int}[]
         for i in 1:nhv(h)
@@ -1798,6 +1874,26 @@ function get_connected_components(h::Hypergraph)
         end
     end
     cc
+end
+
+function get_weakly_connected_components(h::ConcreteDirectedHGs)
+
+end
+
+function get_strongly_connected_components(h::ConcreteDirectedHGs)
+
+end
+
+function get_b_connected_components(h::ConcreteDirectedHGs)
+
+end
+
+function get_f_connected_components(h::ConcreteDirectedHGs)
+
+end
+
+function get_bf_connected_components(h::ConcreteDirectedHGs)
+
 end
 
 
