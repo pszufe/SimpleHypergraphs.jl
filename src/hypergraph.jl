@@ -105,9 +105,9 @@ Hypergraph{T}(n::Integer, k::Integer) where {T<:Real} =  Hypergraph{T,Nothing,No
 Hypergraph(n::Integer, k::Integer) =  Hypergraph{Bool,Nothing,Nothing,Dict{Int,Bool}}(n, k)
 
 function Hypergraph{T,V,E,D}(m::AbstractMatrix{Union{T, Nothing}};
-                        v_meta::Vector{Union{Nothing,V}}=Vector{Union{Nothing,V}}(nothing, size(m,1)),
-                        he_meta::Vector{Union{Nothing,E}}=Vector{Union{Nothing,E}}(nothing, size(m,2))
-                        ) where {T<:Real,V,E,D<:AbstractDict{Int,T}}
+                             v_meta::Vector{Union{Nothing,V}}=Vector{Union{Nothing,V}}(nothing, size(m,1)),
+                             he_meta::Vector{Union{Nothing,E}}=Vector{Union{Nothing,E}}(nothing, size(m,2))
+                            ) where {T<:Real,V,E,D<:AbstractDict{Int,T}}
     @assert length(v_meta) == size(m,1)
     @assert length(he_meta) == size(m,2)
     n, k = size(m)
@@ -729,7 +729,7 @@ verticies.
 * `hg_head`: an undirected hypergraph representing the head half of
     the directed hypergraph
 """
-struct BasicDirectedHypergraph{T<:Real,D<:AbstractDict{Int, T}} <: AbstractDirectedHypergraph{T}
+struct BasicDirectedHypergraph{T<:Real,D<:AbstractDict{Int, T}} <: AbstractDirectedHypergraph{Tuple{T, T}}
     hg_tail::BasicHypergraph{T,D}
     hg_head::BasicHypergraph{T,D}
 
@@ -865,10 +865,10 @@ If a vertex does not belong to a hyperedge `nothing` is returned.
     @boundscheck checkbounds(h.hg_tail, idx...)
     @boundscheck checkbounds(h.hg_head, idx...)
 
-    in_value = get(h.hg_tail.v2he[idx[1]], idx[2], nothing)
-    out_value = get(h.hg_head.v2he[idx[1]], idx[2], nothing)
+    tail_value = get(h.hg_tail.v2he[idx[1]], idx[2], nothing)
+    head_value = get(h.hg_head.v2he[idx[1]], idx[2], nothing)
 
-    (in_value, out_value)
+    (tail_value, head_value)
 end
 
 
@@ -1051,10 +1051,86 @@ the head side.
 @inline gethyperedges(h::ConcreteDirectedHGs, v_id::Int) = (h.hg_tail.v2he[v_id], h.hg_head.v2he[v_id])
 
 """
-Basic logic:
-- Combine 
+    to_undirected(h::DirectedHypergraph)
+
+Converts a directed hypergraph into an undirected hypergraph.
+Tail and head hyperedges are combined; that is, for all hyperedges he_orig in
+the directed hypergraph h, all vertices in the head or tail are added to a
+corresponding undirected hyperedge he_new in the undirected hypergraph h'.
+
+Metadata is combined into tuples; i.e., if there was originally tail metadata
+t_meta and head metadata h_meta for a given directed hyperedge, the new
+undirected hyperedge will have metadata (t_meta, h_meta).
+
+Because vertex-hyperedge weights are restricted to real numbers, we cannot
+combine the weights, so we simply set the values to 1.0 if a given vertex
+is in a given hyperedge 
+
 """
-function to_undirected(h::ConcreteDirectedHGs)
+function to_undirected(h::DirectedHypergraph{T,V,E,D}) where {T <: Real, V, E, D <: AbstractDict{Int,T}}
+    incidence = Matrix{Union{Tuple{Union{T, Nothing}, Union{T, Nothing}}, Nothing}}(undef, nhv(h), nhe(h))
+    fill!(incidence, nothing)
+
+    this_nhe = nhe(h)
+
+    for row in 1:nhv(h)
+        for column in 1:this_nhe
+            tail_val, head_val = h[row, column]
+            if tail_val === nothing && head_val === nothing
+                incidence[row, column] = nothing
+            else
+                incidence[row, column] = convert(T, 1.0)
+        end
+    end
+
+    combined_he_meta = Vector{Union{Tuple{Union{E, Nothing}, Union{E, Nothing}}, Nothing}}(undef, this_nhe)
+    fill!(combined_he_meta, nothing)
+    for he_index in 1:this_nhe
+        tail_meta = h.he_meta_tail[he_index]
+        head_meta = h.he_meta_head[he_index]
+
+        if tail_meta !== nothing || head_meta !== nothing
+            combined_he_meta[he_index] = (tail_meta, head_meta)
+        end
+    end
+
+    Hypergraph{T, V, Tuple{Union{E, Nothing},Union{E, Nothing}}, D}(
+        incidence,
+        v_meta=h.v_meta,
+        he_meta=combined_he_meta
+    )
+
+end
+
+"""
+    to_undirected(h::BasicDirectedHypergraph)
+
+Converts a directed hypergraph into an undirected hypergraph.
+Tail and head hyperedges are combined; that is, for all hyperedges he_orig in
+the directed hypergraph h, all vertices in the head or tail are added to a
+corresponding undirected hyperedge he_new in the undirected hypergraph h'.
+
+Because vertex-hyperedge weights are restricted to real numbers, we cannot
+combine the weights, so we simply set the values to 1.0 if a given vertex
+is in a given hyperedge 
+"""
+function to_undirected(h::BasicDirectedHypergraph)
+    incidence = Matrix{Union{Tuple{Union{T, Nothing}, Union{T, Nothing}}, Nothing}}(undef, nhv(h), nhe(h))
+    fill!(incidence, nothing)
+
+    this_nhe = nhe(h)
+
+    for row in 1:nhv(h)
+        for column in 1:this_nhe
+            tail_val, head_val = h[row, column]
+            if tail_val === nothing && head_val === nothing
+                incidence[row, column] = nothing
+            else
+                incidence[row, column] = convert(T, 1.0)
+        end
+    end
+
+    BasicHypergraph{T, D}(incidence)
 
 end
 
@@ -1164,7 +1240,7 @@ values stored at the head side of hyperedges.
 
 """
 function add_vertex!(h::BasicDirectedHypergraph{T, D};
-                     hyperedges::D = D()
+                     hyperedges_tail::D = D(), hyperedges_head::D = D()
                     ) where {T <: Real, D <: AbstractDict{Int,T}}
     @boundscheck (checkbounds(h.hg_tail,1,k) for k in keys(hyperedges_tail))
     @boundscheck (checkbounds(h.hg_head,1,k) for k in keys(hyperedges_head))
@@ -1739,7 +1815,7 @@ end
 
 Return the number of vertices in the directed hypergraph `h`.
 """
-function nhe(h::ConcreteDirectedHGs)
+function nhv(h::ConcreteDirectedHGs)
     (length(h.hg_tail.v2he) == length(h.hg_head.v2he)) ? length(h.hg_tail.v2he) : throw("Tail and head sides of hypergraph have different numbers of hyperedges!")
 end
 
