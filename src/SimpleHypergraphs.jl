@@ -9,8 +9,10 @@ using PyPlot
 using JSON3
 using Random
 using LinearAlgebra
+using SimpleTraits
 
-export Hypergraph, getvertices, gethyperedges
+export BasicHypergraph, Hypergraph, getvertices, gethyperedges
+export DirectedHypergraph, BasicDirectedHypergraph
 export add_vertex!, add_hyperedge!, remove_vertex!, remove_hyperedge!
 export prune_hypergraph!, prune_hypergraph
 export set_vertex_meta!, get_vertex_meta
@@ -33,7 +35,7 @@ export findcommunities
 
 export nhv, nhe
 export random_walk
-export get_connected_components
+export get_connected_components, get_weakly_connected_components, get_strongly_connected_components
 export conductance
 export AbstractDistance, SnodeDistanceDijkstra, SedgeDistanceDijkstra
 export distance

@@ -1,9 +1,4 @@
 # TODO: think more carefully about ensuring that metadata vectors are of appropriate lengths
-# TODO: are we ensuring that neither head nor tail sides of hyperarcs are empty?
-# TODO: weakly and strongly connected components:
-#   - Weak: naive solution is to convert directed hg into undirected hg and calculate undirected hg's connected components
-#   - Strong: ???
-# TODO: B- and F-components and associated algorithms?
 
 """
     Hypergraph{T} <: AbstractUndirectedHypergraph{T}
@@ -97,8 +92,8 @@ Hypergraph{T,V,E}(n::Integer, k::Integer) where {T<:Real, V, E} = Hypergraph{T,V
 
 Hypergraph{T,V}(n::Integer, k::Integer; v_meta=Vector{Union{V,Nothing}}(nothing, n)) where {T<:Real, V} = Hypergraph{T,V,Nothing,Dict{Int,T}}(n, k; v_meta=v_meta)
 
-# Why was this not included before?
-Hypergraph{T,E}(n::Integer, k::Integer; he_meta=Vector{Union{E,Nothing}}(nothing, k)) where {T<:Real, E} = Hypergraph{T,Nothing,E,Dict{Int,T}}(n, k; he_meta=he_meta)
+# # Why was this not included before?
+# Hypergraph{T,E}(n::Integer, k::Integer; he_meta=Vector{Union{E,Nothing}}(nothing, k)) where {T<:Real, E} = Hypergraph{T,Nothing,E,Dict{Int,T}}(n, k; he_meta=he_meta)
 
 Hypergraph{T}(n::Integer, k::Integer) where {T<:Real} =  Hypergraph{T,Nothing,Nothing,Dict{Int,T}}(n, k)
 
@@ -129,11 +124,11 @@ function Hypergraph{T,V}(m::AbstractMatrix{Union{T, Nothing}};
     Hypergraph{T,V,Nothing,Dict{Int,T}}(m;v_meta=v_meta)
 end
 
-function Hypergraph{T,E}(m::AbstractMatrix{Union{T, Nothing}};
-    he_meta::Vector{Union{Nothing,E}}=Vector{Union{Nothing,E}}(nothing, size(m,2))
-    ) where {T<:Real,E}
-    Hypergraph{T,Nothing,E,Dict{Int,T}}(m;he_meta=he_meta)
-end
+# function Hypergraph{T,E}(m::AbstractMatrix{Union{T, Nothing}};
+#     he_meta::Vector{Union{Nothing,E}}=Vector{Union{Nothing,E}}(nothing, size(m,2))
+#     ) where {T<:Real,E}
+#     Hypergraph{T,Nothing,E,Dict{Int,T}}(m;he_meta=he_meta)
+# end
 
 function Hypergraph{T}(m::AbstractMatrix{Union{T, Nothing}}) where {T<:Real}
     Hypergraph{T,Nothing,Nothing,Dict{Int,T}}(m)
@@ -431,15 +426,15 @@ DirectedHypergraph{T,V}(
         v_meta=v_meta
     )
 
-DirectedHypergraph{T,E}(
-    n::Integer, k::Integer;
-    he_meta_tail::Vector{Union{Nothing,E}}=Vector{Union{Nothing,E}}(nothing, size(m,2)),
-    he_meta_head::Vector{Union{Nothing,E}}=Vector{Union{Nothing,E}}(nothing, size(m,2))
-    ) where {T<:Real, V} = DirectedHypergraph{T,V,Nothing,Dict{Int,T}}(
-        n, k;
-        he_meta_tail=he_meta_tail,
-        he_meta_head=he_meta_head
-    )
+# DirectedHypergraph{T,E}(
+#     n::Integer, k::Integer;
+#     he_meta_tail::Vector{Union{Nothing,E}}=Vector{Union{Nothing,E}}(nothing, size(m,2)),
+#     he_meta_head::Vector{Union{Nothing,E}}=Vector{Union{Nothing,E}}(nothing, size(m,2))
+#     ) where {T<:Real, E} = DirectedHypergraph{T,V,Nothing,Dict{Int,T}}(
+#         n, k;
+#         he_meta_tail=he_meta_tail,
+#         he_meta_head=he_meta_head
+#     )
 
 DirectedHypergraph{T,D}(n::Integer, k::Integer) where {T<:Real, D<:AbstractDict{Int, T}} = DirectedHypergraph{T,Nothing,Nothing,D}(n, k)
 
@@ -472,20 +467,20 @@ function DirectedHypergraph{T,V,D}(
     )
 end
 
-function DirectedHypergraph{T,E,D}(
-    hg_tail::BasicHypergraph{T,D},
-    hg_head::BasicHypergraph{T,D};
-    he_meta_tail::Vector{Union{Nothing,E}}=Vector{Union{Nothing,E}}(nothing, size(m,2)),
-    he_meta_head::Vector{Union{Nothing,E}}=Vector{Union{Nothing,E}}(nothing, size(m,2))
-    ) where {T<:Real,E,D<:AbstractDict{Int, T}}
+# function DirectedHypergraph{T,E,D}(
+#     hg_tail::BasicHypergraph{T,D},
+#     hg_head::BasicHypergraph{T,D};
+#     he_meta_tail::Vector{Union{Nothing,E}}=Vector{Union{Nothing,E}}(nothing, size(m,2)),
+#     he_meta_head::Vector{Union{Nothing,E}}=Vector{Union{Nothing,E}}(nothing, size(m,2))
+#     ) where {T<:Real,E,D<:AbstractDict{Int, T}}
 
-    DirectedHypergraph{T,Nothing,E,D}(
-        hg_tail,
-        hg_head;
-        he_meta_tail=he_meta_tail,
-        he_meta_head=he_meta_head
-    )
-end
+#     DirectedHypergraph{T,Nothing,E,D}(
+#         hg_tail,
+#         hg_head;
+#         he_meta_tail=he_meta_tail,
+#         he_meta_head=he_meta_head
+#     )
+# end
 
 
 function DirectedHypergraph{T,V,E,D}(
@@ -503,7 +498,7 @@ function DirectedHypergraph{T,V,E,D}(
     sgh_head .= hg_head
 
     if all(hg_tail.v_meta .== hg_head.v_meta)
-        DirectedHypergraph{T,V,E,D}(shg_tail, shg_head; hg_tail.v_meta, hg_tail.he_meta, hg_head.he_meta)
+        DirectedHypergraph{T,V,E,D}(shg_tail, shg_head; v_meta=hg_tail.v_meta, he_meta_tail=hg_tail.he_meta, he_meta_head=hg_head.he_meta)
     else
         throw(ArgumentError("Vertex metadata `v_meta` is different for ingoing and head hypergraphs!"))
     end
@@ -582,29 +577,29 @@ function DirectedHypergraph{T,V}(
     )
 end
 
-function DirectedHypergraph{T,E}(
-    m_tail::AbstractMatrix{Union{T, Nothing}},
-    m_head::AbstractMatrix{Union{T, Nothing}};
-    he_meta_tail::Vector{Union{Nothing,E}}=Vector{Union{Nothing,E}}(nothing, size(m,2)),
-    he_meta_head::Vector{Union{Nothing,E}}=Vector{Union{Nothing,E}}(nothing, size(m,2))
-) where {T<:Real,V}
+# function DirectedHypergraph{T,E}(
+#     m_tail::AbstractMatrix{Union{T, Nothing}},
+#     m_head::AbstractMatrix{Union{T, Nothing}};
+#     he_meta_tail::Vector{Union{Nothing,E}}=Vector{Union{Nothing,E}}(nothing, size(m,2)),
+#     he_meta_head::Vector{Union{Nothing,E}}=Vector{Union{Nothing,E}}(nothing, size(m,2))
+# ) where {T<:Real,E}
 
-    # Arbitrary, since sizes are identical
-    n, k = size(m_tail)
+#     # Arbitrary, since sizes are identical
+#     n, k = size(m_tail)
 
-    hg_tail = BasicHypergraph{T,Dict{Int,T}}(n, k)
-    hg_tail .= m_tail
+#     hg_tail = BasicHypergraph{T,Dict{Int,T}}(n, k)
+#     hg_tail .= m_tail
 
-    hg_head = BasicHypergraph{T,Dict{Int,T}}(n, k)
-    hg_head .= m_head
+#     hg_head = BasicHypergraph{T,Dict{Int,T}}(n, k)
+#     hg_head .= m_head
 
-    DirectedHypergraph{T,V,Nothing,Dict{Int,T}}(
-        hg_tail,
-        hg_head;
-        he_meta_tail=he_meta_tail,
-        he_meta_head=he_meta_head
-    )
-end
+#     DirectedHypergraph{T,V,Nothing,Dict{Int,T}}(
+#         hg_tail,
+#         hg_head;
+#         he_meta_tail=he_meta_tail,
+#         he_meta_head=he_meta_head
+#     )
+# end
 
 function DirectedHypergraph{T}(
     m_tail::AbstractMatrix{Union{T, Nothing}},
@@ -813,8 +808,8 @@ const HasMetaHGs = Union{Hypergraph, DirectedHypergraph}
 const NoMetaHGs = Union{BasicHypergraph, BasicDirectedHypergraph}
 
 # implementing traits on types
-@traitimpl HasMeta{HasMetaStructs}
-hasmeta(::Type{T}) where {T<:HasMetaStructs} = true
+@traitimpl HasMeta{HasMetaHGs}
+hasmeta(::Type{T}) where {T<:HasMetaHGs} = true
 
 # Do I need these, or can I just use the abstract types and assume that all implementations will follow a similar structure
 const ConcreteUndirectedHGs = Union{Hypergraph, BasicHypergraph}
@@ -1080,6 +1075,7 @@ function to_undirected(h::DirectedHypergraph{T,V,E,D}) where {T <: Real, V, E, D
                 incidence[row, column] = nothing
             else
                 incidence[row, column] = convert(T, 1.0)
+            end
         end
     end
 
@@ -1114,8 +1110,8 @@ Because vertex-hyperedge weights are restricted to real numbers, we cannot
 combine the weights, so we simply set the values to 1.0 if a given vertex
 is in a given hyperedge 
 """
-function to_undirected(h::BasicDirectedHypergraph)
-    incidence = Matrix{Union{Tuple{Union{T, Nothing}, Union{T, Nothing}}, Nothing}}(undef, nhv(h), nhe(h))
+function to_undirected(h::BasicDirectedHypergraph{T, D}) where {T <: Real, D <: AbstractDict{Int,T}}
+    incidence = Matrix{Union{T, Nothing}}(undef, nhv(h), nhe(h))
     fill!(incidence, nothing)
 
     this_nhe = nhe(h)
@@ -1127,15 +1123,11 @@ function to_undirected(h::BasicDirectedHypergraph)
                 incidence[row, column] = nothing
             else
                 incidence[row, column] = convert(T, 1.0)
+            end
         end
     end
 
     BasicHypergraph{T, D}(incidence)
-
-end
-
-
-function approximate_graph(h::ConcreteDirectedHGs)
 
 end
 
@@ -1773,6 +1765,7 @@ function get_hyperedge_meta(h::DirectedHypergraph{T, V, E, D}, id::Int, side::Hy
     else
         checkbounds(h.he_meta_head, id)
         h.he_meta_head[id]
+    end
 end
 
 get_hyperedge_meta(::BasicHypergraph, ::Int) = throw("Not implemented!")
@@ -1904,7 +1897,7 @@ Next a vertex within hyperedge is with weights proportional to `vselect` functio
 a vertex identifier or a hyperedge identifier. The return values of both functions
 should be respectively a list of hyperedges or vertices and their weights.
 """
-function random_walk(h::Union{ConcreteUndirectedHGs}, start::Int;
+function random_walk(h::ConcreteDirectedHGs, start::Int;
                      heselect::Function=_default_heselect,
                      vselect::Function=_default_vselect,
                      reverse::Bool=false)
@@ -1936,40 +1929,99 @@ end
 """
     get_connected_components(h::Union{Hypergraph, BasicHypergraph})
 
-Return an array of connected components in the hypergraph `h`
+Return an array of connected components in the undirected hypergraph `h`
 (array of vectors of vertices) using recurrence.
 """
 function get_connected_components(h::ConcreteUndirectedHGs)
     visited = falses(nhv(h))
     cc = Vector{Int}[]
-        for i in 1:nhv(h)
-            if !visited[i]
-                s = Int[]
-                _walk!(h, s, i, visited)
-                push!(cc, s)
+    for i in 1:nhv(h)
+        if !visited[i]
+            s = Int[]
+            _walk!(h, s, i, visited)
+            push!(cc, s)
         end
     end
     cc
 end
 
-function get_weakly_connected_components(h::ConcreteDirectedHGs)
+"""
+    get_weakly_connected_components(h::Union{DirectedHypergraph, BasicDirectedHypergraph})
 
+Return an array of weakly connected components in the directed hypergraph `h`
+(array of vectors of vertices) by first converting the directed hypergraph
+into an undirected hypergraph and then obtaining the conected components of
+that hypergraph.
+"""
+function get_weakly_connected_components(h::ConcreteDirectedHGs)
+    undirected = to_undirected(h)
+    get_connected_components(undirected)
 end
 
+
+function _visit(
+    h::ConcreteDirectedHGs,
+    v::Int
+)
+    visited = zeros(Bool, nhv(h))
+    visited_tail_nodes = zeros(Int, nhe(h))
+
+    q = Queue{Int}()
+    bcc = Set{Int}()
+    enqueue!(q, v)
+
+    visited[v] = true
+
+    while length(q) > 0
+        u = dequeue!(q)
+        push!(bcc, u)
+
+        tail_hes = gethyperedges(h, u)[1]
+
+        for tail_he in keys(tail_hes)
+            visited_tail_nodes[tail_he] += 1
+
+            tail_vs, head_vs = getvertices(h, tail_he)
+
+            if visited_tail_nodes[tail_he] == length(tail_vs)
+                for head_v in head_vs
+                    if !visited[head_v]
+                        visited[head_v] = true
+                        enqueue!(q, head_v)
+                    end
+                end
+            end
+        end
+    end
+
+    bcc
+end
+
+
+"""
+    get_strongly_connected_components(h::Union{DirectedHypergraph, BasicDirectedHypergraph})
+
+Return an array of strongly connected components in the directed hypergraph `h`
+(array of vectors of vertices), based on the "naive" algorithm of
+Francisco José Martín-Recuerda Moyano (PhD dissertation, 2016).
+
+"""
 function get_strongly_connected_components(h::ConcreteDirectedHGs)
 
-end
+    T = Dict{Vector{Int}, Set{Int}}()
 
-function get_b_connected_components(h::ConcreteDirectedHGs)
+    for v in 1:nhv(h)
+        bcc_v = _visit(h, v)
+        bcc_sorted = sort(collect(bcc_v))
+        for i in 1:length(bcc_sorted)
+            if !haskey(T, bcc_sorted[1:i])
+                T[bcc_sorted[1:i]] = Set{Int}()
+            end
+        end
+        union!(T[bcc_sorted], Set{Int}(v))
+    end
 
-end
-
-function get_f_connected_components(h::ConcreteDirectedHGs)
-
-end
-
-function get_bf_connected_components(h::ConcreteDirectedHGs)
-
+    [k for (k, v) in T if length(v) != 0]
 end
 
 
