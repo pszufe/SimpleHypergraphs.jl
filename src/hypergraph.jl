@@ -1038,8 +1038,8 @@ Returns hyperedges for a given vertex `v_id` in an undirected hypergraph `h`.
     gethyperedges(h::Union{DirectedHypergraph, BasicDirectedHypergraph}, v_id::Int)
 
 Returns hyperedges for a given vertex `v_id` in a directed hypergraph `h`.
-Hyperedge indices are given in a tuple `(in, out)`, where `in` are the hyperedges where
-vertex `v_ind` is on the ingoing side and `out` are the hyperedges where `v_ind` is on
+Hyperedge indices are given in a tuple `(tail, head)`, where `tail` are the hyperedges where
+vertex `v_ind` is on the tail side and `head` are the hyperedges where `v_ind` is on
 the head side.
 
 """
@@ -1910,11 +1910,11 @@ end
 
 
 """
-    _walk!(h::Hypergraph, s::AbstractVector{Int}, i::Int, visited::AbstractVector{Bool})
+    _walk!(h::Union{Hypergraph, BasicHypergraph}, s::AbstractVector{Int}, i::Int, visited::AbstractVector{Bool})
 
 Appends the list of neighbors `s` of a given vertex `i` (an auxiliary function for `get_connected_components`).
 """
-function _walk!(h::Hypergraph, s::AbstractVector{Int}, i::Int, visited::AbstractVector{Bool})
+function _walk!(h::ConcreteUndirectedHGs, s::AbstractVector{Int}, i::Int, visited::AbstractVector{Bool})
     visited[i] && return
     visited[i] = true
     push!(s, i)
@@ -1959,6 +1959,13 @@ function get_weakly_connected_components(h::ConcreteDirectedHGs)
 end
 
 
+"""
+    _visit!(h::Union{DirectedHypergraph, BasicDirectedHypergraph}, v::Int)
+
+Determines the B-connected component of a vertex `v` in directed hypergraph `h`.
+This is an auxiliary function for `get_strongly_connected_components`, which
+determines the strongly connected components of a directed hypergraph.
+"""
 function _visit(
     h::ConcreteDirectedHGs,
     v::Int
@@ -1984,7 +1991,7 @@ function _visit(
             tail_vs, head_vs = getvertices(h, tail_he)
 
             if visited_tail_nodes[tail_he] == length(tail_vs)
-                for head_v in head_vs
+                for head_v in keys(head_vs)
                     if !visited[head_v]
                         visited[head_v] = true
                         enqueue!(q, head_v)
@@ -2018,10 +2025,10 @@ function get_strongly_connected_components(h::ConcreteDirectedHGs)
                 T[bcc_sorted[1:i]] = Set{Int}()
             end
         end
-        union!(T[bcc_sorted], Set{Int}(v))
+        push!(T[bcc_sorted], v)
     end
 
-    [k for (k, v) in T if length(v) != 0]
+    [v for (k, v) in T if length(v) != 0]
 end
 
 
