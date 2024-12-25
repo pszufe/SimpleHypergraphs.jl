@@ -2031,9 +2031,8 @@ function get_strongly_connected_components(h::ConcreteDirectedHGs)
     [v for (k, v) in T if length(v) != 0]
 end
 
-
 """
-    adjacency_matrix(h::Hypergraph; s::Int=1, weighted::Bool=false)
+    adjacency_matrix(h::Union{Hypergraph, BasicHypergraph}; s::Int=1, weighted::Bool=false)
 
 The sparse weighted `s`-adjacency matrix.
 
@@ -2048,12 +2047,40 @@ greater than `s`, otherwise the cell will equal 0. If weighted is `false`,
 the off diagonal cell will equal 1 if the nodes indexed by the row and column
 share at least `s` edges and 0 otherwise.
 
-! information about the weight of a vertex in a he will be lost.
+NOTE: information about the weight of a vertex in a hyperedge will be lost!
 
 """
-function adjacency_matrix(h; s::Int=1, weighted::Bool=true)
+function adjacency_matrix(h::ConcreteUndirectedHGs; s::Int=1, weighted::Bool=true)
     M = Matrix(h)
     _incidence_to_adjacency(M; s=s, weighted=weighted)
+end
+
+
+# TODO: you are here
+"""
+    adjacency_matrix(h::Union{DirectedHypergraph, BasicDirectedHypergraph}; s::Int=1, weighted::Bool=false)
+
+The sparse weighted `s`-adjacency matrix of a directed hypergraph.
+
+NOTE
+The concept of `s`-adjacency matrix has been firstly defined in the
+Python library [HyperNetX](https://github.com/pnnl/HyperNetX)
+
+TODO: is this correct? What should this be?
+From [HyperNetX](https://pnnl.github.io/HyperNetX/build/classes/classes.html#classes.hypergraph.Hypergraph.adjacency_matrix)
+If weighted is `true` each off diagonal cell will equal the number
+of edges shared by the nodes indexing the row and column if that number is
+greater than `s`, otherwise the cell will equal 0. If weighted is `false`,
+the off diagonal cell will equal 1 if the nodes indexed by the row and column
+share at least `s` edges and 0 otherwise.
+
+NOTE: information about the weight of a vertex in a hyperedge will be lost!
+
+"""
+function adjacency_matrix(h::ConcreteDirectedHGs; s::Int=1, weighted::Bool=true)
+    M1 = Matrix(h.hg_tail)
+    M2 = Matrix(h.hg_head)
+    _directed_incidence_to_adjacency(M1, M2; s=s, weighted=weighted)
 end
 
 
@@ -2108,5 +2135,4 @@ function _incidence_to_adjacency(M; s::Int=1, weighted::Bool=true)
 end
 
 
-# TODO find connected components without recurrence
 # TODO needs validate_hypergraph!(h::Hypergraph{T})

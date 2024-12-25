@@ -49,7 +49,7 @@ function hg_save(io::IO, h::Hypergraph, format::JSON_Format)
     json_hg[:k] = nhe(h)
 
     json_hg[:m] = JSON3.write(Matrix(h))
-    json_hg[:v2he] = JSON3.write(h. v2he)
+    json_hg[:v2he] = JSON3.write(h.v2he)
 
     json_hg[:v_meta] = JSON3.write(h.v_meta)
     json_hg[:he_meta] = JSON3.write(h.he_meta)
