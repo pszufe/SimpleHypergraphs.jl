@@ -92,9 +92,6 @@ Hypergraph{T,V,E}(n::Integer, k::Integer) where {T<:Real, V, E} = Hypergraph{T,V
 
 Hypergraph{T,V}(n::Integer, k::Integer; v_meta=Vector{Union{V,Nothing}}(nothing, n)) where {T<:Real, V} = Hypergraph{T,V,Nothing,Dict{Int,T}}(n, k; v_meta=v_meta)
 
-# # Why was this not included before?
-# Hypergraph{T,E}(n::Integer, k::Integer; he_meta=Vector{Union{E,Nothing}}(nothing, k)) where {T<:Real, E} = Hypergraph{T,Nothing,E,Dict{Int,T}}(n, k; he_meta=he_meta)
-
 Hypergraph{T}(n::Integer, k::Integer) where {T<:Real} =  Hypergraph{T,Nothing,Nothing,Dict{Int,T}}(n, k)
 
 Hypergraph(n::Integer, k::Integer) =  Hypergraph{Bool,Nothing,Nothing,Dict{Int,Bool}}(n, k)
@@ -123,12 +120,6 @@ function Hypergraph{T,V}(m::AbstractMatrix{Union{T, Nothing}};
                         ) where {T<:Real,V}
     Hypergraph{T,V,Nothing,Dict{Int,T}}(m;v_meta=v_meta)
 end
-
-# function Hypergraph{T,E}(m::AbstractMatrix{Union{T, Nothing}};
-#     he_meta::Vector{Union{Nothing,E}}=Vector{Union{Nothing,E}}(nothing, size(m,2))
-#     ) where {T<:Real,E}
-#     Hypergraph{T,Nothing,E,Dict{Int,T}}(m;he_meta=he_meta)
-# end
 
 function Hypergraph{T}(m::AbstractMatrix{Union{T, Nothing}}) where {T<:Real}
     Hypergraph{T,Nothing,Nothing,Dict{Int,T}}(m)
@@ -426,16 +417,6 @@ DirectedHypergraph{T,V}(
         v_meta=v_meta
     )
 
-# DirectedHypergraph{T,E}(
-#     n::Integer, k::Integer;
-#     he_meta_tail::Vector{Union{Nothing,E}}=Vector{Union{Nothing,E}}(nothing, size(m,2)),
-#     he_meta_head::Vector{Union{Nothing,E}}=Vector{Union{Nothing,E}}(nothing, size(m,2))
-#     ) where {T<:Real, E} = DirectedHypergraph{T,V,Nothing,Dict{Int,T}}(
-#         n, k;
-#         he_meta_tail=he_meta_tail,
-#         he_meta_head=he_meta_head
-#     )
-
 DirectedHypergraph{T,D}(n::Integer, k::Integer) where {T<:Real, D<:AbstractDict{Int, T}} = DirectedHypergraph{T,Nothing,Nothing,D}(n, k)
 
 DirectedHypergraph{T}(n::Integer, k::Integer) where {T<:Real} = DirectedHypergraph{T,Nothing,Nothing,Dict{Int,T}}(n, k)
@@ -466,22 +447,6 @@ function DirectedHypergraph{T,V,D}(
         v_meta=v_meta
     )
 end
-
-# function DirectedHypergraph{T,E,D}(
-#     hg_tail::BasicHypergraph{T,D},
-#     hg_head::BasicHypergraph{T,D};
-#     he_meta_tail::Vector{Union{Nothing,E}}=Vector{Union{Nothing,E}}(nothing, size(m,2)),
-#     he_meta_head::Vector{Union{Nothing,E}}=Vector{Union{Nothing,E}}(nothing, size(m,2))
-#     ) where {T<:Real,E,D<:AbstractDict{Int, T}}
-
-#     DirectedHypergraph{T,Nothing,E,D}(
-#         hg_tail,
-#         hg_head;
-#         he_meta_tail=he_meta_tail,
-#         he_meta_head=he_meta_head
-#     )
-# end
-
 
 function DirectedHypergraph{T,V,E,D}(
     hg_tail::Hypergraph{T,V,E,D},
@@ -576,30 +541,6 @@ function DirectedHypergraph{T,V}(
         v_meta=v_meta
     )
 end
-
-# function DirectedHypergraph{T,E}(
-#     m_tail::AbstractMatrix{Union{T, Nothing}},
-#     m_head::AbstractMatrix{Union{T, Nothing}};
-#     he_meta_tail::Vector{Union{Nothing,E}}=Vector{Union{Nothing,E}}(nothing, size(m,2)),
-#     he_meta_head::Vector{Union{Nothing,E}}=Vector{Union{Nothing,E}}(nothing, size(m,2))
-# ) where {T<:Real,E}
-
-#     # Arbitrary, since sizes are identical
-#     n, k = size(m_tail)
-
-#     hg_tail = BasicHypergraph{T,Dict{Int,T}}(n, k)
-#     hg_tail .= m_tail
-
-#     hg_head = BasicHypergraph{T,Dict{Int,T}}(n, k)
-#     hg_head .= m_head
-
-#     DirectedHypergraph{T,V,Nothing,Dict{Int,T}}(
-#         hg_tail,
-#         hg_head;
-#         he_meta_tail=he_meta_tail,
-#         he_meta_head=he_meta_head
-#     )
-# end
 
 function DirectedHypergraph{T}(
     m_tail::AbstractMatrix{Union{T, Nothing}},
@@ -2056,34 +1997,6 @@ function adjacency_matrix(h::ConcreteUndirectedHGs; s::Int=1, weighted::Bool=tru
 end
 
 
-# TODO: you are here
-"""
-    adjacency_matrix(h::Union{DirectedHypergraph, BasicDirectedHypergraph}; s::Int=1, weighted::Bool=false)
-
-The sparse weighted `s`-adjacency matrix of a directed hypergraph.
-
-NOTE
-The concept of `s`-adjacency matrix has been firstly defined in the
-Python library [HyperNetX](https://github.com/pnnl/HyperNetX)
-
-TODO: is this correct? What should this be?
-From [HyperNetX](https://pnnl.github.io/HyperNetX/build/classes/classes.html#classes.hypergraph.Hypergraph.adjacency_matrix)
-If weighted is `true` each off diagonal cell will equal the number
-of edges shared by the nodes indexing the row and column if that number is
-greater than `s`, otherwise the cell will equal 0. If weighted is `false`,
-the off diagonal cell will equal 1 if the nodes indexed by the row and column
-share at least `s` edges and 0 otherwise.
-
-NOTE: information about the weight of a vertex in a hyperedge will be lost!
-
-"""
-function adjacency_matrix(h::ConcreteDirectedHGs; s::Int=1, weighted::Bool=true)
-    M1 = Matrix(h.hg_tail)
-    M2 = Matrix(h.hg_head)
-    _directed_incidence_to_adjacency(M1, M2; s=s, weighted=weighted)
-end
-
-
 """
     edge_adjacency_matrix(h::Hypergraph; s::Int=1, weighted::Bool=false)
 
@@ -2119,6 +2032,8 @@ Helper method to obtain adjacency matrix from incidence matrix.
 """
 function _incidence_to_adjacency(M; s::Int=1, weighted::Bool=true)
     M[M .== nothing] .= 0
+
+    # TODO: Should this be M[M .!= 0] .= 1?
     M[M .> 0] .= 1
 
     A = *(M, transpose(M))
