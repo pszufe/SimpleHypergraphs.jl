@@ -6,30 +6,32 @@ Note this is a view - changes to the original hypergraph will be automatically r
 
 **Constructors**
 
-BipartiteView(::Hypergraph)
+BipartiteView(::H) where {H<:AbstractHypergraph}
 
 The bipartite view of a hypergraph is suitable for processing with the Graphs.jl package.
 Several Graphs methods are provided for the compability.
 
 """
-struct BipartiteView{T<:Real} <: Graphs.SimpleGraphs.AbstractSimpleGraph{Int}
-    h::Hypergraph{T}
+struct BipartiteView{H<:AbstractHypergraph, T<:Real} <: Graphs.SimpleGraphs.AbstractSimpleGraph{Int}
+    h::H{T}
 end
 
 
 """
   Return the number of vertices in a bipartite view `b` of a hypergraph.
 """
-Graphs.nv(b::BipartiteView) = length(b.h.v2he)+length(b.h.he2v)
+Graphs.nv(b::BipartiteView) =  nhv(b.h) + nhe(b.h)
 
 Graphs.vertices(b::BipartiteView) = Base.OneTo(Graphs.nv(b))
 
 """
   Return the number of edges in a bipartite view `b` of a hypergraph.
 """
-Graphs.ne(b::BipartiteView) = sum(length.(b.h.v2he))
+Graphs.ne(b::BipartiteView{H}) where {H<:AbstractUndirectedHypergraph} = sum(length.(b.h.v2he))
+Graphs.ne(b::BipartiteView{H}) where {H<:AbstractDirectedHypergraph} = sum(length.(b.h.hg_tail.v2he)) + sum(length.(b.h.hg_head.v2he))
 
-function Graphs.all_neighbors(b::BipartiteView, v::Integer)
+
+function Graphs.all_neighbors(b::BipartiteView{H}, v::Integer) where {H<:AbstractUndirectedHypergraph}
     n1 = length(b.h.v2he)
     if v <= n1
       n1 .+ keys(b.h.v2he[v])
@@ -38,6 +40,20 @@ function Graphs.all_neighbors(b::BipartiteView, v::Integer)
     end
 end
 
+function Graphs.all_neighbors(b::BipartiteView{H}, v::Integer) where {H<:AbstractDirectedHypergraph}
+    n1 = nhv(b.h)
+
+    if v <= n1
+      t, h = gethyperedges(b.h, v)
+      n1 .+ unique([collect(keys(t)); collect(keys(h))])
+    else
+      t, h = getvertices(b.h, v - n1)
+      unique([collect(keys(t)); collect(keys(h))])
+    end
+end
+
+
+# TODO: you are here
 function Graphs.has_edge(b::BipartiteView, s, d)
     n1 = length(b.h.v2he)
     if s <= n1
