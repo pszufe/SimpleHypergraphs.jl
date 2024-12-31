@@ -284,8 +284,8 @@ Loads a hypergraph from a stream `io` from `json` format.
 """
 function hg_load(
         io::IO,
-        HType::Type{H},
         format::JSON_Format;
+        HType::Type{H} = BasicHypergraph,
         T::Type{U} = Bool,
         D::Type{<:AbstractDict{Int, U}} = Dict{Int, T},
         V = Nothing,
@@ -296,21 +296,30 @@ function hg_load(
     if HType in subtypes(AbstractUndirectedHypergraph)
         m = reshape(JSON3.read(json_hg.m, Array{Union{T, Nothing}}), json_hg.n, json_hg.k)
 
-        v_meta = Vector{Union{Nothing,V}}(nothing, size(m, 1))
-        he_meta = Vector{Union{Nothing,E}}(nothing, size(m, 2))
-
         if V != Nothing && E != Nothing
             v_meta = JSON3.read(json_hg.v_meta, Array{Union{V, Nothing}})
             he_meta = JSON3.read(json_hg.he_meta, Array{Union{E, Nothing}})
             h = Hypergraph{T, V, E, D}(m; v_meta=v_meta, he_meta=he_meta)
+        else
+            h = BasicHypergraph{T, D}(m)
         end
 
-        h = BasicHypergraph{T, D}(m)
-
     elseif HType in subtypes(AbstractDirectedHypergraph)
-        #  TODO: you are here
+        m_tail = reshape(JSON3.read(json_hg.m_tail, Array{Union{T, Nothing}}), json_hg.n, json_hg.k)
+        m_head = reshape(JSON3.read(json_hg.m_head, Array{Union{T, Nothing}}), json_hg.n, json_hg.k)
+
+        if V != Nothing && E != Nothing
+            v_meta = JSON3.read(json_hg.v_meta, Array{Union{V, Nothing}})
+            he_meta_tail = JSON3.read(json_hg.he_meta_tail, Array{Union{E, Nothing}})
+            he_meta_head = JSON3.read(json_hg.he_meta_head, Array{Union{E, Nothing}})
+            h = DirectedHypergraph{T, V, E, D}(m_tail, m_head; v_meta=v_meta, he_meta_tail=he_meta_tail, he_meta_head=he_meta_head)
+        else
+            h = BasicDirectedHypergraph{T, D}(m_tail, m_head)
+        end
+
     else
         error("Not implemented.")
+    end
 
     h
 end
@@ -320,6 +329,7 @@ end
     hg_load(
         fname::AbstractString;
         format::Abstract_HG_format = HGF_Format(),
+        HType::Type{H} = BasicHypergraph,
         T::Type{U} = Bool,
         D::Type{<:AbstractDict{Int, U}} = Dict{Int,U},
         V = Nothing,
@@ -331,17 +341,30 @@ The default saving format is `hgf`.
 
 **Arguments**
 
+* `HType`: type of hypergraph to store data in
 * `T` : type of weight values stored in the hypergraph's adjacency matrix
 * `D` : dictionary for storing values the default is `Dict{Int, T}`
 * `V` : type of values stored in the vertices of the hypergraph
 * `E` : type of values stored in the edges of the hypergraph
 
 """
-hg_load(
+function hg_load(
     fname::AbstractString;
     format::Abstract_HG_format = HGF_Format(),
+    HType::Type{H} = BasicHypergraph,
     T::Type{U} = Bool,
     D::Type{<:AbstractDict{Int, U}} = Dict{Int, T},
     V = Nothing,
-    E = Nothing) where {U <: Real} =
-    open(io -> hg_load(io, format; T=T, D=D, V=V, E=E), fname, "r")
+    E = Nothing) where {U <: Real, H <: AbstractHypergraph}
+
+    if format == HGF_Format()
+        if HType == BasicHypergraph
+            open(io -> hg_load(io, format; T=T, D=D), fname, "r")
+        else
+            error("HGF loading only implemented for BasicHypergraph")
+        end
+    else
+        open(io -> hg_load(io, format; HType=HType, T=T, D=D, V=V, E=E), fname, "r")
+    end
+
+end
