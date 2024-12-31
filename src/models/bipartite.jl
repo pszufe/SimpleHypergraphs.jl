@@ -53,8 +53,7 @@ function Graphs.all_neighbors(b::BipartiteView{H}, v::Integer) where {H<:Abstrac
 end
 
 
-# TODO: you are here
-function Graphs.has_edge(b::BipartiteView, s, d)
+function Graphs.has_edge(b::BipartiteView{H}, s, d) where {H<:AbstractUndirectedHypergraph}
     n1 = length(b.h.v2he)
     if s <= n1
         d > n1 && has_key(b.v2he[s], d - n1)
@@ -63,22 +62,68 @@ function Graphs.has_edge(b::BipartiteView, s, d)
     end
 end
 
+function Graphs.has_edge(b::BipartiteView{H}, s, d) where {H<:AbstractDirectedHypergraph}
+    n1 = nhv(b.h)
+
+    if s <= n1
+        d > n1 && has_key(b.h.hg_tail.v2he[s], d - n1)
+    else
+        d <= n1 && has_key(b.h.hg_head.he2v[s-n1], d)
+    end
+end
+
+
 Graphs.has_vertex(b::BipartiteView, v::Integer) = 1 <= v <= Graphs.nv(b)
 
 
-Graphs.outneighbors(b::BipartiteView, v::Integer) = Graphs.all_neighbors(b::BipartiteView, v)
+Graphs.outneighbors(b::BipartiteView{H}, v::Integer) where {H<:AbstractUndirectedHypergraph} = Graphs.all_neighbors(b::BipartiteView{H}, v)
 
-Graphs.inneighbors(b::BipartiteView, v::Integer) = Graphs.all_neighbors(b::BipartiteView, v)
+Graphs.inneighbors(b::BipartiteView{H}, v::Integer) where {H<:AbstractUndirectedHypergraph} = Graphs.all_neighbors(b::BipartiteView{H}, v)
+
+function Graphs.outneighbors(
+    b::BipartiteView{H},
+    v::Integer
+    ) where {H<:AbstractDirectedHypergraph}
+
+    n1 = nhv(b.h)
+
+    if v <= n1
+      t, _ = gethyperedges(b.h, v)
+      n1 .+ collect(keys(t))
+    else
+      _, h = getvertices(b.h, v - n1)
+      collect(keys(h))
+    end
+
+end
+
+function Graphs.inneighbors(
+    b::BipartiteView{H},
+    v::Integer
+    ) where {H<:AbstractDirectedHypergraph}
+
+    n1 = nhv(b.h)
+
+    if v <= n1
+      _, h = gethyperedges(b.h, v)
+      n1 .+ collect(keys(h))
+    else
+      t, _ = getvertices(b.h, v - n1)
+      collect(keys(t))
+    end
+
+end
+
 
 """
-    Graphs.SimpleGraph(b::BipartiteView)
+    Graphs.SimpleGraph(b::BipartiteView{H}) where {H<:AbstractUndirectedHypergraph}
 
 Creates a `Graphs.SimpleGraph` representation of a `BipartiteView` b.
 
 This creates a copy of the date. Note that the weights information is not stored
 in the created `SimpleGraph`.
 """
-function Graphs.SimpleGraph(b::BipartiteView)
+function Graphs.SimpleGraph(b::BipartiteView{H}) where {H<:AbstractUndirectedHypergraph}
     g = SimpleGraph(nv(b))
     for v in keys(b.h.v2he)
         for he in keys(b.h.v2he[v])
@@ -88,14 +133,62 @@ function Graphs.SimpleGraph(b::BipartiteView)
     g
 end
 
-Graphs.is_directed(b::BipartiteView{T}) where T = false
 
-Graphs.is_directed(::Type{BipartiteView{T}}) where T = false
+"""
+    Graphs.SimpleGraph(b::BipartiteView{H}) where {H<:AbstractDirectedHypergraph}
+
+Creates a `Graphs.SimpleGraph` representation of a `BipartiteView` b.
+
+This creates a copy of the date. Note that the weights information is not stored
+in the created `SimpleGraph`.
+"""
+function Graphs.SimpleGraph(b::BipartiteView{H}) where {H<:AbstractDirectedHypergraph}
+    g = SimpleGraph(nv(b))
+
+    n1 = nhv(b)
+    for v in 1:n1
+        t, h = gethyperedges(b.h, v)
+
+        for he in unique([collect(keys(t)); collect(keys(h))])
+            add_edge!(g, v, n1 + he)
+        end
+    end
+    g
+end
+
+# TODO: you are here
+"""
+    Graphs.SimpleDiGraph(b::BipartiteView{H}) where {H<:AbstractDirectedHypergraph}
+
+Creates a `Graphs.SimpleDiGraph` representation of a `BipartiteView` b.
+
+This creates a copy of the date. Note that the weights information is not stored
+in the created `SimpleDiGraph`.
+"""
+function Graphs.SimpleDiGraph(b::BipartiteView{H}) where {H<:AbstractDirectedHypergraph}
+    g = SimpleGraph(nv(b))
+    for v in keys(b.h.v2he)
+        for he in keys(b.h.v2he[v])
+            add_edge!(g, v, length(b.h.v2he) + he)
+        end
+    end
+    g
+end
+
+
+Graphs.is_directed(b::BipartiteView{H}) where {H<:AbstractUndirectedHypergraph} = false
+
+Graphs.is_directed(::Type{BipartiteView{H}}) where {H<:AbstractUndirectedHypergraph} = false
+
+Graphs.is_directed(b::BipartiteView{H}) where {H<:AbstractDirectedHypergraph} = true
+
+Graphs.is_directed(::Type{BipartiteView{H}}) where {H<:AbstractDirectedHypergraph} = true
 
 Base.eltype(::BipartiteView{T}) where T = Int
 
+# TODO: you are here
 """
-    shortest_path(b::BipartiteView,source::Int, target::Int)
+    shortest_path(b::BipartiteView, source::Int, target::Int)
 
 Finds a single shortest path in a graph `b` between vertices
 `source` and `target`.
@@ -103,7 +196,7 @@ Note that if several paths of the same length exist, only one
 will be returned.
 
 """
-function shortest_path(b::BipartiteView,source::Int, target::Int)
+function shortest_path(b::BipartiteView, source::Int, target::Int)
     checkbounds(b.h.v2he, source)
     checkbounds(b.h.v2he, target)
     dj = dijkstra_shortest_paths(b, source)

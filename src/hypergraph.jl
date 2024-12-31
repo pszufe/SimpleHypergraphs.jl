@@ -1,4 +1,6 @@
 # TODO: think more carefully about ensuring that metadata vectors are of appropriate lengths
+# TODO: use haskey instead of x in keys(...)
+# TODO: Can probably get rid of ConcreteDirectedHGs and ConcreteUndirectedHGs
 
 """
     Hypergraph{T} <: AbstractUndirectedHypergraph{T}
