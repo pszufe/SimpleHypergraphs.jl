@@ -11,7 +11,7 @@ struct JSON_Format <: Abstract_HG_format end
 Saves an undirected hypergraph `h` to an output stream `io` in `hgf` format.
 
 """
-function hg_save(io::IO, h::ConcreteUndirectedHGs, format::HGF_Format)
+function hg_save(io::IO, h::H, format::HGF_Format) where {H <: AbstractUndirectedHypergraph}
     println(io, length(h.v2he), " ", length(h.he2v))
     for he in h.he2v
         skeys = sort(collect(keys(he)))
@@ -270,7 +270,7 @@ end
         D::Type{<:AbstractDict{Int, U}} = Dict{Int,U},
         V = Nothing,
         E = Nothing
-    ) where {H <: AbstractHypergrph, U <: Real}
+    ) where {H <: AbstractHypergraph, U <: Real}
 
 Loads a hypergraph from a stream `io` from `json` format.
 

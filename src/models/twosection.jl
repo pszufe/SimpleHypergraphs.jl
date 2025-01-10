@@ -1,3 +1,5 @@
+# TODO: you are here
+
 """
     TwoSectionView{T<:Real} <: Graphs.SimpleGraphs.AbstractSimpleGraph{Int64}
 
@@ -152,19 +154,22 @@ Graphs.zero(t::TwoSectionView{T}) where T = TwoSectionView(Hypergraph{T}(0,0))
 Graphs.zero(::Type{TwoSectionView{T}}) where T = TwoSectionView(Hypergraph{T}(0,0))
 
 """
-    get_twosection_adjacency_mx(h::Hypergraph{T,V,E}; count_self_loops::Bool=false,
-                                replace_weights::Union{Nothing,Real}=nothing ) where {T<:Real, V, E}
+    get_twosection_adjacency_mx(h::H{T}; count_self_loops::Bool=false,
+                                replace_weights::Union{Nothing,Real}=nothing ) where {H<:AbstractUndirectedHypergraph, T<:Real}
 
 Returns an adjacency matrix for a two section view of a hypergraph `h`.
 """
-function get_twosection_adjacency_mx(h::Hypergraph{T,V,E}; count_self_loops::Bool=false,
-                                     replace_weights::Union{Nothing,Real}=nothing ) where {T<:Real, V, E}
-    mx = zeros(replace_weights==nothing ? T : typeof(replace_weights), nhv(h), nhv(h))
+function get_twosection_adjacency_mx(
+    h::H{T};
+    count_self_loops::Bool=false,
+    replace_weights::Union{Nothing,Real}=nothing
+    ) where {H<:AbstractUndirectedHypergraph, T<:Real}
+    mx = zeros(replace_weights === nothing ? T : typeof(replace_weights), nhv(h), nhv(h))
     for he in 1:nhe(h)
         for v1 in keys(h.he2v[he])
             for v2 in keys(h.he2v[he])
                 v1 == v2 && !count_self_loops && continue
-                mx[v1,v2] += replace_weights==nothing ? h.he2v[he][v1] : replace_weights
+                mx[v1,v2] += replace_weights === nothing ? h.he2v[he][v1] : replace_weights
             end
         end
     end
