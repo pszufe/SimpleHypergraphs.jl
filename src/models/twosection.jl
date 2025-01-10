@@ -1,7 +1,5 @@
-# TODO: you are here
-
 """
-    TwoSectionView{T<:Real} <: Graphs.SimpleGraphs.AbstractSimpleGraph{Int64}
+    TwoSectionView{T<:Real, H<:AbstractHypergraph} <: Graphs.SimpleGraphs.AbstractSimpleGraph{Int64}
 
 Represents a 2-section view of a hypergraph `h`.
 Note (1) this is a view - changes to the original hypergraph will be automatically reflected in the view.
@@ -13,28 +11,28 @@ This can be achieved via the `get_twosection_adjacency_mx(h)` method.
 
 **Constructors**
 
-TwoSectionView(::Hypergraph)
+TwoSectionView(::H<:AbstractHypergraph)
 
 The 2-section view of a hypergraph is suitable for processing with the Graphs.jl package.
 Several Graphs methods are provided for the compability.
 
 """
-struct TwoSectionView{T<:Real} <: Graphs.SimpleGraphs.AbstractSimpleGraph{Int}
-    h::Hypergraph{T}
-    TwoSectionView(h::Hypergraph{T}) where { T <: Real } = begin
-        has_overlapping_hedges(h) && error("A two section view can be created only for a graph with non overlapping edges")
-        new{T}(h)
+struct TwoSectionView{T<:Real, H<:AbstractHypergraph} <: Graphs.SimpleGraphs.AbstractSimpleGraph{Int}
+    h::H{T}
+    TwoSectionView(h::H{T}) where {T<:Real, H<:AbstractHypergraph} = begin
+        has_overlapping_hedges(h) && error("A two section view can be created only for a hypergraph with non-overlapping hyperedges")
+        new{T, H}(h)
     end
 end
 
 """
-    has_overlapping_hedges(h::Hypergraph{T}) where { T <: Real }
+    has_overlapping_hedges(h::H{T}) where {T<:Real, H<:AbstractHypergraph}
 
 Checks whether a hypergraph has hyperedges connecting the same pairs of vertices.
 Such hypergraph cannot be presented as a two section view
 """
 
-function has_overlapping_hedges(h::Hypergraph{T}) where { T <: Real }
+function has_overlapping_hedges(h::H{T}) where {T<:Real, H<:AbstractHypergraph}
     minimum(size(h)) == 0 && return false
     maximum(get_twosection_adjacency_mx(h;replace_weights=1)) > 1
 end
@@ -42,15 +40,15 @@ end
 """
   Return the number of vertices in 2-section view `t` of a hypergraph.
 """
-Graphs.nv(t::TwoSectionView) = length(t.h.v2he)
-
+Graphs.nv(t::TwoSectionView) = nhv(t.h)
 
 Graphs.vertices(t::TwoSectionView) = Base.OneTo(nv(t))
 
+
 """
-  Return the number of edges in 2-section view `t` of a hypergraph.
+  Return the number of edges in 2-section view `t` of an undirected hypergraph.
 """
-function Graphs.ne(t::TwoSectionView)
+function Graphs.ne(t::TwoSectionView{T, H}) where {T<:Real, H<:AbstractUndirectedHypergraph}
     s = 0
     for x in t.h.he2v
         s += length(x) * (length(x) - 1)
@@ -58,6 +56,19 @@ function Graphs.ne(t::TwoSectionView)
     div(s, 2)
 end
 
+"""
+  Return the number of edges in 2-section view `t` of a directed hypergraph.
+"""
+function Graphs.ne(t::TwoSectionView{T, H}) where {T<:Real, H<:AbstractDirectedHypergraph}
+    s = 0
+    for x in 1:nhe(t.h)
+        s += length(t.h.hg_tail[x]) * length(t.h.hg_head[x])
+    end
+    s
+end
+
+
+# TODO: you are here
 """
     Graphs.all_neighbors(t::TwoSectionView, v::Integer)
 
@@ -170,6 +181,29 @@ function get_twosection_adjacency_mx(
             for v2 in keys(h.he2v[he])
                 v1 == v2 && !count_self_loops && continue
                 mx[v1,v2] += replace_weights === nothing ? h.he2v[he][v1] : replace_weights
+            end
+        end
+    end
+    mx
+end
+
+"""
+    get_twosection_adjacency_mx(h::H{T}; count_self_loops::Bool=false,
+                                replace_weights::Union{Nothing,Real}=nothing) where {H<:AbstractDirectedHypergraph, T<:Real}
+
+Returns an adjacency matrix for a two section view of a hypergraph `h`.
+"""
+function get_twosection_adjacency_mx(
+    h::H{T};
+    count_self_loops::Bool=false,
+    replace_weights::Union{Nothing,Real}=nothing
+    ) where {H<:AbstractDirectedHypergraph, T<:Real}
+    mx = zeros(replace_weights === nothing ? Tuple{T,T} : typeof(replace_weights), nhv(h), nhv(h))
+    for he in 1:nhe(h)
+        for vt in keys(h.hg_tail.he2v[he])
+            for vh in keys(h.hg_head.he2v[he])
+                vt == vh && !count_self_loops && continue
+                mx[vt,vh] += replace_weights === nothing ? (h.hg_tail.he2v[he][vt], h.hg_head.he2v[he][vh]) : replace_weights
             end
         end
     end
