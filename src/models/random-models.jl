@@ -6,11 +6,16 @@
         * preferential-attachment
 """
 
+# TODO:
+# - Erdős–Rényi–Gilbert model for (directed) hypergraphs?
+# - Random preferential model for directed hypergraphs
+#     - I think some new math might need to be done here
+
 
 """
-    random_model(nVertices::Int, nEdges::Int; HType::Type{H}=BasicHypergraph) where {H<:AbstractUndirectedHypergraph}
+    random_model(nVertices::Int, nEdges::Int, HType::Type{H}) where {H<:AbstractUndirectedHypergraph}
 
-Generate a *random* undirected hypergraph without any structural constraints.
+Generate a *random* undirected hypergraph (in the style of Erdős–Rényi random graphs) without any structural constraints.
 
 # The Algorithm
 
@@ -19,7 +24,7 @@ the algorithm computes - for each hyperedge *he={1,...,m}* -
 a random number *s ϵ [1, n]* (i.e. the hyperedge size).
 Then, the algorithm selects uniformly at random *s* vertices from *V* to be added in *he*.
 """
-function random_model(nVertices::Int, nEdges::Int; HType::Type{H}=Hypergraph) where {H<:AbstractUndirectedHypergraph}
+function random_model(nVertices::Int, nEdges::Int, HType::Type{H}) where {H<:AbstractUndirectedHypergraph}
     mx = Matrix{Union{Nothing,Bool}}(nothing, nVertices, nEdges)
     if nEdges == 0
         return HType(nVertices, nEdges)
@@ -33,15 +38,15 @@ function random_model(nVertices::Int, nEdges::Int; HType::Type{H}=Hypergraph) wh
     if all(length.(h.v2he) .> 0)
         return h
     else
-        return random_model(nVertices, nEdges)
+        return random_model(nVertices, nEdges, HType)
     end
 end
 
 
 """
-    random_model(nVertices::Int, nEdges::Int; HType::Type{H}=BasicDirectedHypergraph) where {H<:AbstractDirectedHypergraph}
+    random_model(nVertices::Int, nEdges::Int, HType::Type{H}) where {H<:AbstractDirectedHypergraph}
 
-Generate a *random* directed hypergraph without any structural constraints.
+Generate a *random* directed hypergraph (in the style of Erdős–Rényi random graphs) without any structural constraints.
 
 # The Algorithm
 
@@ -56,8 +61,8 @@ cannot appear in both the head and the tail of the same hyperedge *he*.
 """
 function random_model(
     nVertices::Int,
-    nEdges::Int;
-    HType::Type{H}=BasicDirectedHypergraph,
+    nEdges::Int,
+    HType::Type{H};
     no_self_loops::Bool=false
 ) where {H<:AbstractUndirectedHypergraph}
     if no_self_loops && nVertices == 1
@@ -94,25 +99,25 @@ function random_model(
     if all(length.(h.hg_tail.v2he) .> 0) && all(length.(h.hg_head.v2he) .> 0)
         return h
     else
-        return random_model(nVertices, nEdges, HType=HType, no_self_loops=no_self_loops)
+        return random_model(nVertices, nEdges, HType, no_self_loops=no_self_loops)
     end
 end
 
 
 """
-    random_kuniform_model(nVertices::Int, nEdges::Int, k::Int; HType::Type{H}=BasicHypergraph) where {H<:AbstractUndirectedHypergraph}
+    random_kuniform_model(nVertices::Int, nEdges::Int, k::Int, HType::Type{H}) where {H<:AbstractUndirectedHypergraph}
 
 Generates a *k*-uniform hypergraph, i.e. an hypergraph where each hyperedge has size *k*.
 
 # The Algorithm
 
-The algorithm proceeds as the *randomH*, forcing the size of each hyperedge equal to *k*.
+The algorithm proceeds as the *random_model*, forcing the size of each hyperedge equal to *k*.
 """
 function random_kuniform_model(
     nVertices::Int,
     nEdges::Int,
-    k::Int;
-    HType::Type{H}=BasicHypergraph
+    k::Int,
+    HType::Type{H}
 ) where {H<:AbstractUndirectedHypergraph}
     mx = Matrix{Union{Nothing,Bool}}(nothing, nVertices,nEdges)
     for e in 1:size(mx,2)
@@ -124,11 +129,12 @@ end
 """
     random_kuniform_model(nVertices::Int, nEdges::Int, k::Int; HType::Type{H}=BasicDirectedHypergraph, no_self_loops::Bool=false) where {H<:AbstractDirectedHypergraph}
 
-Generates a *k*-uniform directed hypergraph, i.e. an hypergraph where each hyperedge has size *k*.
+Generates a *k*-uniform directed hypergraph, i.e., an hypergraph where each hyperedge has size *k = k_tail + k_head*.
+In this implementation, *k_tail* and *k_head* are not necessarily equal.
 
 # The Algorithm
 
-The algorithm proceeds as the *randomH*, forcing the size of each hyperedge equal to *k*.
+The algorithm proceeds as the *random_model*, forcing the size of each hyperedge equal to *k*.
 """
 function random_kuniform_model(
     nVertices::Int,
@@ -167,13 +173,12 @@ function random_kuniform_model(
 end
 
 
-# TODO: you are here
 """
     random_dregular_model(
         nVertices::Int,
         nEdges::Int,
-        d::Int;
-        HType::Type{H}=BasicHypergraph
+        d::Int,
+        HType::Type{H}
     ) where {H<:AbstractUndirectedHypergraph}
 Generates a *d*-regular hypergraph, where each node has degree *d*.
 
@@ -186,8 +191,8 @@ It returns the hypergraph *H^* dual of *H*.
 function random_dregular_model(
     nVertices::Int,
     nEdges::Int,
-    d::Int;
-    HType::Type{H}=BasicHypergraph
+    d::Int,
+    HType::Type{H}
 ) where {H<:AbstractUndirectedHypergraph}
     mx = Matrix{Union{Nothing,Bool}}(nothing, nVertices,nEdges)
     for v in 1:size(mx,1)
@@ -200,8 +205,8 @@ end
     random_dregular_model(
         nVertices::Int,
         nEdges::Int,
-        d::Int;
-        HType::Type{H}=BasicDirectedHypergraph,
+        d::Int,
+        HType::Type{H};
         no_self_loops::Bool=false
     ) where {H<:AbstractDirectedHypergraph}
 Generates a *d*-regular directed hypergraph, where each node has degree *d*.
@@ -215,8 +220,8 @@ It returns the hypergraph *H^* dual of *H*.
 function random_dregular_model(
     nVertices::Int,
     nEdges::Int,
-    d::Int;
-    HType::Type{H}=BasicDirectedHypergraph,
+    d::Int,
+    HType::Type{H};
     no_self_loops::Bool = false
 ) where {H<:AbstractDirectedHypergraph}
     if no_self_loops && nVertices == 1
@@ -249,9 +254,13 @@ function random_dregular_model(
 end
 
 
-#TODO: you are here
 """
-    random_preferential_model(nVertices::Int, p::Real; H = random_model(5,5))
+    random_preferential_model(
+        nVertices::Int,
+        p::Real,
+        HType::Type{H};
+        hg::HType = random_model(5,5, HType)
+    ) where {H<:AbstractUndirectedHypergraph}
 
 Generate a hypergraph with a preferential attachment rule between nodes, as presented in
 *Avin, C., Lotker, Z., and Peleg, D. Random preferential attachment hyper-graphs. Computer Science 23 (2015).*
@@ -270,25 +279,30 @@ The so-built hypergraph will have `nVertices` vertices.
 
 The starting hypergraph can be instantiated as preferred.
 """
-function random_preferential_model(nVertices::Int, p::Real; H = random_model(5,5))
-    while nhv(H) < nVertices
+function random_preferential_model(
+    nVertices::Int,
+    p::Real,
+    HType::Type{H};
+    hg::HType = random_model(5,5, HType)
+) where {H<:AbstractUndirectedHypergraph}
+    while nhv(hg) < nVertices
         r = rand()
-        y = rand(1:nhv(H))
+        y = rand(1:nhv(hg))
         Y = Dict{Int,Bool}()
         if r < p
-            v = SimpleHypergraphs.add_vertex!(H)
+            v = SimpleHypergraphs.add_vertex!(hg)
             push!(Y,v=>true)
-            for v in next_nodes(H,y-1)
+            for v in next_nodes(hg,y-1)
                 push!(Y,v)
             end
         else
-            for v in next_nodes(H,y)
+            for v in next_nodes(hg,y)
                 push!(Y,v)
             end
         end
-        SimpleHypergraphs.add_hyperedge!(H, vertices=Y)
+        SimpleHypergraphs.add_hyperedge!(hg, vertices=Y)
     end
-    H
+    hg
 end
 
 
@@ -297,7 +311,7 @@ end
 
 Selects nodes to add to a hyperedge.
 """
-function next_nodes(h::Hypergraph, size::Int)
+function next_nodes(h::H, size::Int) where {H<:AbstractUndirectedHypergraph}
     nodes = Dict{Int, Bool}()
 
     ids = collect(1:nhv(h))
