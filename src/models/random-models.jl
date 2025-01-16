@@ -8,9 +8,9 @@
 
 
 """
-    random_model(nVertices::Int, nEdges::Int)
+    random_model(nVertices::Int, nEdges::Int; HType::Type{H}=BasicHypergraph) where {H<:AbstractUndirectedHypergraph}
 
-Generate a *random* hypergraph without any structural constraints.
+Generate a *random* undirected hypergraph without any structural constraints.
 
 # The Algorithm
 
@@ -19,17 +19,17 @@ the algorithm computes - for each hyperedge *he={1,...,m}* -
 a random number *s ϵ [1, n]* (i.e. the hyperedge size).
 Then, the algorithm selects uniformly at random *s* vertices from *V* to be added in *he*.
 """
-function random_model(nVertices::Int, nEdges::Int)
+function random_model(nVertices::Int, nEdges::Int; HType::Type{H}=Hypergraph) where {H<:AbstractUndirectedHypergraph}
     mx = Matrix{Union{Nothing,Bool}}(nothing, nVertices, nEdges)
     if nEdges == 0
-        return Hypergraph(nVertices, nEdges)
+        return HType(nVertices, nEdges)
     end
     for e in 1:size(mx,2)
         nv = rand(1:size(mx,1))
         mx[sample(1:size(mx,1), nv;replace=false), e] .= true
     end
 
-    h = Hypergraph(mx)
+    h = HType(mx)
     if all(length.(h.v2he) .> 0)
         return h
     else
@@ -38,6 +38,68 @@ function random_model(nVertices::Int, nEdges::Int)
 end
 
 
+"""
+    random_model(nVertices::Int, nEdges::Int; HType::Type{H}=BasicDirectedHypergraph) where {H<:AbstractDirectedHypergraph}
+
+Generate a *random* directed hypergraph without any structural constraints.
+
+# The Algorithm
+
+Given two integer parameters *nVertices* and *nEdges* (the number of nodes and hyperedges, respectively),
+the algorithm computes - for each hyperedge *he={1,...,m}* -
+two random numbers *s_t ϵ [1, n]* (i.e., the size of the hyperedge tail) and *s_h ϵ [1, n]*
+(i.e., the size of the hyperedge head).
+Then, the algorithm selects uniformly at random *s_t* vertices from *V* to be added in the tail of *he*
+and *s_h* vertices from *V* to be added into the head of *he*.
+If *no_self_loops* is true (default false), then vertices will be chosen such that the same vertex *v*
+cannot appear in both the head and the tail of the same hyperedge *he*.
+"""
+function random_model(
+    nVertices::Int,
+    nEdges::Int;
+    HType::Type{H}=BasicDirectedHypergraph,
+    no_self_loops::Bool=false
+) where {H<:AbstractUndirectedHypergraph}
+    if no_self_loops && nVertices == 1
+        # Impossible; all directed hyperedges with non-empty tails & heads will be self-loops
+        error("Impossible to avoid self-loops in non-empty directed hyperedges in a directed hypergraph with one (1) vertex!")
+    end
+
+    mx_tail = Matrix{Union{Nothing,Bool}}(nothing, nVertices, nEdges)
+    mx_head = Matrix{Union{Nothing,Bool}}(nothing, nVertices, nEdges)
+    if nEdges == 0
+        return HType(nVertices, nEdges)
+    end
+
+    for e in 1:size(mx_tail,2)
+        if no_self_loops
+            # To avoid self-loops, can't have all 
+            nv = rand(1:size(mx_tail,1)-1)
+        else
+            nv = rand(1:size(mx_tail,1))
+        end
+        mx_tail[sample(1:size(mx_tail,1), nv;replace=false), e] .= true
+
+        if no_self_loops
+            valid_indices = collect(setdiff(Set(1:size(mx_tail, 1)), Set(findall(x->x===true, mx_tail[:, e]))))
+            nv = rand(1:length(valid_indices))
+            mx_head[sample(valid_indices, nv;replace=false), e] .= true
+        else
+            nv = rand(1:size(mx_head,1))
+            mx_head[sample(1:size(mx_head,1), nv;replace=false), e] .= true
+        end
+    end
+
+    h = HType(mx)
+    if all(length.(h.hg_tail.v2he) .> 0) && all(length.(h.hg_head.v2he) .> 0)
+        return h
+    else
+        return random_model(nVertices, nEdges, HType=HType, no_self_loops=no_self_loops)
+    end
+end
+
+
+# TODO: you are here
 """
     random_kuniform_model(nVertices::Int, nEdges::Int, k::Int)
 
