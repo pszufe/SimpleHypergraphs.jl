@@ -90,7 +90,7 @@ function random_model(
         end
     end
 
-    h = HType(mx)
+    h = HType(mx_tail, mx_head)
     if all(length.(h.hg_tail.v2he) .> 0) && all(length.(h.hg_head.v2he) .> 0)
         return h
     else
@@ -99,9 +99,8 @@ function random_model(
 end
 
 
-# TODO: you are here
 """
-    random_kuniform_model(nVertices::Int, nEdges::Int, k::Int)
+    random_kuniform_model(nVertices::Int, nEdges::Int, k::Int; HType::Type{H}=BasicHypergraph) where {H<:AbstractUndirectedHypergraph}
 
 Generates a *k*-uniform hypergraph, i.e. an hypergraph where each hyperedge has size *k*.
 
@@ -109,40 +108,153 @@ Generates a *k*-uniform hypergraph, i.e. an hypergraph where each hyperedge has 
 
 The algorithm proceeds as the *randomH*, forcing the size of each hyperedge equal to *k*.
 """
-function random_kuniform_model(nVertices::Int, nEdges::Int, k::Int)
+function random_kuniform_model(
+    nVertices::Int,
+    nEdges::Int,
+    k::Int;
+    HType::Type{H}=BasicHypergraph
+) where {H<:AbstractUndirectedHypergraph}
     mx = Matrix{Union{Nothing,Bool}}(nothing, nVertices,nEdges)
     for e in 1:size(mx,2)
         mx[sample(1:size(mx,1), k;replace=false), e] .= true
     end
-    Hypergraph(mx)
+    HType(mx)
+end
+
+"""
+    random_kuniform_model(nVertices::Int, nEdges::Int, k::Int; HType::Type{H}=BasicDirectedHypergraph, no_self_loops::Bool=false) where {H<:AbstractDirectedHypergraph}
+
+Generates a *k*-uniform directed hypergraph, i.e. an hypergraph where each hyperedge has size *k*.
+
+# The Algorithm
+
+The algorithm proceeds as the *randomH*, forcing the size of each hyperedge equal to *k*.
+"""
+function random_kuniform_model(
+    nVertices::Int,
+    nEdges::Int,
+    k::Int;
+    HType::Type{H}=BasicDirectedHypergraph,
+    no_self_loops::Bool=false
+) where {H<:AbstractDirectedHypergraph}
+    mx_tail = Matrix{Union{Nothing,Bool}}(nothing, nVertices,nEdges)
+    mx_head = Matrix{Union{Nothing,Bool}}(nothing, nVertices,nEdges)
+    
+    if no_self_loops && nVertices == 1
+        # Impossible; all directed hyperedges with non-empty tails & heads will be self-loops
+        error("Impossible to avoid self-loops in non-empty directed hyperedges in a directed hypergraph with one (1) vertex!")
+    end
+
+    for e in 1:size(mx_tail,2)
+        if no_self_loops
+            k_tail = rand(1:k-1)
+        else
+           k_tail = rand(1:k)
+        end
+        k_head = k - k_tail
+
+        mx_tail[sample(1:size(mx_tail,1), k_tail;replace=false), e] .= true
+
+        if no_self_loops
+            valid_indices = collect(setdiff(Set(1:size(mx_tail, 1)), Set(findall(x->x===true, mx_tail[:, e]))))
+            mx_head[sample(valid_indices, k_head;replace=false), e] .= true
+        else
+            mx_head[sample(1:size(mx_head,1), k_head;replace=false), e] .= true
+        end
+    end
+    
+    HType(mx_tail, mx_head)
 end
 
 
+# TODO: you are here
 """
-    random_dregular_model(nVertices::Int, nEdges::Int, d::Int)
-
+    random_dregular_model(
+        nVertices::Int,
+        nEdges::Int,
+        d::Int;
+        HType::Type{H}=BasicHypergraph
+    ) where {H<:AbstractUndirectedHypergraph}
 Generates a *d*-regular hypergraph, where each node has degree *d*.
 
 # The Algorithm
 
 The algorithm exploits the *k*-uniform approach described for the *random_kuniform_model* method
 to build a *d*-regular hypergraph *H* having *nVertices* nodes and *nEdges* edges.
-It returns the hypergraph H^* dual of *H*.
+It returns the hypergraph *H^* dual of *H*.
 """
-function random_dregular_model(nVertices::Int, nEdges::Int, d::Int)
+function random_dregular_model(
+    nVertices::Int,
+    nEdges::Int,
+    d::Int;
+    HType::Type{H}=BasicHypergraph
+) where {H<:AbstractUndirectedHypergraph}
     mx = Matrix{Union{Nothing,Bool}}(nothing, nVertices,nEdges)
     for v in 1:size(mx,1)
         mx[v, sample(1:size(mx,2), d;replace=false)] .= true
     end
-    Hypergraph(mx)
+    HType(mx)
+end
+
+"""
+    random_dregular_model(
+        nVertices::Int,
+        nEdges::Int,
+        d::Int;
+        HType::Type{H}=BasicDirectedHypergraph,
+        no_self_loops::Bool=false
+    ) where {H<:AbstractDirectedHypergraph}
+Generates a *d*-regular directed hypergraph, where each node has degree *d*.
+
+# The Algorithm
+
+The algorithm exploits the *k*-uniform approach described for the *random_kuniform_model* method
+to build a *d*-regular hypergraph *H* having *nVertices* nodes and *nEdges* edges.
+It returns the hypergraph *H^* dual of *H*.
+"""
+function random_dregular_model(
+    nVertices::Int,
+    nEdges::Int,
+    d::Int;
+    HType::Type{H}=BasicDirectedHypergraph,
+    no_self_loops::Bool = false
+) where {H<:AbstractDirectedHypergraph}
+    if no_self_loops && nVertices == 1
+        # Impossible; all directed hyperedges with non-empty tails & heads will be self-loops
+        error("Impossible to avoid self-loops in non-empty directed hyperedges in a directed hypergraph with one (1) vertex!")
+    end
+
+    mx_tail = Matrix{Union{Nothing,Bool}}(nothing, nVertices, nEdges)
+    mx_head = Matrix{Union{Nothing,Bool}}(nothing, nVertices, nEdges)
+    
+    for v in 1:size(mx_tail,1)
+        d_tail = rand(0:d)
+        d_head = d - d_tail
+
+        if d_tail > 0
+            mx_tail[v, sample(1:size(mx_tail,2), d_tail;replace=false)] .= true
+        end
+
+        if d_head > 0
+            if no_self_loops
+                valid_indices = collect(setdiff(Set(1:size(mx_tail, 2)), Set(findall(x->x===true, mx_tail[v, :]))))
+                mx_head[v, sample(valid_indices, d_head;replace=false)] .= true
+            else
+                mx_head[v, sample(1:size(mx_head,2), d_head;replace=false)] .= true
+            end
+        end
+    end
+
+    HType(mx_tail, mx_head)
 end
 
 
+#TODO: you are here
 """
     random_preferential_model(nVertices::Int, p::Real; H = random_model(5,5))
 
 Generate a hypergraph with a preferential attachment rule between nodes, as presented in
-*Avin, C., Lotker, Z., and Peleg, D.Random preferential attachment hyper-graphs. Computer Science 23 (2015).*
+*Avin, C., Lotker, Z., and Peleg, D. Random preferential attachment hyper-graphs. Computer Science 23 (2015).*
 
 # The Algorithm
 
