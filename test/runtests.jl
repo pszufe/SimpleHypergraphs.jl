@@ -16,7 +16,7 @@ h1[5,4] = 5.5
 h1[5,2] = 6.5
 
 
-@testset "SimpleHypergraphs Hypergraph          " begin
+@testset "SimpleHypergraphs Hypergraph             " begin
 
     h = hg_load("data/test1.hgf"; T=Int)
     @test size(h) == (4, 4)
@@ -156,8 +156,20 @@ h1[5,2] = 6.5
     @test size(h1_1)[2] == 3
 end;
 
+@testset "SimpleHypergraphs BasicHypergraph        " begin
 
-@testset "SimpleHypergraphs BipartiteView       " begin
+end;
+
+@testset "SimpleHypergraphs DirectedHypergraph     " begin
+
+end;
+
+@testset "SimpleHypergraphs BasicDirectedHypergraph" begin
+
+end;
+
+
+@testset "SimpleHypergraphs BipartiteView          " begin
     h2 = deepcopy(h1)
 
     @test Graphs.nv(Graphs.zero(BipartiteView{Int})) == 0
@@ -204,7 +216,7 @@ end;
 end;
 
 
-@testset "SimpleHypergraphs TwoSectionView      " begin
+@testset "SimpleHypergraphs TwoSectionView         " begin
 
     ht = Hypergraph{Float64}(3,3)
     ht[1:2,1:2] .= 2.
@@ -263,7 +275,7 @@ end;
 end;
 
 
-@testset "SimpleHypergraphs random-models       " begin
+@testset "SimpleHypergraphs random-models          " begin
 
     Hᵣ = random_model(5,5)
     @test nhv(Hᵣ) == 5
@@ -345,7 +357,7 @@ end;
 end;
 
 
-@testset "SimpleHypergraphs randomized tests    " begin
+@testset "SimpleHypergraphs randomized tests       " begin
     Random.seed!(0)
     N = 500
     res = Vector{Bool}(undef, N)
@@ -362,7 +374,7 @@ end;
 end
 
 
-@testset "SimpleHypergraphs label propagation   " begin
+@testset "SimpleHypergraphs label propagation      " begin
     Random.seed!(1234);
     hg = Hypergraph{Bool}(10, 12)
     for i in eachindex(hg)
@@ -391,7 +403,7 @@ end
 end;
 
 
-@testset "SimpleHypergraphs randomwalk          " begin
+@testset "SimpleHypergraphs randomwalk             " begin
     h1 = Hypergraph{Float64}(5,4)
     h1[1:3,1] .= 1.5
     h1[3,4] = 2.5
@@ -427,7 +439,7 @@ end
 end
 
 
-@testset "SimpleHypergraphs hypernetx bridge    " begin
+@testset "SimpleHypergraphs hypernetx bridge       " begin
 
     if (!SimpleHypergraphs.support_hypernetx())
         @warn "HyperNetX is not installed. Skipping hypernetx tests"
@@ -470,7 +482,7 @@ end
 end;
 
 
-@testset "SimpleHypergraphs conductance         " begin
+@testset "SimpleHypergraphs conductance            " begin
   h = Hypergraph{Float64, Int}(5,4)
   h[1:3,1] .= 1
   h[3,4] = 1
@@ -498,7 +510,7 @@ end;
 end;
 
 
-@testset "SimpleHypergraphs dual                " begin
+@testset "SimpleHypergraphs dual                   " begin
     m = [
           1         nothing   nothing   4
           1         2         3         nothing
@@ -530,7 +542,7 @@ end;
 end;
 
 
-@testset "SimpleHypergraphs s-distance          " begin
+@testset "SimpleHypergraphs s-distance             " begin
     h = Hypergraph{Int}(6,4)
 
     h[1:3, 1] .= 1

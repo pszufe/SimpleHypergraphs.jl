@@ -12,8 +12,8 @@ The bipartite view of a hypergraph is suitable for processing with the Graphs.jl
 Several Graphs methods are provided for the compability.
 
 """
-struct BipartiteView{H<:AbstractHypergraph, T<:Real} <: Graphs.SimpleGraphs.AbstractSimpleGraph{Int}
-    h::H{T}
+struct BipartiteView{H<:AbstractHypergraph} <: Graphs.SimpleGraphs.AbstractSimpleGraph{Int}
+    h::H
 end
 
 
@@ -235,11 +235,11 @@ end
 
 
 """
-    Graphs.SimpleGraphs.fadj(b::BipartiteView)
+    Graphs.SimpleGraphs.fadj(b::BipartiteView{H}) where {H<:AbstractUndirectedHypergraph}
 
-Generates an adjency list for this view of a hypergraph.
+Generates an adjency list for this view of an undirected hypergraph.
 """
-function Graphs.SimpleGraphs.fadj(b::BipartiteView)
+function Graphs.SimpleGraphs.fadj(b::BipartiteView{H}) where {H<:AbstractUndirectedHypergraph}
     res = Vector{Vector{Int}}(undef, Graphs.nv(b))
 
     h_nv = length(b.h.v2he)
@@ -252,6 +252,42 @@ function Graphs.SimpleGraphs.fadj(b::BipartiteView)
     res
 end
 
+"""
+    Graphs.SimpleGraphs.fadj(b::BipartiteView{H}) where {H<:AbstractDirectedHypergraph}
+
+Generates a forward adjacency list for this view of a directed hypergraph.
+"""
+function Graphs.SimpleGraphs.fadj(b::BipartiteView{H}) where {H<:AbstractDirectedHypergraph}
+    res = Vector{Vector{Int}}(undef, Graphs.nv(b))
+
+    h_nv = length(b.h.hg_tail.v2he)
+    for i in 1:h_nv
+       res[i] = h_nv .+ sort!(collect(keys(b.h.hg_tail.v2he[i])))
+    end
+    for i in 1:length(b.h.hg_head.he2v)
+        res[i+h_nv] = sort!(collect(keys(b.h.hg_head.he2v[i])))
+    end
+    res
+end
+
+"""
+    Graphs.SimpleGraphs.badj(b::BipartiteView{H}) where {H<:AbstractDirectedHypergraph}
+
+Generates a backward adjacency list for this view of a directed hypergraph.
+"""
+function Graphs.SimpleGraphs.badj(b::BipartiteView{H}) where {H<:AbstractDirectedHypergraph}
+    res = Vector{Vector{Int}}(undef, Graphs.nv(b))
+
+    h_nv = length(b.h.hg_head.v2he)
+    for i in 1:h_nv
+       res[i] = h_nv .+ sort!(collect(keys(b.h.hg_head.v2he[i])))
+    end
+    for i in 1:length(b.h.hg_tail.he2v)
+        res[i+h_nv] = sort!(collect(keys(b.h.hg_tail.he2v[i])))
+    end
+    res
+end
+
 Graphs.SimpleGraphs.fadj(b::BipartiteView{H}, v::Integer) where {H<:AbstractUndirectedHypergraph} = Graphs.all_neighbors(b,v)
 
 Graphs.SimpleGraphs.fadj(b::BipartiteView{H}, v::Integer) where {H<:AbstractDirectedHypergraph} = Graphs.outneighbors(b,v)
@@ -259,7 +295,7 @@ Graphs.SimpleGraphs.badj(b::BipartiteView{H}, v::Integer) where {H<:AbstractDire
 
 Graphs.edges(b::BipartiteView) = Graphs.SimpleGraphs.SimpleEdgeIter(b)
 
-Graphs.edgetype(b::BipartiteView{H,T}) where H, T = Graphs.SimpleGraphs.SimpleEdge{Int}
+Graphs.edgetype(b::BipartiteView{H}) where H = Graphs.SimpleGraphs.SimpleEdge{Int}
 
-Graphs.zero(t::BipartiteView{H,T}) where {H<:AbstractHypergraph, T} = BipartiteView(H{T}(0,0))
-Graphs.zero(::Type{BipartiteView{H,T}}) where {H<:AbstractHypergraph, T} = BipartiteView(H{T}(0,0))
+Graphs.zero(t::BipartiteView{H}) where {H<:AbstractHypergraph} = BipartiteView(H(0,0))
+Graphs.zero(::Type{BipartiteView{H}}) where {H<:AbstractHypergraph} = BipartiteView(H(0,0))

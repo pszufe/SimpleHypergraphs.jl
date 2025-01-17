@@ -1,5 +1,5 @@
 """
-    TwoSectionView{T<:Real, H<:AbstractHypergraph} <: Graphs.SimpleGraphs.AbstractSimpleGraph{Int64}
+    TwoSectionView{H<:AbstractHypergraph} <: Graphs.SimpleGraphs.AbstractSimpleGraph{Int64}
 
 Represents a 2-section view of a hypergraph `h`.
 Note (1) this is a view - changes to the original hypergraph will be automatically reflected in the view.
@@ -17,22 +17,22 @@ The 2-section view of a hypergraph is suitable for processing with the Graphs.jl
 Several Graphs methods are provided for the compability.
 
 """
-struct TwoSectionView{T<:Real, H<:AbstractHypergraph} <: Graphs.SimpleGraphs.AbstractSimpleGraph{Int}
-    h::H{T}
-    TwoSectionView(h::H{T}) where {T<:Real, H<:AbstractHypergraph} = begin
+struct TwoSectionView{H<:AbstractHypergraph} <: Graphs.SimpleGraphs.AbstractSimpleGraph{Int}
+    h::H
+    TwoSectionView(h::H) where {H<:AbstractHypergraph} = begin
         has_overlapping_hedges(h) && error("A two section view can be created only for a hypergraph with non-overlapping hyperedges")
-        new{T, H}(h)
+        new{H}(h)
     end
 end
 
 """
-    has_overlapping_hedges(h::H{T}) where {T<:Real, H<:AbstractHypergraph}
+    has_overlapping_hedges(h::H{T}) where {H<:AbstractHypergraph}
 
 Checks whether a hypergraph has hyperedges connecting the same pairs of vertices.
 Such hypergraph cannot be presented as a two section view
 """
 
-function has_overlapping_hedges(h::H{T}) where {T<:Real, H<:AbstractHypergraph}
+function has_overlapping_hedges(h::H) where {H<:AbstractHypergraph}
     minimum(size(h)) == 0 && return false
     maximum(get_twosection_adjacency_mx(h;replace_weights=1)) > 1
 end
@@ -48,7 +48,7 @@ Graphs.vertices(t::TwoSectionView) = Base.OneTo(nv(t))
 """
   Return the number of edges in 2-section view `t` of an undirected hypergraph.
 """
-function Graphs.ne(t::TwoSectionView{T, H}) where {T<:Real, H<:AbstractUndirectedHypergraph}
+function Graphs.ne(t::TwoSectionView{H}) where {H<:AbstractUndirectedHypergraph}
     s = 0
     for x in t.h.he2v
         s += length(x) * (length(x) - 1)
@@ -59,7 +59,7 @@ end
 """
   Return the number of edges in 2-section view `t` of a directed hypergraph.
 """
-function Graphs.ne(t::TwoSectionView{T, H}) where {T<:Real, H<:AbstractDirectedHypergraph}
+function Graphs.ne(t::TwoSectionView{H}) where {H<:AbstractDirectedHypergraph}
     s = 0
     for x in 1:nhe(t.h)
         s += length(t.h.hg_tail[x]) * length(t.h.hg_head[x])
@@ -69,11 +69,11 @@ end
 
 
 """
-    Graphs.all_neighbors(t::TwoSectionView{T, H}, v::Integer) where {T<:Real, H<:AbstractUndirectedHypergraph}
+    Graphs.all_neighbors(t::TwoSectionView{T, H}, v::Integer) where {H<:AbstractUndirectedHypergraph}
 
 Returns N(v) (the vertex v is not included in N(v))
 """
-function Graphs.all_neighbors(t::TwoSectionView{T, H}, v::Integer) where {T<:Real, H<:AbstractUndirectedHypergraph}
+function Graphs.all_neighbors(t::TwoSectionView{H}, v::Integer) where {H<:AbstractUndirectedHypergraph}
     neighbors = Set{Int}()
     for he in keys(t.h.v2he[v])
         union!(neighbors, keys(t.h.he2v[he]))
@@ -87,7 +87,7 @@ end
         t::TwoSectionView,
         v::Integer;
         incoming::Bool = false, outgoing::Bool = true
-    ) where {T<:Real, H<:AbstractDirectedHypergraph}
+    ) where {H<:AbstractDirectedHypergraph}
 
 Returns N(v) (the vertex v is not included in N(v))
 
@@ -100,11 +100,11 @@ by directed hyperedges where v is in the tail.
 If both incoming and outgoing are false, returns an empty set
 """
 function Graphs.all_neighbors(
-    t::TwoSectionView{T, H},
+    t::TwoSectionView{H},
     v::Integer;
     incoming::Bool = true,
     outgoing::Bool = true
-) where {T<:Real, H<:AbstractDirectedHypergraph}
+) where {H<:AbstractDirectedHypergraph}
     neighbors = Set{Int}()
 
     if !(incoming || outgoing)
@@ -136,16 +136,16 @@ end
 
 Graphs.has_vertex(t::TwoSectionView, v::Integer) = 1 <= v <= Graphs.nv(t)
 
-Graphs.outneighbors(t::TwoSectionView{T, H}, v::Integer) where {T<:Real, H<:AbstractUndirectedHypergraph} =
+Graphs.outneighbors(t::TwoSectionView{H}, v::Integer) where {H<:AbstractUndirectedHypergraph} =
     Graphs.all_neighbors(t, v)
 
-Graphs.inneighbors(t::TwoSectionView{T, H}, v::Integer) where {T<:Real, H<:AbstractUndirectedHypergraph} =
+Graphs.inneighbors(t::TwoSectionView{H}, v::Integer) where {H<:AbstractUndirectedHypergraph} =
     Graphs.all_neighbors(t, v)
 
-Graphs.outneighbors(t::TwoSectionView{T, H}, v::Integer) where {T<:Real, H<:AbstractDirectedHypergraph} =
+Graphs.outneighbors(t::TwoSectionView{H}, v::Integer) where {H<:AbstractDirectedHypergraph} =
     Graphs.all_neighbors(t, v, incoming=false)
 
-Graphs.inneighbors(t::TwoSectionView{T, H}, v::Integer) where {T<:Real, H<:AbstractDirectedHypergraph} =
+Graphs.inneighbors(t::TwoSectionView{H}, v::Integer) where {H<:AbstractDirectedHypergraph} =
     Graphs.all_neighbors(t, v, outgoing=false)
 
 
@@ -170,14 +170,14 @@ end
 
 
 """
-    Graphs.SimpleGraph(t::TwoSectionView{T, H}) where {T<:Real, H<:AbstractDirectedHypergraph}
+    Graphs.SimpleGraph(t::TwoSectionView{H}) where {H<:AbstractDirectedHypergraph}
 
 Creates a `Graphs.SimpleGraph` representation of a `TwoSectionView` t.
 
 This creates a copy of the date. Note that the weights information is not stored
 in the created `SimpleGraph`.
 """
-function Graphs.SimpleDiGraph(t::TwoSectionView{T, H}) where {T<:Real, H<:AbstractDirectedHypergraph}
+function Graphs.SimpleDiGraph(t::TwoSectionView{H}) where {H<:AbstractDirectedHypergraph}
     g = SimpleDiGraph(nv(t))
     for v in Graphs.vertices(t)
         outneighbors_v = Graphs.outneighbors(t, v)
@@ -190,13 +190,13 @@ function Graphs.SimpleDiGraph(t::TwoSectionView{T, H}) where {T<:Real, H<:Abstra
 end
 
 
-Graphs.is_directed(t::TwoSectionView{T, H}) where {T, H<:AbstractUndirectedHypergraph} = false
-Graphs.is_directed(::Type{TwoSectionView{T, H}}) where {T, H<:AbstractUndirectedHypergraph} = false
+Graphs.is_directed(t::TwoSectionView{H}) where {H<:AbstractUndirectedHypergraph} = false
+Graphs.is_directed(::Type{TwoSectionView{H}}) where {H<:AbstractUndirectedHypergraph} = false
 
-Graphs.is_directed(t::TwoSectionView{T, H}) where {T, H<:AbstractDirectedHypergraph} = true
-Graphs.is_directed(::Type{TwoSectionView{T, H}}) where {T, H<:AbstractDirectedHypergraph} = true
+Graphs.is_directed(t::TwoSectionView{H}) where {H<:AbstractDirectedHypergraph} = true
+Graphs.is_directed(::Type{TwoSectionView{H}}) where {H<:AbstractDirectedHypergraph} = true
 
-Base.eltype(::TwoSectionView{T, H}) where T, H = Int
+Base.eltype(::TwoSectionView{H}) where H = Int
 
 
 """
@@ -216,11 +216,11 @@ function shortest_path(t::TwoSectionView, source::Int, target::Int)
 end
 
 """
-    Graphs.SimpleGraphs.fadj(t::TwoSectionView{T, H}) where {T<:Real, H<:AbstractUndirectedHypergraph}
+    Graphs.SimpleGraphs.fadj(t::TwoSectionView{H}) where {H<:AbstractUndirectedHypergraph}
 
 Generates an adjency list for this view of an undirected hypergraph.
 """
-function Graphs.SimpleGraphs.fadj(t::TwoSectionView{T, H}) where {T<:Real, H<:AbstractUndirectedHypergraph}
+function Graphs.SimpleGraphs.fadj(t::TwoSectionView{H}) where {H<:AbstractUndirectedHypergraph}
     res = [Vector{Int}() for _ in 1:Graphs.nv(t)]
     for he in t.h.he2v
         vs = collect(keys(he))
@@ -234,11 +234,11 @@ function Graphs.SimpleGraphs.fadj(t::TwoSectionView{T, H}) where {T<:Real, H<:Ab
 end
 
 """
-    Graphs.SimpleGraphs.fadj(t::TwoSectionView{T, H}) where {T<:Real, H<:AbstractDirectedHypergraph}
+    Graphs.SimpleGraphs.fadj(t::TwoSectionView{H}) where {H<:AbstractDirectedHypergraph}
 
 Generates an adjency list for this view of a directed hypergraph.
 """
-function Graphs.SimpleGraphs.fadj(t::TwoSectionView{T, H}) where {T<:Real, H<:AbstractDirectedHypergraph}
+function Graphs.SimpleGraphs.fadj(t::TwoSectionView{H}) where {H<:AbstractDirectedHypergraph}
     res = [Vector{Int}() for _ in 1:Graphs.nv(t)]
     
     for he in 1:nhe(t.h)
@@ -256,11 +256,11 @@ function Graphs.SimpleGraphs.fadj(t::TwoSectionView{T, H}) where {T<:Real, H<:Ab
 end
 
 """
-    Graphs.SimpleGraphs.fadj(t::TwoSectionView{T, H}) where {T<:Real, H<:AbstractDirectedHypergraph}
+    Graphs.SimpleGraphs.fadj(t::TwoSectionView{H}) where {H<:AbstractDirectedHypergraph}
 
 Generates an adjency list for this view of a hypergraph.
 """
-function Graphs.SimpleGraphs.badj(t::TwoSectionView{T, H}) where {T<:Real, H<:AbstractDirectedHypergraph}
+function Graphs.SimpleGraphs.badj(t::TwoSectionView{H}) where {H<:AbstractDirectedHypergraph}
     res = [Vector{Int}() for _ in 1:Graphs.nv(t)]
     for he in t.h.he2v
         vs = collect(keys(he))
@@ -274,30 +274,30 @@ function Graphs.SimpleGraphs.badj(t::TwoSectionView{T, H}) where {T<:Real, H<:Ab
 end
 
 
-Graphs.SimpleGraphs.fadj(t::TwoSectionView{T, H}, v::Integer) where {T, H<:AbstractUndirectedHypergraph} = Graphs.all_neighbors(t,v)
+Graphs.SimpleGraphs.fadj(t::TwoSectionView{H}, v::Integer) where {H<:AbstractUndirectedHypergraph} = Graphs.all_neighbors(t,v)
 
-Graphs.SimpleGraphs.fadj(t::TwoSectionView{T, H}, v::Integer) where {T, H<:AbstractDirectedHypergraph} = Graphs.outneighbors(t,v)
-Graphs.SimpleGraphs.badj(t::TwoSectionView{T, H}, v::Integer) where {T, H<:AbstractDirectedHypergraph} = Graphs.inneighbors(t,v)
+Graphs.SimpleGraphs.fadj(t::TwoSectionView{H}, v::Integer) where {H<:AbstractDirectedHypergraph} = Graphs.outneighbors(t,v)
+Graphs.SimpleGraphs.badj(t::TwoSectionView{H}, v::Integer) where {H<:AbstractDirectedHypergraph} = Graphs.inneighbors(t,v)
 
 Graphs.edges(t::TwoSectionView) = Graphs.SimpleGraphs.SimpleEdgeIter(t)
 
 Graphs.edgetype(t::TwoSectionView) = Graphs.SimpleGraphs.SimpleEdge{Int}
 
-Graphs.zero(t::TwoSectionView{T, H}) where {T<:Real, H<:AbstractHypergraph} = TwoSectionView(H{T}(0,0))
-Graphs.zero(::Type{TwoSectionView{T, H}}) where {T<:Real, H<:AbstractHypergraph} = TwoSectionView(H{T}(0,0))
+Graphs.zero(t::TwoSectionView{H}) where {H<:AbstractHypergraph} = TwoSectionView(H(0,0))
+Graphs.zero(::Type{TwoSectionView{H}}) where {H<:AbstractHypergraph} = TwoSectionView(H(0,0))
 
 
 """
-    get_twosection_adjacency_mx(h::H{T}; count_self_loops::Bool=false,
-                                replace_weights::Union{Nothing,Real}=nothing ) where {H<:AbstractUndirectedHypergraph, T<:Real}
+    get_twosection_adjacency_mx(h::H; count_self_loops::Bool=false,
+                                replace_weights::Union{Nothing,Real}=nothing ) where {H<:AbstractUndirectedHypergraph}
 
 Returns an adjacency matrix for a two section view of a hypergraph `h`.
 """
 function get_twosection_adjacency_mx(
-    h::H{T};
+    h::H;
     count_self_loops::Bool=false,
     replace_weights::Union{Nothing,Real}=nothing
-    ) where {H<:AbstractUndirectedHypergraph, T<:Real}
+    ) where {H<:AbstractUndirectedHypergraph}
     mx = zeros(replace_weights === nothing ? T : typeof(replace_weights), nhv(h), nhv(h))
     for he in 1:nhe(h)
         for v1 in keys(h.he2v[he])
@@ -311,16 +311,16 @@ function get_twosection_adjacency_mx(
 end
 
 """
-    get_twosection_adjacency_mx(h::H{T}; count_self_loops::Bool=false,
-                                replace_weights::Union{Nothing,Real}=nothing) where {H<:AbstractDirectedHypergraph, T<:Real}
+    get_twosection_adjacency_mx(h::H; count_self_loops::Bool=false,
+                                replace_weights::Union{Nothing,Real}=nothing) where {H<:AbstractDirectedHypergraph}
 
 Returns an adjacency matrix for a two section view of a hypergraph `h`.
 """
 function get_twosection_adjacency_mx(
-    h::H{T};
+    h::H;
     count_self_loops::Bool=false,
     replace_weights::Union{Nothing,Real}=nothing
-    ) where {H<:AbstractDirectedHypergraph, T<:Real}
+    ) where {H<:AbstractDirectedHypergraph}
     mx = zeros(replace_weights === nothing ? Tuple{T,T} : typeof(replace_weights), nhv(h), nhv(h))
     for he in 1:nhe(h)
         for vt in keys(h.hg_tail.he2v[he])
