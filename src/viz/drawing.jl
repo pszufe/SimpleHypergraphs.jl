@@ -10,7 +10,7 @@ end
 
 """
     function draw(
-            h::Hypergraph,
+            h::H,
             type::Type{GraphBased};
             element::Union{String, Int}=get_next_div_id(),
             width::Int=500,
@@ -35,7 +35,7 @@ end
             with_he_labels::Bool=false,
             he_labels::Union{AbstractVector{String}, Nothing}=nothing,
             with_he_metadata_hover::Bool=false
-        )
+        ) where {H<:AbstractUndirectedHypergraph}
 
 Draw a hypergraph `h` in a web-based environment (e.g. Jupyter Notebook),
 using a js script based on the library (D3)[https://d3js.org/].
@@ -71,7 +71,7 @@ will be represented as a vertex (see above)
 
 """
 function draw(
-        h::Hypergraph,
+        h::H,
         type::Type{GraphBased};
         element::Union{String, Int}=get_next_div_id(),
         width::Int=500,
@@ -96,7 +96,7 @@ function draw(
         with_he_labels::Bool=false,
         he_labels::Union{AbstractVector{String}, Nothing}=nothing,
         with_he_metadata_hover::Bool=false
-    )
+    ) where {H<:AbstractUndirectedHypergraph}
 
     w = widget_graph(
         JSON3.write(h.v2he),
@@ -134,7 +134,7 @@ end
 
 """
     draw(
-        h::Hypergraph,
+        h::H,
         type::Type{HyperNetX};
         width::Int=10,
         height::Int=10,
@@ -157,7 +157,7 @@ end
         with_edge_labels::Bool=true,
         with_node_labels::Bool=true,
         label_alpha::Float64=.35
-        )
+        ) where {H<:AbstractUndirectedHypergraph}
 
  Draw a hypergraph `h` as an Euler diagram, using the library [HyperNetX](https://github.com/pnnl/HyperNetX).
 
@@ -176,7 +176,7 @@ end
 For more details about the other parameters, please refer to the library [HyperNetX](https://github.com/pnnl/HyperNetX).
 """
 function draw(
-        h::Hypergraph,
+        h::H,
         type::Type{HyperNetX};
         width::Int=10,
         height::Int=10,
@@ -199,7 +199,7 @@ function draw(
         with_edge_labels::Bool=true,
         with_node_labels::Bool=true,
         label_alpha::Float64=.35
-        )
+        ) where {H<:AbstractUndirectedHypergraph}
     if (!SimpleHypergraphs.support_hypernetx())
         throw("HyperNetX is not installed in Python used by this Julia. Install HyperNetX and reload SimpleHypergraphs.jl")
     end
