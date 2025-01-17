@@ -64,7 +64,7 @@ function random_model(
     nEdges::Int,
     HType::Type{H};
     no_self_loops::Bool=false
-) where {H<:AbstractUndirectedHypergraph}
+) where {H<:AbstractDirectedHypergraph}
     if no_self_loops && nVertices == 1
         # Impossible; all directed hyperedges with non-empty tails & heads will be self-loops
         error("Impossible to avoid self-loops in non-empty directed hyperedges in a directed hypergraph with one (1) vertex!")
@@ -281,9 +281,8 @@ The starting hypergraph can be instantiated as preferred.
 """
 function random_preferential_model(
     nVertices::Int,
-    p::Real,
-    HType::Type{H};
-    hg::HType = random_model(5,5, HType)
+    p::Real;
+    hg::H = random_model(5,5, H)
 ) where {H<:AbstractUndirectedHypergraph}
     while nhv(hg) < nVertices
         r = rand()
