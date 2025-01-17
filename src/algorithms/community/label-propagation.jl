@@ -11,7 +11,7 @@ end
 
 
 """
-    findcommunities(h::Hypergraph, method::CFLabelPropagationFinder)
+    findcommunities(h::H, method::CFLabelPropagationFinder) where {H<:AbstractUndirectedHypergraph}
 
 Implements the label propagation algorithm over a hypergraph `h`.
 
@@ -33,7 +33,7 @@ Vittorio Scarano, Carmine Spagnuolo, Przemyslaw Szufel
 *Analyzing, Exploring, and Visualizing Complex Networks via Hypergraphs Using SimpleHypergraphs.jl.*
 Journal Internet Mathematics (2020). https://doi.org/10.24166/im.01.2020
 """
-function findcommunities(h::Hypergraph, method::CFLabelPropagationFinder)
+function findcommunities(h::H, method::CFLabelPropagationFinder) where {H<:AbstractUndirectedHypergraph}
     @assert length(get_connected_components(h)) == 1
 
     rng = MersenneTwister(method.seed)
@@ -111,12 +111,24 @@ end
 
 
 """
-    compute_vertex_label(h::Hypergraph, v::Int, vlabels::Dict{Int,Int}, helabels::Dict{Int,Int}, rng::MersenneTwister)
+    compute_vertex_label(
+    h::H,
+    v::Int,
+    vlabels::Dict{Int,Int},
+    helabels::Dict{Int,Int},
+    rng::MersenneTwister
+    ) where {H<:AbstractUndirectedHypergraph}
 
 Vertices labeling phase. Computes the label of each vertex according to the most
 frequent label among the hyperedges it belongs to.
 """
-function compute_vertex_label(h::Hypergraph, v::Int, vlabels::Dict{Int,Int}, helabels::Dict{Int,Int}, rng::MersenneTwister)
+function compute_vertex_label(
+    h::H,
+    v::Int,
+    vlabels::Dict{Int,Int},
+    helabels::Dict{Int,Int},
+    rng::MersenneTwister
+) where {H<:AbstractUndirectedHypergraph}
     hesᵥ = gethyperedges(h, v)
     vL = Dict{Int,Int}()
 
@@ -153,12 +165,24 @@ end
 
 
 """
-    compute_edge_label(h::Hypergraph, e::Int, vlabels::Dict{Int,Int}, helabels::Dict{Int,Int}, rng::MersenneTwister)
+    compute_edge_label(
+    h::H, 
+    e::Int,
+    vlabels::Dict{Int,Int},
+    helabels::Dict{Int,Int},
+    rng::MersenneTwister
+) where {H<:AbstractUndirectedHypergraph}
 
 Hyperedges labeling phase. Computes the labels of the hyperedges according  to
 the  most frequent label among the vertices contained in that hyperedge.
 """
-function compute_edge_label(h::Hypergraph, e::Int, vlabels::Dict{Int,Int}, helabels::Dict{Int,Int}, rng::MersenneTwister)
+function compute_edge_label(
+    h::H, 
+    e::Int,
+    vlabels::Dict{Int,Int},
+    helabels::Dict{Int,Int},
+    rng::MersenneTwister
+) where {H<:AbstractUndirectedHypergraph}
     vₑ = getvertices(h,e)
     eL = Dict{Int,Int}()
 
