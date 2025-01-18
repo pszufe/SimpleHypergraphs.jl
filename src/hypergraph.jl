@@ -91,7 +91,7 @@ end
 
 Hypergraph{T,V,E}(n::Integer, k::Integer) where {T<:Real, V, E} = Hypergraph{T,V,E,Dict{Int,T}}(n, k)
 
-Hypergraph{T,V}(n::Integer, k::Integer; v_meta=Vector{Union{V,Nothing}}(nothing, n)) where {T<:Real, V} = Hypergraph{T,V,Nothing,Dict{Int,T}}(n, k; v_meta=v_meta)
+Hypergraph{T,V}(n::Integer, k::Integer) where {T<:Real, V} = Hypergraph{T,V,Nothing,Dict{Int,T}}(n, k)
 
 Hypergraph{T}(n::Integer, k::Integer) where {T<:Real} =  Hypergraph{T,Nothing,Nothing,Dict{Int,T}}(n, k)
 
@@ -398,25 +398,9 @@ struct DirectedHypergraph{T<:Real,V,E,D<:AbstractDict{Int, T}} <: AbstractDirect
     end
 end
 
-DirectedHypergraph{T,V,E}(
-    n::Integer, k::Integer;
-    v_meta::Vector{Union{Nothing,V}}=Vector{Union{Nothing,V}}(nothing, size(m,1)),
-    he_meta_tail::Vector{Union{Nothing,E}}=Vector{Union{Nothing,E}}(nothing, size(m,2)),
-    he_meta_head::Vector{Union{Nothing,E}}=Vector{Union{Nothing,E}}(nothing, size(m,2))
-    ) where {T<:Real, V, E} = DirectedHypergraph{T,V,E,Dict{Int,T}}(
-        n, k;
-        v_meta=v_meta,
-        he_meta_tail=he_meta_tail,
-        he_meta_head=he_meta_head
-    )
+DirectedHypergraph{T,V,E}(n::Integer, k::Integer) where {T<:Real, V, E} = DirectedHypergraph{T,V,E,Dict{Int,T}}(n, k)
 
-DirectedHypergraph{T,V}(
-    n::Integer, k::Integer;
-    v_meta::Vector{Union{Nothing,V}}=Vector{Union{Nothing,V}}(nothing, size(m,1)),
-    ) where {T<:Real, V} = DirectedHypergraph{T,V,Nothing,Dict{Int,T}}(
-        n, k;
-        v_meta=v_meta
-    )
+DirectedHypergraph{T,V}(n::Integer, k::Integer) where {T<:Real, V} = DirectedHypergraph{T,V,Nothing,Dict{Int,T}}(n, k)
 
 DirectedHypergraph{T,D}(n::Integer, k::Integer) where {T<:Real, D<:AbstractDict{Int, T}} = DirectedHypergraph{T,Nothing,Nothing,D}(n, k)
 
@@ -438,14 +422,12 @@ end
 
 function DirectedHypergraph{T,V,D}(
     hg_tail::BasicHypergraph{T,D},
-    hg_head::BasicHypergraph{T,D};
-    v_meta::Vector{Union{Nothing,V}}=Vector{Union{Nothing,V}}(nothing, size(m,1)),
+    hg_head::BasicHypergraph{T,D}
     ) where {T<:Real,V,D<:AbstractDict{Int, T}}
 
     DirectedHypergraph{T,V,Nothing,D}(
         hg_tail,
-        hg_head;
-        v_meta=v_meta
+        hg_head
     )
 end
 
@@ -466,7 +448,8 @@ function DirectedHypergraph{T,V,E,D}(
     if all(hg_tail.v_meta .== hg_head.v_meta)
         DirectedHypergraph{T,V,E,D}(shg_tail, shg_head; v_meta=hg_tail.v_meta, he_meta_tail=hg_tail.he_meta, he_meta_head=hg_head.he_meta)
     else
-        throw(ArgumentError("Vertex metadata `v_meta` is different for ingoing and head hypergraphs!"))
+        @warn "Vertex metadata for tail and head hypergraphs not identical; discarding vertex metadata."
+        DirectedHypergraph{T,V,E,D}(shg_tail, shg_head; he_meta_tail=hg_tail.he_meta, he_meta_head=hg_head.he_meta)
     end
 end
 

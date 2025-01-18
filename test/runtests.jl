@@ -18,7 +18,7 @@ h1[5,2] = 6.5
 
 @testset "SimpleHypergraphs Hypergraph             " begin
 
-    h = hg_load("data/test1.hgf"; T=Int)
+    h = hg_load("data/test1.hgf"; T=Int, HType=Hypergraph)
     @test size(h) == (4, 4)
     @test nhv(h) == 4
     @test nhe(h) == 4
@@ -64,7 +64,7 @@ h1[5,2] = 6.5
         end
 
         hg_save(path, h1; format=JSON_Format())
-        loaded_hg = hg_load(path; format=JSON_Format(), T=Float64, V=Int, E=String)
+        loaded_hg = hg_load(path; format=JSON_Format(), HType=Hypergraph, T=Float64, V=Int, E=String)
 
         @test h1 == loaded_hg
         @test h1.v_meta == loaded_hg.v_meta
@@ -172,7 +172,7 @@ end;
 @testset "SimpleHypergraphs BipartiteView          " begin
     h2 = deepcopy(h1)
 
-    @test Graphs.nv(Graphs.zero(BipartiteView{Int})) == 0
+    @test Graphs.nv(Graphs.zero(BipartiteView{Hypergraph{Int}})) == 0
 
     b = BipartiteView(h2)
     @test Graphs.edgetype(b) == Graphs.SimpleGraphs.SimpleEdge{Int}

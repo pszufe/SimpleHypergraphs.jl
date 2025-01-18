@@ -212,9 +212,10 @@ Skips a single initial comment.
 function hg_load(
     io::IO,
     format::HGF_Format;
+    HType::Type{H} = BasicHypergraph,
     T::Type{U} = Bool,
     D::Type{<:AbstractDict{Int, U}} = Dict{Int, T},
-) where {U <: Real}
+) where {U <: Real, H <: AbstractUndirectedHypergraph}
     line = readline(io)
 
     if startswith(line, "\"\"\"")
@@ -237,7 +238,7 @@ function hg_load(
     l = split(line)
     length(l) == 2 || throw(ArgumentError("expected two integers"))
     n, k = parse.(Int, l)
-    h = BasicHypergraph{T, D}(n, k)
+    h = HType{T, D}(n, k)
 
     for i in 1:k
         lastv = 0
@@ -293,32 +294,29 @@ function hg_load(
     ) where {H <: AbstractHypergraph, U <: Real}
     json_hg = JSON3.read(readline(io))
 
-    if HType in subtypes(AbstractUndirectedHypergraph)
+    if !isdirected(HType)
         m = reshape(JSON3.read(json_hg.m, Array{Union{T, Nothing}}), json_hg.n, json_hg.k)
 
-        if V != Nothing && E != Nothing
+        if V != Nothing && E != Nothing && hasmeta(HType)
             v_meta = JSON3.read(json_hg.v_meta, Array{Union{V, Nothing}})
             he_meta = JSON3.read(json_hg.he_meta, Array{Union{E, Nothing}})
-            h = Hypergraph{T, V, E, D}(m; v_meta=v_meta, he_meta=he_meta)
+            h = HType{T, V, E, D}(m; v_meta=v_meta, he_meta=he_meta)
         else
-            h = BasicHypergraph{T, D}(m)
-        end
-
-    elseif HType in subtypes(AbstractDirectedHypergraph)
-        m_tail = reshape(JSON3.read(json_hg.m_tail, Array{Union{T, Nothing}}), json_hg.n, json_hg.k)
-        m_head = reshape(JSON3.read(json_hg.m_head, Array{Union{T, Nothing}}), json_hg.n, json_hg.k)
-
-        if V != Nothing && E != Nothing
-            v_meta = JSON3.read(json_hg.v_meta, Array{Union{V, Nothing}})
-            he_meta_tail = JSON3.read(json_hg.he_meta_tail, Array{Union{E, Nothing}})
-            he_meta_head = JSON3.read(json_hg.he_meta_head, Array{Union{E, Nothing}})
-            h = DirectedHypergraph{T, V, E, D}(m_tail, m_head; v_meta=v_meta, he_meta_tail=he_meta_tail, he_meta_head=he_meta_head)
-        else
-            h = BasicDirectedHypergraph{T, D}(m_tail, m_head)
+            h = HType{T, D}(m)
         end
 
     else
-        error("Not implemented.")
+        m_tail = reshape(JSON3.read(json_hg.m_tail, Array{Union{T, Nothing}}), json_hg.n, json_hg.k)
+        m_head = reshape(JSON3.read(json_hg.m_head, Array{Union{T, Nothing}}), json_hg.n, json_hg.k)
+
+        if V != Nothing && E != Nothing && hasmeta(HType)
+            v_meta = JSON3.read(json_hg.v_meta, Array{Union{V, Nothing}})
+            he_meta_tail = JSON3.read(json_hg.he_meta_tail, Array{Union{E, Nothing}})
+            he_meta_head = JSON3.read(json_hg.he_meta_head, Array{Union{E, Nothing}})
+            h = HType{T, V, E, D}(m_tail, m_head; v_meta=v_meta, he_meta_tail=he_meta_tail, he_meta_head=he_meta_head)
+        else
+            h = HType{T, D}(m_tail, m_head)
+        end
     end
 
     h
@@ -355,13 +353,13 @@ function hg_load(
     T::Type{U} = Bool,
     D::Type{<:AbstractDict{Int, U}} = Dict{Int, T},
     V = Nothing,
-    E = Nothing) where {U <: Real, H <: AbstractHypergraph}
+    E = Nothing) where {U <: Real, H <: AbstractUndirectedHypergraph}
 
     if format == HGF_Format()
-        if HType == BasicHypergraph
+        if HType == BasicHypergraph || HType == Hypergraph
             open(io -> hg_load(io, format; T=T, D=D), fname, "r")
         else
-            error("HGF loading only implemented for BasicHypergraph")
+            error("HGF loading only implemented for BasicHypergraph and Hypergraph")
         end
     else
         open(io -> hg_load(io, format; HType=HType, T=T, D=D, V=V, E=E), fname, "r")

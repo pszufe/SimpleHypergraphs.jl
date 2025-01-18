@@ -11,6 +11,8 @@ using Random
 using LinearAlgebra
 using SimpleTraits
 
+export AbstractHypergraph, AbstractUndirectedHypergraph, AbstractDirectedHypergraph
+export isdirected, IsDirected, hasmeta, HasMeta
 export BasicHypergraph, Hypergraph, getvertices, gethyperedges
 export DirectedHypergraph, BasicDirectedHypergraph
 export add_vertex!, add_hyperedge!, remove_vertex!, remove_hyperedge!
