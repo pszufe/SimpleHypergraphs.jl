@@ -204,6 +204,10 @@ function BasicHypergraph{T,D}(m::AbstractMatrix{Union{T, Nothing}}) where {T<:Re
     h
 end
 
+function BasicHypergraph(m::AbstractMatrix{Union{T, Nothing}}) where {T<:Real}
+    BasicHypergraph{T,Dict{Int,T}}(m)
+end
+
 function BasicHypergraph{T}(m::AbstractMatrix{Union{T, Nothing}}) where {T<:Real}
     BasicHypergraph{T,Dict{Int,T}}(m)
 end
@@ -1951,6 +1955,29 @@ function get_strongly_connected_components(h::H) where {H <: AbstractDirectedHyp
     end
 
     [v for (k, v) in T if length(v) != 0]
+end
+
+"""
+    adjacency_matrix(M::AbstractMatrix{Union{T, Nothing}}; s::Int=1, weighted::Bool=false) where {T <: Real}
+
+The sparse weighted `s`-adjacency matrix.
+
+NOTE
+The concept of `s`-adjacency matrix has been firstly defined in the
+Python library [HyperNetX](https://github.com/pnnl/HyperNetX)
+
+From [HyperNetX](https://pnnl.github.io/HyperNetX/build/classes/classes.html#classes.hypergraph.Hypergraph.adjacency_matrix)
+If weighted is `true` each off diagonal cell will equal the number
+of edges shared by the nodes indexing the row and column if that number is
+greater than `s`, otherwise the cell will equal 0. If weighted is `false`,
+the off diagonal cell will equal 1 if the nodes indexed by the row and column
+share at least `s` edges and 0 otherwise.
+
+NOTE: information about the weight of a vertex in a hyperedge will be lost!
+
+"""
+function adjacency_matrix(M::AbstractMatrix{Union{T, Nothing}}; s::Int=1, weighted::Bool=true) where {T <: Real}
+    _incidence_to_adjacency(M; s=s, weighted=weighted)
 end
 
 """

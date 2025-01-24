@@ -281,7 +281,8 @@ The starting hypergraph can be instantiated as preferred.
 """
 function random_preferential_model(
     nVertices::Int,
-    p::Real;
+    p::Real,
+    HType::Type{H};
     hg::H = random_model(5,5, H)
 ) where {H<:AbstractUndirectedHypergraph}
     while nhv(hg) < nVertices

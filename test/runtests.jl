@@ -227,7 +227,7 @@ end;
     h1[5,5] = 1
     h1[6,5] = 1
 
-    @test Graphs.nv(Graphs.zero(TwoSectionView{Int})) == 0
+    @test Graphs.nv(Graphs.zero(TwoSectionView{BasicHypergraph{Int64}})) == 0
 
     t = TwoSectionView(h1)
     @test Graphs.edgetype(t) == Graphs.SimpleGraphs.SimpleEdge{Int}
@@ -277,31 +277,32 @@ end;
 
 @testset "SimpleHypergraphs random-models          " begin
 
-    Hᵣ = random_model(5,5)
+    Hᵣ = random_model(5, 5, BasicHypergraph)
     @test nhv(Hᵣ) == 5
     @test nhe(Hᵣ) == 5
     @test  all(length.(Hᵣ.v2he) .> 0)
     @test  all(length.(Hᵣ.v2he) .<= 5)
 
-    Hᵣ2 = random_model(5,0)
+    Hᵣ2 = random_model(5, 0, BasicHypergraph)
     add_hyperedge!(Hᵣ2;vertices=Dict(2 => true, 4 => true))
     @test nhv(Hᵣ2) == 5
     @test nhe(Hᵣ2) == 1
 
-    Hᵣ3  = random_model(5,1)
+    Hᵣ3  = random_model(5,1,BasicHypergraph)
     @test nhe(Hᵣ3) == 1
 
-    Hκ = random_kuniform_model(5, 5, 3)
+    Hκ = random_kuniform_model(5, 5, 3, BasicHypergraph)
     @test nhv(Hκ) == 5
     @test nhe(Hκ) == 5
     @test all(length.(Hκ.he2v) .== 3)
 
-    Hδ = random_dregular_model(5, 5, 3)
+    Hδ = random_dregular_model(5, 5, 3, BasicHypergraph)
     @test nhv(Hδ) == 5
     @test nhe(Hδ) == 5
     @test all(length.(Hδ.v2he) .== 3)
 
-    H∂ = random_preferential_model(20, 0.5)
+    # TODO: you are here
+    H∂ = random_preferential_model(20, 0.5, BasicHypergraph)
     @test nhv(H∂) == 20
 end;
 

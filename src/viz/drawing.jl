@@ -1,6 +1,9 @@
 struct GraphBased end
 struct HyperNetX end
 
+# TODO: Upgrade to HyperNetX v2
+# Apparently there are incompatibilities, e.g., with Entity
+
 let div_id = 0
     global get_next_div_id
     function get_next_div_id()
