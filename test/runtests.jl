@@ -168,7 +168,7 @@ end;
 
 end;
 
-
+# TODO: directed hypergraph bipartite view
 @testset "SimpleHypergraphs BipartiteView          " begin
     h2 = deepcopy(h1)
 
@@ -216,6 +216,7 @@ end;
 end;
 
 
+# TODO: directed hypergraph twosectionview
 @testset "SimpleHypergraphs TwoSectionView         " begin
 
     ht = Hypergraph{Float64}(3,3)
@@ -274,7 +275,7 @@ end;
     @test Graphs.SimpleGraphs.fadj(g) == Graphs.SimpleGraphs.fadj(TwoSectionView(h_from_g))
 end;
 
-
+# TODO: random models for directed hypergraphs
 @testset "SimpleHypergraphs random-models          " begin
 
     Hᵣ = random_model(5, 5, BasicHypergraph)
@@ -403,7 +404,7 @@ end
     #@test comms.helabels == [4, 7, -1]
 end;
 
-
+# TODO: for directed hypergraph
 @testset "SimpleHypergraphs randomwalk             " begin
     h1 = Hypergraph{Float64}(5,4)
     h1[1:3,1] .= 1.5
@@ -427,7 +428,7 @@ end;
     @test_throws ArgumentError random_walk(h1, 0)
 end
 
-
+# TODO: strongly and weakly connected components for directed hypergraph
 @testset "SimpleHypergraphs connected components" begin
     bip = Graphs.SimpleGraph(BipartiteView(h1))
     cc = Graphs.connected_components(bip)
@@ -510,7 +511,7 @@ end;
   @test_throws ErrorException SimpleHypergraphs.conductance(h, Set(1:nhv(h)))
 end;
 
-
+# TODO: directed hypergraph dual
 @testset "SimpleHypergraphs dual                   " begin
     m = [
           1         nothing   nothing   4
@@ -605,3 +606,6 @@ end;
     @test distance(h, SedgeDistanceDijkstra(2, 3, 3)) == 1
     @test distance(h, SedgeDistanceDijkstra(1, 3, 3)) == typemax(Int)
 end;
+
+# TODO: directed hypergraph IO
+# Including new file format

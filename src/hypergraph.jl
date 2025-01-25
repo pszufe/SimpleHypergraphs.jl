@@ -1,5 +1,6 @@
 # TODO: think more carefully about ensuring that metadata vectors are of appropriate lengths
 # TODO: use haskey instead of x in keys(...)
+# TODO: Don't allow empty hyperedges, heads, tails
 
 """
     Hypergraph{T} <: AbstractUndirectedHypergraph{T}
@@ -374,8 +375,8 @@ struct DirectedHypergraph{T<:Real,V,E,D<:AbstractDict{Int, T}} <: AbstractDirect
         he_meta_head=Vector{Union{E, Nothing}}(nothing, k)
         ) where {T<:Real,V,E,D<:AbstractDict{Int, T}} = 
         new{T,V,E,D}(
-            BasicHypergraph(n, k),
-            BasicHypergraph(n, k),
+            BasicHypergraph{T,D}(n, k),
+            BasicHypergraph{T,D}(n, k),
             v_meta, he_meta_tail, he_meta_head
         )
 
@@ -661,8 +662,8 @@ struct BasicDirectedHypergraph{T<:Real,D<:AbstractDict{Int, T}} <: AbstractDirec
         n::Integer, k::Integer,
         ) where {T<:Real,D<:AbstractDict{Int, T}} =
         new{T,D}(
-            BasicHypergraph(n, k),
-            BasicHypergraph(n, k)
+            BasicHypergraph{T,D}(n, k),
+            BasicHypergraph{T,D}(n, k)
         )
 
     function BasicDirectedHypergraph{T,D}(

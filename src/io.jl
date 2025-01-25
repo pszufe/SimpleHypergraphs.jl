@@ -2,13 +2,16 @@
 
 abstract type Abstract_HG_format end
 struct HGF_Format <: Abstract_HG_format end
+struct EHGF_Format <: Abstract_HG_format end
 struct JSON_Format <: Abstract_HG_format end
 
 
 """
-    hg_save(io::IO, h::Union{Hypergraph, BasicHypergraph}, format::HGF_Format)
+    hg_save(io::IO, h::H, format::HGF_Format) where {H <: AbstractUndirectedHypergraph}
 
 Saves an undirected hypergraph `h` to an output stream `io` in `hgf` format.
+
+TODO: what to do about metadata?
 
 """
 function hg_save(io::IO, h::H, format::HGF_Format) where {H <: AbstractUndirectedHypergraph}
@@ -16,6 +19,35 @@ function hg_save(io::IO, h::H, format::HGF_Format) where {H <: AbstractUndirecte
     for he in h.he2v
         skeys = sort(collect(keys(he)))
         println(io, join(["$k=$(he[k])" for k in skeys], ' '))
+    end
+end
+
+
+"""
+    hg_save(io::IO, h::H, format::EHGF_Format) where {H <: AbstractDirectedHypergraph}
+
+Saves an undirected hypergraph `h` to an output stream `io` in `ehgf` format.
+
+TODO: what to do about metadata?
+
+"""
+function hg_save(io::IO, h::H, format::EHGF_Format) where {H <: AbstractDirectedHypergraph}
+    
+    h_size = Base.size(h)
+    
+    println(io, h_size[1], " ", h_size[2])
+    for i in 1:h_size[2]
+        tail_keys = sort(collect(keys(h.hg_tail.he2v[i])))
+        head_keys = sort(collect(keys(h.hg_head.he2v[i])))
+        print(
+            io, 
+            join(["$k=$(h.hg_tail.he2v[i][k])" for k in tail_keys], ' ')
+        )
+        print(io, " || ")
+        print(
+            io,
+            join(["$k=$(h.hg_head.he2v[i][k])" for k in head_keys], ' ')
+        )
     end
 end
 
@@ -187,17 +219,18 @@ The default saving format is `hgf`.
 """
 hg_save(
     fname::AbstractString, h::AbstractHypergraph;
-    format::Abstract_HG_format=HGF_Format()) =
-    open(io -> hg_save(io, h, format), fname, "w")
+    format::Abstract_HG_format=HGF_Format()
+    ) = open(io -> hg_save(io, h, format), fname, "w")
 
 
 """
     hg_load(
         io::IO,
         format::HGF_Format;
+        HType::Type{H} = BasicHypergraph,
         T::Type{U} = Bool,
-        D::Type{<:AbstractDict{Int, U}} = Dict{Int,U},
-    ) where {U <: Real}
+        D::Type{<:AbstractDict{Int, U}} = Dict{Int, T},
+    ) where {U <: Real, H <: AbstractUndirectedHypergraph}
 
 Loads a hypergraph from a stream `io` from `hgf` format.
 
@@ -260,6 +293,100 @@ function hg_load(
     h
 end
 
+
+"""
+    hg_load(
+        io::IO,
+        format::EHGF_Format;
+        HType::Type{H} = BasicDirectedHypergraph,
+        T::Type{U} = Bool,
+        D::Type{<:AbstractDict{Int, U}} = Dict{Int, T},
+    ) where {U <: Real, H <: AbstractDirectedHypergraph}
+
+Loads a hypergraph from a stream `io` from `ehgf` format.
+
+**Arguments**
+
+* `T` : type of weight values stored in the hypergraph's adjacency matrix
+* `D` : dictionary for storing values the default is `Dict{Int, T}`
+
+Skips a single initial comment.
+
+"""
+function hg_load(
+    io::IO,
+    format::EHGF_Format;
+    HType::Type{H} = BasicDirectedHypergraph,
+    T::Type{U} = Bool,
+    D::Type{<:AbstractDict{Int, U}} = Dict{Int, T},
+) where {U <: Real, H <: AbstractDirectedHypergraph}
+    line = readline(io)
+
+    if startswith(line, "\"\"\"")
+      singleline = true
+        while(
+            !( (!singleline && endswith(line, "\"\"\"")) ||
+            (singleline && endswith(line, "\"\"\"") && length(line)>5)
+            ) &&
+            !eof(io)
+            )
+                line = readline(io)
+                singleline = false
+        end
+        if eof(io)
+            throw(ArgumentError("malformed input"))
+        end
+       line = readline(io)
+    end
+
+    l = split(strip(line))
+    length(l) == 2 || throw(ArgumentError("expected two integers"))
+    n, k = parse.(Int, l)
+    h = HType{T, D}(n, k)
+
+    for i in 1:k
+        lastv = 0
+
+        ht = split(readline(io), " || ")
+        length(ht) == 2 || throw(ArgumentError("Expected one head and one tail!"))
+
+        he_tail, he_head = ht
+        
+        for pos in split.(strip.(he_tail))
+            entry = split(pos, '=')
+            length(entry) == 2 || throw(ArgumentError("Expected format: vertex=weight"))
+
+            v = parse(Int, entry[1])
+            w = parse(T, entry[2])
+
+            if v > lastv
+                lastv = v
+            else
+                throw(ArgumentError("Vertices in hyperedge must be sorted!"))
+            end
+            h.hg_tail[v, i] = w
+        end
+
+        lastv = 0
+        for pos in split.(strip.(he_head))
+            entry = split(pos, '=')
+            length(entry) == 2 || throw(ArgumentError("Expected format: vertex=weight"))
+
+            v = parse(Int, entry[1])
+            w = parse(T, entry[2])
+
+            if v > lastv
+                lastv = v
+            else
+                throw(ArgumentError("Vertices in hyperedge must be sorted!"))
+            end
+            h.hg_head[v, i] = w
+        end
+
+    end
+    # we ignore lines beyond k+1 in the file
+    h
+end
 
 
 """
@@ -329,10 +456,10 @@ end
         format::Abstract_HG_format = HGF_Format(),
         HType::Type{H} = BasicHypergraph,
         T::Type{U} = Bool,
-        D::Type{<:AbstractDict{Int, U}} = Dict{Int,U},
+        D::Type{<:AbstractDict{Int, U}} = Dict{Int, T},
         V = Nothing,
-        E = Nothing) where {U <: Real}
-    )
+        E = Nothing
+    ) where {U <: Real, H <: AbstractHypergraph}
 
 Loads a hypergraph from a file `fname`.
 The default saving format is `hgf`.
@@ -347,19 +474,26 @@ The default saving format is `hgf`.
 
 """
 function hg_load(
-    fname::AbstractString;
-    format::Abstract_HG_format = HGF_Format(),
-    HType::Type{H} = BasicHypergraph,
-    T::Type{U} = Bool,
-    D::Type{<:AbstractDict{Int, U}} = Dict{Int, T},
-    V = Nothing,
-    E = Nothing) where {U <: Real, H <: AbstractUndirectedHypergraph}
+        fname::AbstractString;
+        format::Abstract_HG_format = HGF_Format(),
+        HType::Type{H} = BasicHypergraph,
+        T::Type{U} = Bool,
+        D::Type{<:AbstractDict{Int, U}} = Dict{Int, T},
+        V = Nothing,
+        E = Nothing
+    ) where {U <: Real, H <: AbstractHypergraph}
 
     if format == HGF_Format()
         if HType == BasicHypergraph || HType == Hypergraph
             open(io -> hg_load(io, format; T=T, D=D), fname, "r")
         else
             error("HGF loading only implemented for BasicHypergraph and Hypergraph")
+        end
+    elseif format == EHGF_Format()
+        if HType == BasicDirectedHypergraph || HType == DirectedHypergraph
+            open(io -> hg_load(io, format; T=T, D=D), fname, "r")
+        else
+            error("EHGF loading only implemented for BasicDirectedHypergraph and DirectedHypergraph")
         end
     else
         open(io -> hg_load(io, format; HType=HType, T=T, D=D, V=V, E=E), fname, "r")

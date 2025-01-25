@@ -27,7 +27,7 @@ export get_twosection_adjacency_mx, get_twosection_weighted_adjacency_mx
 export dual
 export random_model, random_kuniform_model, random_dregular_model, random_preferential_model
 
-export Abstract_HG_format, HGF_Format, JSON_Format
+export Abstract_HG_format, HGF_Format, EHGF_Format, JSON_Format
 export hg_load, hg_save
 
 export modularity
