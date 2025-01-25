@@ -826,7 +826,7 @@ end
 
 
 """
-    Base.setindex!(h::Union{DirectedHypergraph, BasicDirectedHypergraph}, ::Nothing, idx::Vararg{Int,2})
+    Base.setindex!(h::H, ::Nothing, idx::Vararg{Int,2}) where {H <: AbstractDirectedHypergraph}
 
 Removes a vertex from a given hyperedge for a directed hypergraph `h` and a given vertex-hyperedge pair `idx`.
 Note that trying to remove a vertex from a hyperedge when it is not present will not throw an error.

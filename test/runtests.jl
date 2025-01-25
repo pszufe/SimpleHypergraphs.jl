@@ -7,6 +7,7 @@ using Random
 using DataStructures
 import Graphs
 
+
 h1 = Hypergraph{Float64, Int, String}(5,4)
 h1[1:3,1] .= 1.5
 h1[3,4] = 2.5
@@ -14,6 +15,8 @@ h1[2,3] = 3.5
 h1[4,3:4] .= 4.5
 h1[5,4] = 5.5
 h1[5,2] = 6.5
+
+h1_basic = BasicHypergraph{Float64}(h1)
 
 
 @testset "SimpleHypergraphs Hypergraph             " begin
@@ -157,7 +160,101 @@ h1[5,2] = 6.5
 end;
 
 @testset "SimpleHypergraphs BasicHypergraph        " begin
+    h = hg_load("data/test1.hgf"; T=Int, HType=BasicHypergraph)
+    @test size(h) == (4, 4)
+    @test nhv(h) == 4
+    @test nhe(h) == 4
+    m = Matrix(h)
+    @test m == h
+    @test h == [1       nothing 4       nothing
+                2       3       nothing nothing
+                nothing nothing 5       nothing
+                nothing nothing 6       nothing]
+    mktemp("data") do path, _
+        println(path)
+        hg_save(path, h)
 
+        loaded_hg = replace(read(path, String), r"\n*$" => "")
+
+        @test loaded_hg ==
+            reduce(replace,
+                ["\r\n"=>"\n",
+                r"^\"\"\"(?s).*\"\"\"\n"=>"", #remove initial comments
+                r"\n*$"=>""], #remove final \n*
+                init=read("data/test1.hgf", String)) #no comments
+
+        @test loaded_hg ==
+            reduce(replace,
+                ["\r\n"=>"\n",
+                r"^\"\"\"(?s).*\"\"\"\n"=>"", #remove initial comments
+                r"\n*$"=>""], #remove final \n*
+                init=read("data/test_singlelinecomment.hgf", String)) #single line comment
+
+        @test loaded_hg ==
+            reduce(replace,
+                ["\r\n"=>"\n",
+                r"^\"\"\"(?s).*\"\"\"\n"=>"", #remove initial comments
+                r"\n*$"=>""], #remove final \n*
+                init=read("data/test_multiplelinescomment.hgf", String)) #multiple lines comment
+
+        hg_save(path, h1_basic; format=JSON_Format())
+        loaded_hg = hg_load(path; format=JSON_Format(), HType=BasicHypergraph, T=Float64)
+
+        @test h1_basic == loaded_hg
+
+    end
+
+    h2 = BasicHypergraph{Float64}(0,0)
+    @test h2 == BasicHypergraph{Float64, Dict{Int,Float64}}(0,0)
+
+    h3 = BasicHypergraph(0,0)
+    @test h3 == BasicHypergraph{Bool, Dict{Int, Bool}}(0,0)
+
+    for i in 1:4 add_vertex!(h2) end
+    add_hyperedge!(h2;vertices=Dict(1:3 .=> 1.5))
+    add_hyperedge!(h2)
+    add_vertex!(h2;hyperedges=Dict(2=>6.5))
+    add_hyperedge!(h2;vertices=Dict(2 => 3.5, 4 => 4.5))
+    add_hyperedge!(h2;vertices=Dict(3:5 .=> (2.5,4.5,5.5)))
+    @test h1_basic == h2
+    m = Matrix(h1)
+    @test  m == Matrix(h2)
+    @test h1_basic == Hypergraph(m)
+    @test h1_basic == Hypergraph{Float64}(m)
+    @test h1_basic == Hypergraph{Float64,Dict{Int,Float64}}(m)
+    @test all(Matrix(h1_basic) .== Matrix(Hypergraph{Float64, SortedDict{Int,Float64}}(m)))
+    @test getindex(h1_basic,3,1) == 1.5
+
+    h5 = BasicHypergraph{Float64,SortedDict{Int,Float64}}(1,1)
+    @test typeof(h5.v2he[1]) <: SortedDict{Int,Float64}
+    @test typeof(h5.he2v[1]) <: SortedDict{Int,Float64}
+    @test add_vertex!(h5) == 2
+    @test add_hyperedge!(h5) == 2
+    h5 .= [1.0 2.0;3.0 4.0]
+    @test h5[2,2] == 4
+
+    h1_0 = deepcopy(h1_basic)
+    @test add_vertex!(h1_0) == 6
+    h1_0[6,:] = h1_0[5,:]
+    @test remove_vertex!(h1_0,5) == h1_basic
+    setindex!(h1_0, nothing, 1, 1)
+    @test h1_0[1,1] === nothing
+    @test_throws BoundsError setindex!(h1_0, nothing, 10, 9)
+
+    h1_1 = BasicHypergraph([nothing nothing nothing nothing
+                       1       1       nothing nothing
+                       nothing nothing 1       nothing
+                       nothing nothing 1       nothing])
+    @test add_hyperedge!(h1_1) == 5
+    @test size(remove_hyperedge!(h1_1, 5))[2] == 4
+    @test add_vertex!(h1_1) == 5
+    @test add_hyperedge!(h1_1) == 5
+    hp = prune_hypergraph(h1_1)
+    @test size(hp)[1] == 3 && size(h)[1] == 4
+    @test size(hp)[2] == 3 && size(h)[1] == 4
+    prune_hypergraph!(h1_1)
+    @test size(h1_1)[1] == 3
+    @test size(h1_1)[2] == 3
 end;
 
 @testset "SimpleHypergraphs DirectedHypergraph     " begin
