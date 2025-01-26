@@ -360,7 +360,7 @@ an error if the vertex metadata of the two hypergraphs is not element-for-elemen
     the directed hypergraph
 """
 
-struct DirectedHypergraph{T<:Real,V,E,D<:AbstractDict{Int, T}} <: AbstractDirectedHypergraph{Tuple{T, T}}
+struct DirectedHypergraph{T<:Real,V,E,D<:AbstractDict{Int, T}} <: AbstractDirectedHypergraph{T}
     hg_tail::BasicHypergraph{T,D}
     hg_head::BasicHypergraph{T,D}
 
@@ -654,7 +654,7 @@ verticies.
 * `hg_head`: an undirected hypergraph representing the head half of
     the directed hypergraph
 """
-struct BasicDirectedHypergraph{T<:Real,D<:AbstractDict{Int, T}} <: AbstractDirectedHypergraph{Tuple{T, T}}
+struct BasicDirectedHypergraph{T<:Real,D<:AbstractDict{Int, T}} <: AbstractDirectedHypergraph{T}
     hg_tail::BasicHypergraph{T,D}
     hg_head::BasicHypergraph{T,D}
 
@@ -835,8 +835,8 @@ Note that trying to remove a vertex from a hyperedge when it is not present will
 @inline function Base.setindex!(h::H, ::Nothing, idx::Vararg{Int,2}) where {H <: AbstractDirectedHypergraph}
     @boundscheck checkbounds(h.hg_tail, idx...)
     @boundscheck checkbounds(h.hg_head, idx...)
-    setindex!(h.hg_tail, nothing, idx)
-    setindex!(h.hg_head, nothing, idx)
+    setindex!(h.hg_tail, nothing, idx...)
+    setindex!(h.hg_head, nothing, idx...)
     h
 end
 
@@ -852,8 +852,8 @@ Adds a vertex to a hyperedge (represented by indices `idx`) and assigns value
     @boundscheck checkbounds(h.hg_tail, idx...)
     @boundscheck checkbounds(h.hg_head, idx...)
 
-    setindex!(h.hg_tail, v, idx)
-    setindex!(h.hg_head, v, idx)
+    setindex!(h.hg_tail, v, idx...)
+    setindex!(h.hg_head, v, idx...)
     h
 end
 
@@ -874,8 +874,8 @@ vertex will be removed from that side of the hyperedge.
     @boundscheck checkbounds(h.hg_tail, idx...)
     @boundscheck checkbounds(h.hg_head, idx...)
     
-    setindex!(h.hg_tail, v[1], idx)
-    setindex!(h.hg_head, v[2], idx)
+    setindex!(h.hg_tail, v[1], idx...)
+    setindex!(h.hg_head, v[2], idx...)
 
     h
 end
@@ -901,7 +901,7 @@ Note that trying to remove a vertex from a hyperedge when it is not present will
     
     @boundscheck checkbounds(side, idx[2:end]...)
     
-    setindex!(side, nothing, idx[2:end])
+    setindex!(side, nothing, idx[2], idx[3])
 
     h
 end
@@ -926,10 +926,68 @@ Adds a vertex to a hyperedge (represented by indices `idx`, where the first inde
     
     @boundscheck checkbounds(side, idx[2:end]...)
     
-    setindex!(side, v, idx[2:end])
+    setindex!(side, v, idx[2]..., idx[3]...)
 
     h
 end
+
+# """
+#     Base.setindex!(
+#         h::H,
+#         v::Real,
+#         idx::Vararg{Union{Int, AbstractArray{Int}, AbstractUnitRange{Int}}, 3}
+#     ) where {H <: AbstractDirectedHypergraph}
+
+# Adds a vertex to a hyperedge (represented by indices `idx`, where the first index must be either
+# 1 - referring to an tail hyperedge - or 2 - referring to an head hyperedge) and assigns value
+# `v` to be stored with that assignment.
+
+# """
+# @inline function Base.setindex!(
+#     h::H,
+#     v::Real,
+#     idx::Vararg{Union{Int, AbstractArray{Int}, AbstractUnitRange{Int}}, 3}
+# ) where {H <: AbstractDirectedHypergraph}
+#     @boundscheck checkbounds(DIRECTED_HYPERGRAPH_VALID_FIRST_INDICES, idx[1])
+
+#     if idx[1] isa Number
+#         sides = [idx[1]]
+#     else
+#         sides = idx[1]
+#     end
+
+#     if idx[2] isa Number
+#         rowinds = [idx[2]]
+#     else
+#         rowinds = idx[2]
+#     end
+
+#     if idx[3] isa Number
+#         colinds = [idx[3]]
+#     else
+#         colinds = idx[3]
+#     end
+
+#     for side in sides
+#         if side == 1
+#             for i in rowinds
+#                 for j in colinds
+#                     @boundscheck checkbounds(h.hg_tail, [i, j]...)
+#                     setindex!(h.hg_tail, v, i, j)
+#                 end
+#             end
+#         elseif side == 2
+#             for i in rowinds
+#                 for j in colinds
+#                     @boundscheck checkbounds(h.hg_head, [i, j]...)
+#                     setindex!(h.hg_head, v, i, j)
+#                 end
+#             end
+#         end
+#     end
+
+#     h
+# end
 
 
 """

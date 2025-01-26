@@ -48,6 +48,7 @@ function hg_save(io::IO, h::H, format::EHGF_Format) where {H <: AbstractDirected
             io,
             join(["$k=$(h.hg_head.he2v[i][k])" for k in head_keys], ' ')
         )
+        print(io, "\n")
     end
 end
 
@@ -485,13 +486,13 @@ function hg_load(
 
     if format == HGF_Format()
         if HType == BasicHypergraph || HType == Hypergraph
-            open(io -> hg_load(io, format; T=T, D=D), fname, "r")
+            open(io -> hg_load(io, format; HType=HType, T=T, D=D), fname, "r")
         else
             error("HGF loading only implemented for BasicHypergraph and Hypergraph")
         end
     elseif format == EHGF_Format()
         if HType == BasicDirectedHypergraph || HType == DirectedHypergraph
-            open(io -> hg_load(io, format; T=T, D=D), fname, "r")
+            open(io -> hg_load(io, format; HType=HType, T=T, D=D), fname, "r")
         else
             error("EHGF loading only implemented for BasicDirectedHypergraph and DirectedHypergraph")
         end

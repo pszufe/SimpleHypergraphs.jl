@@ -5,21 +5,21 @@ An abstract hypergraph type storing information about vertices and hyperedges.
 """
 # TODO: should this be just `abstract type AbstractHypergraph{T} end`?
 # How important is subtyping AbstractMatrix?
-abstract type AbstractHypergraph{T} <: AbstractMatrix{Union{T, Nothing}} end
+abstract type AbstractHypergraph{T} <: AbstractMatrix{T} end
 
 """
     AbstractUndirectedHypergraph{T} <: AbstractHypergraph{T}
 
 An abstract undirected hypergraph type storing information about vertices and hyperedges.
 """
-abstract type AbstractUndirectedHypergraph{T} <: AbstractHypergraph{T} end
+abstract type AbstractUndirectedHypergraph{T} <: AbstractHypergraph{Union{T, Nothing}} end
 
 """
     AbstractDirectedHypergraph{T} <: AbstractHypergraph{T}
 
 An abstract directed hypergraph type storing information about vertices and hyperedges.
 """
-abstract type AbstractDirectedHypergraph{T} <: AbstractHypergraph{T} end
+abstract type AbstractDirectedHypergraph{T} <: AbstractHypergraph{Tuple{Union{T, Nothing}, Union{T, Nothing}}} end
 
 # TODO: interface, similar to Graphs.jl
 
