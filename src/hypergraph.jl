@@ -383,9 +383,9 @@ struct DirectedHypergraph{T<:Real,V,E,D<:AbstractDict{Int, T}} <: AbstractDirect
     function DirectedHypergraph{T,V,E,D}(
         hg_tail::BasicHypergraph{T,D},
         hg_head::BasicHypergraph{T,D};
-        v_meta::Vector{Union{Nothing,V}}=Vector{Union{Nothing,V}}(nothing, size(m,1)),
-        he_meta_tail::Vector{Union{Nothing,E}}=Vector{Union{Nothing,E}}(nothing, size(m,2)),
-        he_meta_head::Vector{Union{Nothing,E}}=Vector{Union{Nothing,E}}(nothing, size(m,2))
+        v_meta::Vector{Union{Nothing,V}}=Vector{Union{Nothing,V}}(nothing, size(hg_tail,1)),
+        he_meta_tail::Vector{Union{Nothing,E}}=Vector{Union{Nothing,E}}(nothing, size(hg_tail,2)),
+        he_meta_head::Vector{Union{Nothing,E}}=Vector{Union{Nothing,E}}(nothing, size(hg_tail,2))
         ) where {T<:Real,V,E,D<:AbstractDict{Int, T}}
         @assert size(hg_tail) == size(hg_head)
 
@@ -462,10 +462,12 @@ end
 function DirectedHypergraph{T,V,E,D}(
         m_tail::AbstractMatrix{Union{T, Nothing}},
         m_head::AbstractMatrix{Union{T, Nothing}};
-        v_meta::Vector{Union{Nothing,V}}=Vector{Union{Nothing,V}}(nothing, size(m,1)),
-        he_meta_tail::Vector{Union{Nothing,E}}=Vector{Union{Nothing,E}}(nothing, size(m,2)),
-        he_meta_head::Vector{Union{Nothing,E}}=Vector{Union{Nothing,E}}(nothing, size(m,2))
+        v_meta::Vector{Union{Nothing,V}}=Vector{Union{Nothing,V}}(nothing, size(m_tail,1)),
+        he_meta_tail::Vector{Union{Nothing,E}}=Vector{Union{Nothing,E}}(nothing, size(m_tail,2)),
+        he_meta_head::Vector{Union{Nothing,E}}=Vector{Union{Nothing,E}}(nothing, size(m_tail,2))
     ) where {T<:Real,V,E,D<:AbstractDict{Int,T}}
+
+    # TODO: ensure that sizes of matrices identical?
 
     # Arbitrary, since sizes are identical
     n, k = size(m_tail)
@@ -487,9 +489,9 @@ end
 function DirectedHypergraph{T,V,E}(
     m_tail::AbstractMatrix{Union{T, Nothing}},
     m_head::AbstractMatrix{Union{T, Nothing}};
-    v_meta::Vector{Union{Nothing,V}}=Vector{Union{Nothing,V}}(nothing, size(m,1)),
-    he_meta_tail::Vector{Union{Nothing,E}}=Vector{Union{Nothing,E}}(nothing, size(m,2)),
-    he_meta_head::Vector{Union{Nothing,E}}=Vector{Union{Nothing,E}}(nothing, size(m,2))
+    v_meta::Vector{Union{Nothing,V}}=Vector{Union{Nothing,V}}(nothing, size(m_tail,1)),
+    he_meta_tail::Vector{Union{Nothing,E}}=Vector{Union{Nothing,E}}(nothing, size(m_tail,2)),
+    he_meta_head::Vector{Union{Nothing,E}}=Vector{Union{Nothing,E}}(nothing, size(m_tail,2))
 ) where {T<:Real,V,E}
 
     # Arbitrary, since sizes are identical
@@ -512,7 +514,7 @@ end
 function DirectedHypergraph{T,V}(
     m_tail::AbstractMatrix{Union{T, Nothing}},
     m_head::AbstractMatrix{Union{T, Nothing}};
-    v_meta::Vector{Union{Nothing,V}}=Vector{Union{Nothing,V}}(nothing, size(m,1)),
+    v_meta::Vector{Union{Nothing,V}}=Vector{Union{Nothing,V}}(nothing, size(m_tail,1)),
 ) where {T<:Real,V}
 
     # Arbitrary, since sizes are identical

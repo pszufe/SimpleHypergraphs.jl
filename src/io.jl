@@ -434,8 +434,8 @@ function hg_load(
         end
 
     else
-        m_tail = reshape(JSON3.read(json_hg.m_tail, Array{Union{T, Nothing}}), json_hg.n, json_hg.k)
-        m_head = reshape(JSON3.read(json_hg.m_head, Array{Union{T, Nothing}}), json_hg.n, json_hg.k)
+        m_tail = reshape(JSON3.read(json_hg.tail, Array{Union{T, Nothing}}), json_hg.n, json_hg.k)
+        m_head = reshape(JSON3.read(json_hg.head, Array{Union{T, Nothing}}), json_hg.n, json_hg.k)
 
         if V != Nothing && E != Nothing && hasmeta(HType)
             v_meta = JSON3.read(json_hg.v_meta, Array{Union{V, Nothing}})

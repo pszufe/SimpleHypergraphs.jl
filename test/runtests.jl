@@ -18,17 +18,17 @@ h1[5,2] = 6.5
 
 h1_basic = BasicHypergraph{Float64}(h1)
 
-dh1 = DirectedHypergraph{Float64, Int, String}(7,5)
+dh1 = DirectedHypergraph{Float64, Int, String}(7,6)
 dh1[1,1,1] = 1.0
 dh1.hg_head[2:3,1] .= 2.5  # Assignment on a directed hypergraph directly with slices is currently awkward
-dh1[1,3,2] = 4.0
-dh1[2,4,2] = 5.5
-dh1[1,5,3] = 7.0
-dh1[2,6,3] = 8.5
-dh1[1,6,4] = 10.0
-dh1[2,7,4] = -1.5
-dh1[1,7,5] = 0.0
-dh1[2,5,5] = 1.5
+dh1[1,3,3] = 4.0
+dh1[2,4,3] = 5.5
+dh1[1,5,4] = 7.0
+dh1[2,6,4] = 8.5
+dh1[1,6,5] = 10.0
+dh1[2,7,5] = -1.5
+dh1[1,7,6] = 0.0
+dh1[2,5,6] = 1.5
 
 dh1_basic = BasicDirectedHypergraph{Float64}(dh1.hg_tail, dh1.hg_head)
 
@@ -314,54 +314,61 @@ end;
                 init=read("data/multilinecomment.ehgf", String)) #multiple lines comment
 
         # TODO: you are here
-        # for v=1:nhv(h)
-        #     set_vertex_meta!(h, v, v)
-        # end
+        for v=1:nhv(dh1)
+            set_vertex_meta!(dh1, v, v)
+        end
 
-        # for he=1:nhe(h)
-        #     set_hyperedge_meta!(h1, string(he), he)
-        # end
+        for he=1:nhe(dh1)
+            set_hyperedge_meta!(dh1, string(he), string(he), he)
+        end
 
-        # hg_save(path, h1; format=JSON_Format())
-        # loaded_hg = hg_load(path; format=JSON_Format(), HType=Hypergraph, T=Float64, V=Int, E=String)
+        hg_save(path, dh1; format=JSON_Format())
+        loaded_hg = hg_load(path; format=JSON_Format(), HType=DirectedHypergraph, T=Float64, V=Int, E=String)
 
-        # @test h1 == loaded_hg
-        # @test h1.v_meta == loaded_hg.v_meta
-        # @test h1.he_meta == loaded_hg.he_meta
+        @test dh1 == loaded_hg
+        @test dh1.v_meta == loaded_hg.v_meta
+        @test dh1.he_meta_tail == loaded_hg.he_meta_tail
+        @test dh1.he_meta_head == loaded_hg.he_meta_head
 
-        # @test get_vertex_meta(h1, 1) == get_vertex_meta(loaded_hg, 1)
-        # @test get_hyperedge_meta(h1, 2) == get_hyperedge_meta(loaded_hg, 2)
+        @test get_vertex_meta(dh1, 1) == get_vertex_meta(loaded_hg, 1)
+        @test get_hyperedge_meta(dh1, 2) == get_hyperedge_meta(loaded_hg, 2)
 
     end
 
-    # @test_throws ArgumentError hg_load("data/test_malformedcomment.hgf"; T=Int)
-    # @test_throws ArgumentError hg_load("data/test_argumenterror.hgf"; T=Int)
+    @test_throws ArgumentError hg_load("data/malformedcomment.ehgf"; format=EHGF_Format(), HType=DirectedHypergraph, T=Int)
+    @test_throws ArgumentError hg_load("data/argumenterror.ehgf"; format=EHGF_Format(), HType=DirectedHypergraph, T=Int)
 
-    # h2 = Hypergraph{Float64}(0,0)
-    # @test h2 == Hypergraph{Float64,Nothing}(0,0)
-    # @test h2 == Hypergraph{Float64,Nothing,Nothing}(0,0)
-    # @test h2 == Hypergraph{Float64,Nothing,Nothing,Dict{Int,Float64}}(0,0)
+    dh2 = DirectedHypergraph{Float64}(0,0)
+    @test dh2 == DirectedHypergraph{Float64,Nothing}(0,0)
+    @test dh2 == DirectedHypergraph{Float64,Nothing,Nothing}(0,0)
+    @test dh2 == DirectedHypergraph{Float64,Nothing,Nothing,Dict{Int,Float64}}(0,0)
 
-    # h3 = Hypergraph(0,0)
-    # @test h3 == Hypergraph{Bool, Nothing, Nothing, Dict{Int, Bool}}(0,0)
+    dh3 = DirectedHypergraph(0,0)
+    @test dh3 == DirectedHypergraph{Bool, Nothing, Nothing, Dict{Int, Bool}}(0,0)
 
-    # for i in 1:4 add_vertex!(h2) end
-    # add_hyperedge!(h2;vertices=Dict(1:3 .=> 1.5))
-    # add_hyperedge!(h2)
-    # add_vertex!(h2;hyperedges=Dict(2=>6.5))
-    # add_hyperedge!(h2;vertices=Dict(2 => 3.5, 4 => 4.5))
-    # add_hyperedge!(h2;vertices=Dict(3:5 .=> (2.5,4.5,5.5)))
-    # @test h1 == h2
-    # m = Matrix(h1)
-    # @test  m == Matrix(h2)
-    # @test h1 == Hypergraph(m)
-    # @test h1 == Hypergraph{Float64}(m)
-    # @test h1 == Hypergraph{Float64,Nothing}(m)
-    # @test h1 == Hypergraph{Float64,Nothing, Nothing}(m)
-    # @test h1 == Hypergraph{Float64,Nothing, Nothing,Dict{Int,Float64}}(m)
-    # @test all(Matrix(h1) .== Matrix(Hypergraph{Float64,Nothing, Nothing,SortedDict{Int,Float64}}(m)))
-    # @test getindex(h1,3,1) == 1.5
+    for i in 1:6 add_vertex!(dh2) end
+    add_hyperedge!(dh2;vertices_tail=Dict(1 => 1.0), vertices_head=Dict(2:3 .=> 2.5))
+    add_hyperedge!(dh2)
+    add_hyperedge!(dh2;vertices_tail=Dict(3 => 4.0), vertices_head=Dict(4 => 5.5))
+    add_hyperedge!(dh2;vertices_tail=Dict(5 => 7.0), vertices_head=Dict(6 => 8.5))
+    add_hyperedge!(dh2;vertices_tail=Dict(6 => 10.0))
+    add_hyperedge!(dh2;vertices_head=Dict(5 => 1.5))
+    add_vertex!(dh2;hyperedges_tail=Dict(6 => 0.0), hyperedges_head=Dict(5 => -1.5))
+    @test dh1 == dh2
+    mtail = Matrix(dh1.hg_tail)
+    mhead = Matrix(dh1.hg_head)
+    @test mtail == Matrix(dh2.hg_tail)
+    @test mhead == Matrix(dh2.hg_head)
+    @test dh1 == DirectedHypergraph(mtail, mhead)
+    @test dh1 == DirectedHypergraph{Float64}(mtail, mhead)
+    @test dh1 == DirectedHypergraph{Float64,Nothing}(mtail, mhead)
+    @test dh1 == DirectedHypergraph{Float64,Nothing, Nothing}(mtail, mhead)
+    @test dh1 == DirectedHypergraph{Float64,Nothing, Nothing,Dict{Int,Float64}}(mtail, mhead)
+    @test all(Matrix(dh1.hg_tail) .== Matrix(DirectedHypergraph{Float64,Nothing, Nothing,SortedDict{Int,Float64}}(mtail, mhead).hg_tail))
+    @test all(Matrix(dh1.hg_head) .== Matrix(DirectedHypergraph{Float64,Nothing, Nothing,SortedDict{Int,Float64}}(mtail, mhead).hg_head))
+    @test getindex(dh1,5,4) == (7.0, nothing)
 
+    # TODO: you are here
     # h3 = Hypergraph{Float64,String,Nothing}(1,1)
     # @test add_vertex!(h3;v_meta="test") == 2
     # @test set_vertex_meta!(h3,"t",1) == ["t","test"]
