@@ -1583,7 +1583,7 @@ Remove all vertices with degree 0 and all hyperedges of size 0.
 """
 function prune_hypergraph!(h::H) where {H <: AbstractDirectedHypergraph}
 	for e in reverse(1:nhe(h))
-        length(h.hg_tail.he2v[e]) == 0 && length(h.hg_head.he2v[e]) && remove_hyperedge!(h,e)
+        length(h.hg_tail.he2v[e]) == 0 && length(h.hg_head.he2v[e]) == 0 && remove_hyperedge!(h,e)
     end
 	for v in reverse(1:nhv(h))
     	length(h.hg_tail.v2he[v]) == 0 && length(h.hg_tail.v2he[v]) == 0 && remove_vertex!(h,v)
