@@ -139,8 +139,8 @@ The algorithm proceeds as the *random_model*, forcing the size of each hyperedge
 function random_kuniform_model(
     nVertices::Int,
     nEdges::Int,
-    k::Int;
-    HType::Type{H}=BasicDirectedHypergraph,
+    k::Int,
+    HType::Type{H}=BasicDirectedHypergraph;
     no_self_loops::Bool=false
 ) where {H<:AbstractDirectedHypergraph}
     mx_tail = Matrix{Union{Nothing,Bool}}(nothing, nVertices,nEdges)
@@ -233,7 +233,7 @@ function random_dregular_model(
     mx_head = Matrix{Union{Nothing,Bool}}(nothing, nVertices, nEdges)
     
     for v in 1:size(mx_tail,1)
-        d_tail = rand(0:d)
+        d_tail = rand(1:d)
         d_head = d - d_tail
 
         if d_tail > 0

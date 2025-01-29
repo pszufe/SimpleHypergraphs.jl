@@ -764,7 +764,7 @@ end;
     
 end;
 
-# TODO: random models for directed hypergraphs
+
 @testset "SimpleHypergraphs random-models          " begin
 
     Hᵣ = random_model(5, 5, BasicHypergraph)
@@ -794,6 +794,53 @@ end;
     # TODO: you are here
     H∂ = random_preferential_model(20, 0.5, BasicHypergraph)
     @test nhv(H∂) == 20
+
+    DHᵣ = random_model(5, 5, BasicDirectedHypergraph)
+    @test nhv(DHᵣ) == 5
+    @test nhe(DHᵣ) == 5
+    @test  all(length.(DHᵣ.hg_tail.v2he) .> 0)
+    @test  all(length.(DHᵣ.hg_head.v2he) .> 0)
+    @test  all(length.(DHᵣ.hg_tail.v2he) .<= 5)
+    @test  all(length.(DHᵣ.hg_head.v2he) .<= 5)
+
+    @test_throws ErrorException random_model(1, 2, BasicDirectedHypergraph; no_self_loops=true)
+
+    DHr_nsl = random_model(5, 5, BasicDirectedHypergraph; no_self_loops=true)
+    for i in 1:5
+        @test length(intersect(keys(DHr_nsl.hg_tail.v2he[i]), keys(DHr_nsl.hg_head.v2he[i]))) == 0
+    end
+
+    DHᵣ2 = random_model(5, 0, BasicDirectedHypergraph)
+    add_hyperedge!(DHᵣ2;vertices_tail=Dict(2 => true, 4 => true),vertices_head=Dict(1 => true, 5 => true))
+    @test nhv(DHᵣ2) == 5
+    @test nhe(DHᵣ2) == 1
+
+    DHκ = random_kuniform_model(5, 5, 3, BasicDirectedHypergraph)
+    @test nhv(Hκ) == 5
+    @test nhe(Hκ) == 5
+    @test all(length.(DHκ.hg_tail.he2v) .+ length.(DHκ.hg_head.he2v) .== 3)
+
+    @test_throws ErrorException random_kuniform_model(1, 3, 1, BasicDirectedHypergraph; no_self_loops=true)
+
+    DHκ_nsl = random_kuniform_model(5, 5, 3, BasicDirectedHypergraph; no_self_loops=true)
+    for i in 1:5
+        @test length(intersect(keys(DHκ_nsl.hg_tail.v2he[i]), keys(DHκ_nsl.hg_head.v2he[i]))) == 0
+    end
+
+    DHδ = random_dregular_model(5, 5, 3, BasicDirectedHypergraph)
+    @test nhv(DHδ) == 5
+    @test nhe(DHδ) == 5
+    @test all(length.(DHδ.hg_tail.v2he) .+ length.(DHδ.hg_head.v2he) .== 3)
+
+    @test_throws ErrorException random_dregular_model(1, 3, 1, BasicDirectedHypergraph; no_self_loops=true)
+
+    DHδ_nsl = random_kuniform_model(5, 5, 3, BasicDirectedHypergraph; no_self_loops=true)
+    for i in 1:5
+        @test length(intersect(keys(DHκ_nsl.hg_tail.v2he[i]), keys(DHκ_nsl.hg_head.v2he[i]))) == 0
+    end
+
+    DH∂ = random_preferential_model(20, 0.5, BasicDirectedHypergraph)
+    @test nhv(DH∂) == 20
 end;
 
 
