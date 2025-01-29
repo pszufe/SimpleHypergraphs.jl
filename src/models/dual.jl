@@ -68,22 +68,22 @@ function dual(h::DirectedHypergraph)
     mx_head = Matrix{Union{Nothing,T}}(nothing, nhe(h), nhv(h))
 
     for v=1:nhv(h)
-        t, h = gethyperedges(h, v)
+        the, hhe = gethyperedges(h, v)
 
-        for he in keys(t)
-            mx_tail[he, v] = h.hg_tail[v][he]
+        for he in keys(the)
+            mx_tail[he, v] = h.hg_tail[v,he]
         end
 
-        for he in keys(h)
-            mx_head[he, v] = h.hg_head[v][he]
+        for he in keys(hhe)
+            mx_head[he, v] = h.hg_head[v,he]
         end
     end
 
     # This is awkward, but it allows us to combine tail and head metadata
-    new_v_meta = Vector{Union{Tuple{Union{V, Nothing}, Union{V, Nothing}}, nothing}}(nothing, nhe(h))
+    new_v_meta = Vector{Union{Tuple{Union{V, Nothing}, Union{V, Nothing}}, Nothing}}(nothing, nhe(h))
 
     for e=1:nhe(h)
-        push!(new_v_meta, (h.he_meta_tail[e], h.he_meta_head[e]))
+        new_v_meta[e] = (h.he_meta_tail[e], h.he_meta_head[e])
     end
 
     DirectedHypergraph{T, Tuple{Union{V, Nothing}, Union{V, Nothing}}, E}(mx_tail, mx_head; v_meta=new_v_meta, he_meta_tail=h.v_meta, he_meta_head=h.v_meta)
@@ -106,16 +106,16 @@ function dual(h::BasicDirectedHypergraph)
     mx_head = Matrix{Union{Nothing,T}}(nothing, nhe(h), nhv(h))
 
     for v=1:nhv(h)
-        t, h = gethyperedges(h, v)
+        the, hhe = gethyperedges(h, v)
 
-        for he in keys(t)
-            mx_tail[he, v] = h.hg_tail[v][he]
+        for he in keys(the)
+            mx_tail[he, v] = h.hg_tail[v,he]
         end
 
-        for he in keys(h)
-            mx_head[he, v] = h.hg_head[v][he]
+        for he in keys(hhe)
+            mx_head[he, v] = h.hg_head[v,he]
         end
     end
 
-    BasicHypergraph{T}(mx_tail, mx_head)
+    BasicDirectedHypergraph{T}(mx_tail, mx_head)
 end

@@ -1007,6 +1007,8 @@ end
     cc2 = SimpleHypergraphs.get_connected_components(h1)
     @test sort!(sort!.(cc)) == sort!(sort!.(cc2))
     @test typeof(cc2) == Vector{Vector{Int}}
+
+
 end
 
 
@@ -1110,6 +1112,80 @@ end;
     @test m == transpose(m_dual)
 
     @test_throws AssertionError dual(Hypergraph(0, 0))
+
+    m_tail = [
+        1         nothing      nothing      nothing
+        nothing    2           nothing      nothing
+        nothing    nothing     3            3
+        4          nothing     nothing      4
+    ]
+
+    m_head = [
+        nothing    5          5            nothing
+        nothing    nothing    nothing      6
+        7          nothing    nothing      nothing
+        nothing    nothing    8            nothing
+    ]
+
+    v_meta = Array{Union{Nothing, Char}, 1}(collect('a':'d'))
+    he_meta_tail = Array{Union{Nothing, Symbol}, 1}(Symbol.(collect('A':'D')))
+    he_meta_head = Array{Union{Nothing, Symbol}, 1}(Symbol.(collect('E':'H')))
+
+    dh = DirectedHypergraph{Int,Char,Symbol}(m_tail, m_head; v_meta=v_meta, he_meta_tail=he_meta_tail, he_meta_head=he_meta_head)
+    dh_dual = dual(dh)
+
+    @test nhv(dh_dual) == nhe(dh)
+    @test nhe(dh_dual) == nhv(dh)
+
+    m_dual_tail = Matrix(dh_dual.hg_tail)
+    m_dual_head = Matrix(dh_dual.hg_head)
+
+    m_dual_tail[m_dual_tail .== nothing] .= 0
+    m_dual_head[m_dual_head .== nothing] .= 0
+    m_tail[m_tail .== nothing] .= 0
+    m_head[m_head .== nothing] .= 0
+
+    @test m_tail == transpose(m_dual_tail)
+    @test m_head == transpose(m_dual_head)
+
+    @test dh_dual.he_meta_tail == dh.v_meta
+    @test dh_dual.he_meta_head == dh.v_meta
+    @test all(dh_dual.v_meta .== [(dh.he_meta_tail[i], dh.he_meta_head[i]) for i in 1:nhe(dh)])
+
+    @test_throws AssertionError dual(DirectedHypergraph(0,0))
+
+    h = BasicHypergraph{Int}(m)
+    h_dual = dual(h)
+
+    @test nhv(h_dual) == nhe(h)
+    @test nhe(h_dual) == nhv(h)
+
+    m_dual = Matrix(h_dual)
+    m_dual[m_dual .== nothing] .= 0
+    m[m .== nothing] .= 0
+
+    @test m == transpose(m_dual)
+
+    @test_throws AssertionError dual(BasicHypergraph(0, 0))
+
+    dh = BasicDirectedHypergraph{Int}(m_tail, m_head)
+    dh_dual = dual(dh)
+
+    @test nhv(dh_dual) == nhe(dh)
+    @test nhe(dh_dual) == nhv(dh)
+
+    m_dual_tail = Matrix(dh_dual.hg_tail)
+    m_dual_head = Matrix(dh_dual.hg_head)
+
+    m_dual_tail[m_dual_tail .== nothing] .= 0
+    m_dual_head[m_dual_head .== nothing] .= 0
+    m_tail[m_tail .== nothing] .= 0
+    m_head[m_head .== nothing] .= 0
+
+    @test m_tail == transpose(m_dual_tail)
+    @test m_head == transpose(m_dual_head)
+
+    @test_throws AssertionError dual(BasicDirectedHypergraph(0,0))
 end;
 
 
