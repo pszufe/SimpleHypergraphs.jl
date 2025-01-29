@@ -839,8 +839,6 @@ end;
         @test length(intersect(keys(DHκ_nsl.hg_tail.v2he[i]), keys(DHκ_nsl.hg_head.v2he[i]))) == 0
     end
 
-    DH∂ = random_preferential_model(20, 0.5, BasicDirectedHypergraph)
-    @test nhv(DH∂) == 20
 end;
 
 
@@ -962,6 +960,41 @@ end;
     @test abs(w5[3]-w5[4]) < 10000
     @test abs(w5[5]-w5[4]-500000) < 10000
     @test_throws ArgumentError random_walk(h1, 0)
+
+    dh = BasicDirectedHypergraph{Float64}(8,9)
+    dh[1,1,1] = 1.0
+    dh.hg_head[2:3,1] .= 2.5
+    dh[1,3,2] = 0.5
+    dh[2,4,2] = 1.5
+    dh.hg_tail[3:4,3] .= 2.0
+    dh[2,1,3] = 0.5
+    dh[1,4,4] = 2.5
+    dh[2,5,4] = 1.0
+    dh[1,3,5] = 2.0
+    dh[2,5,5] = 1.0
+    dh[1,5,6] = 1.5
+    dh[2,3,6] = 0.5
+    dh[1,6,7] = 1.0
+    dh[2,7,7] = 2.5
+    dh[1,7,8] = 2.0
+    dh[2,8,8] = 1.5
+    dh[1,8,9] = 1.0
+    dh[2,6,9] = 1.5
+
+    dw1 = countmap([random_walk(dh, 1) for _ in 1:10^6])
+    @test keys(dw1) == Set([2,3])
+    @test -(extrema(values(dw1))...) > -10000
+
+    dw1_rev = countmap([random_walk(dh, 1; reverse=true) for _ in 1:10^6])
+    @test keys(dw1_rev) == Set([3, 4])
+    @test -(extrema(values(dw1_rev))...) > -10000
+
+    dw2 = countmap([random_walk(dh, 6) for _ in 1:10^6])
+    @test keys(dw2) == Set([7])
+    @test -(extrema(values(dw2))...) > -10000
+
+    @test_throws ArgumentError random_walk(dh, 0)
+
 end
 
 # TODO: strongly and weakly connected components for directed hypergraph

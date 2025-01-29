@@ -1827,9 +1827,9 @@ function _default_heselect(h::H, v::Int; reverse::Bool=false) where {H <: Abstra
     he_tail, he_head = gethyperedges(h, v)
 
     if reverse
-        hes = he_tail
-    else
         hes = he_head
+    else
+        hes = he_tail
     end
 
     sort!(collect(keys(hes))), ones(length(hes))
