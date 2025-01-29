@@ -643,10 +643,10 @@ end;
 
     @test sort!(Graphs.SimpleGraphs.fadj(b,1)) == [9]
     @test sort!(Graphs.SimpleGraphs.fadj(b,2)) == Int64[]
+    @test sort!(Graphs.SimpleGraphs.badj(b,2)) == [9]
 end;
 
 
-# TODO: directed hypergraph twosectionview
 @testset "SimpleHypergraphs TwoSectionView         " begin
 
     ht = Hypergraph{Float64}(3,3)
@@ -703,6 +703,65 @@ end;
     @test minimum([sum((h_from_g .== true)[:,n]) for n in 1:6] .== 2)
     @test Graphs.modularity(g,[1,1,2,2,3,3,4,4]) ≈ modularity(h_from_g, Set.([[1,2],[3,4],[5,6],[7,8]]))
     @test Graphs.SimpleGraphs.fadj(g) == Graphs.SimpleGraphs.fadj(TwoSectionView(h_from_g))
+
+    ht = BasicDirectedHypergraph{Float64}(3,3)
+    ht[1,1,1] = 1
+    ht.hg_head[2:3,1] .= 2
+    ht[1,2,2] = 2
+    ht[2,1,2] = 2
+    ht[1,3,3] = 3
+    ht[2,1,3] = 3
+
+    @test Graphs.nv(Graphs.zero(TwoSectionView{BasicDirectedHypergraph{Int64}})) == 0
+
+    t = TwoSectionView(dh1)
+    @test Graphs.edgetype(t) == Graphs.SimpleGraphs.SimpleEdge{Int}
+    @test Graphs.has_vertex(t, 0) == false
+    @test Graphs.has_vertex(t, 1) == true
+    @test Graphs.nv(Graphs.zero(t)) == 0
+
+    @test Graphs.is_directed(t) == true
+    @test Graphs.is_directed(typeof(t)) == true
+    @test Graphs.eltype(t) == Int
+
+    @test Graphs.nv(t) == 7
+    @test Graphs.ne(t) == 6
+
+    @test sort(Graphs.all_neighbors(t, 1)) == [2,3]
+    @test sort(Graphs.outneighbors(t, 5)) == [6]
+    @test sort(Graphs.inneighbors(t, 4)) == [3]
+    @inferred Graphs.all_neighbors(t, 1)
+
+    @test Graphs.has_edge(t, 1, 2) == true
+    @test Graphs.has_edge(t, 1, 5) == false
+
+    @test sum(Graphs.adjacency_matrix(Graphs.SimpleDiGraph(t))) == 6
+    @test shortest_path(t,1,4) == [1,3,4]
+    @test Graphs.is_weakly_connected(t) == false
+    @test Graphs.is_strongly_connected(t) == false
+
+    add_vertex!(dh1)
+    add_hyperedge!(dh1)
+    dh1[1,4,7] = 1
+    dh1[2,8,7] = 1
+
+    @test Graphs.ne(t) == 7
+    @test Graphs.nv(t) == 8
+    @test sort(Graphs.outneighbors(t, 4)) == [8]
+
+    @test shortest_path(t,1,8) == [1,3,4,8]
+
+    @test sum(Graphs.adjacency_matrix(Graphs.SimpleDiGraph(t))) == 7
+
+    Random.seed!(0);
+    g = Graphs.erdos_renyi(8, 0.3; is_directed=true)
+    h_from_g = BasicDirectedHypergraph(g)
+    @test Graphs.adjacency_matrix(g) == Graphs.adjacency_matrix(TwoSectionView(h_from_g))
+    @test minimum([sum((h_from_g.hg_tail .== true)[:,n]) for n in 1:6] .== 1)
+    @test minimum([sum((h_from_g.hg_head .== true)[:,n]) for n in 1:6] .== 1)
+    @test Graphs.SimpleGraphs.fadj(g) == Graphs.SimpleGraphs.fadj(TwoSectionView(h_from_g))
+    @test Graphs.SimpleGraphs.badj(g) == Graphs.SimpleGraphs.badj(TwoSectionView(h_from_g))
+    
 end;
 
 # TODO: random models for directed hypergraphs

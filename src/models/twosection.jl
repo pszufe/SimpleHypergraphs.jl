@@ -62,7 +62,7 @@ end
 function Graphs.ne(t::TwoSectionView{H}) where {H<:AbstractDirectedHypergraph}
     s = 0
     for x in 1:nhe(t.h)
-        s += length(t.h.hg_tail[x]) * length(t.h.hg_head[x])
+        s += length(t.h.hg_tail.he2v[x]) * length(t.h.hg_head.he2v[x])
     end
     s
 end
@@ -108,17 +108,17 @@ function Graphs.all_neighbors(
     neighbors = Set{Int}()
 
     if !(incoming || outgoing)
-        return neighbors
+        return collect(neighbors)
     end
 
     if incoming
-        for he in keys(t.h.hg_head.v2he[v_id])
+        for he in keys(t.h.hg_head.v2he[v])
             union!(neighbors, keys(t.h.hg_tail.he2v[he]))
         end
     end
 
     if outgoing
-        for he in keys(t.h.hg_tail.v2he[v_id])
+        for he in keys(t.h.hg_tail.v2he[v])
             union!(neighbors, keys(t.h.hg_head.he2v[he]))
         end
     end
@@ -128,9 +128,15 @@ function Graphs.all_neighbors(
 end
 
 
-function Graphs.has_edge(t::TwoSectionView, s, d)
+function Graphs.has_edge(t::TwoSectionView{H}, s, d) where {H<:AbstractUndirectedHypergraph}
     s == d && return false
     !isempty(intersect(keys(t.h.v2he[s]), keys(t.h.v2he[d])))
+end
+
+
+function Graphs.has_edge(t::TwoSectionView{H}, s, d) where {H<:AbstractDirectedHypergraph}
+    s == d && return false
+    !isempty(intersect(keys(t.h.hg_tail.v2he[s]), keys(t.h.hg_head.v2he[d])))
 end
 
 
@@ -200,7 +206,7 @@ Base.eltype(::TwoSectionView{H}) where H = Int
 
 
 """
-    shortest_path(t::TwoSectionView, source::Int, target::Int)
+    shortest_path(t::TwoSectionView{H}, source::Int, target::Int) where {H<:AbstractUndirectedHypergraph}
 
 Finds a single shortest path in a graph `b` between vertices
 `source` and `target`.
@@ -208,9 +214,25 @@ Note that if several paths of the same length exist, only one
 will be returned.
 
 """
-function shortest_path(t::TwoSectionView, source::Int, target::Int)
+function shortest_path(t::TwoSectionView{H}, source::Int, target::Int) where {H<:AbstractUndirectedHypergraph}
     checkbounds(t.h.v2he, source)
     checkbounds(t.h.v2he, target)
+    dj = dijkstra_shortest_paths(t, source)
+    enumerate_paths(dj)[target]
+end
+
+"""
+    shortest_path(t::TwoSectionView{H}, source::Int, target::Int) where {H<:AbstractDirectedHypergraph}
+
+Finds a single shortest path in a graph `b` between vertices
+`source` and `target`.
+Note that if several paths of the same length exist, only one
+will be returned.
+
+"""
+function shortest_path(t::TwoSectionView{H}, source::Int, target::Int) where {H<:AbstractDirectedHypergraph}
+    checkbounds(t.h.hg_tail.v2he, source)
+    checkbounds(t.h.hg_head.v2he, target)
     dj = dijkstra_shortest_paths(t, source)
     enumerate_paths(dj)[target]
 end
@@ -262,11 +284,13 @@ Generates an adjency list for this view of a hypergraph.
 """
 function Graphs.SimpleGraphs.badj(t::TwoSectionView{H}) where {H<:AbstractDirectedHypergraph}
     res = [Vector{Int}() for _ in 1:Graphs.nv(t)]
-    for he in t.h.he2v
-        vs = collect(keys(he))
-        if length(vs) > 1
-            for i in 1:length(vs)
-                append!(res[vs[i]], vs[1:end .!= i])
+    for he in 1:nhe(t.h)
+        vs_tail, vs_head = getvertices(t.h, he)
+        for v_tail in keys(vs_tail)
+            for v_head in keys(vs_head)
+                if v_head != v_tail
+                    append!(res[v_head], v_tail)
+                end
             end
         end
     end
