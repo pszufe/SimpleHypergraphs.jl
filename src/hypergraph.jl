@@ -685,6 +685,24 @@ BasicDirectedHypergraph{T}(n::Integer, k::Integer) where {T<:Real} = BasicDirect
 BasicDirectedHypergraph(n::Integer, k::Integer) = BasicDirectedHypergraph{Bool,Dict{Int,Bool}}(n, k)
 
 
+function BasicDirectedHypergraph{T, D}(
+    m_tail::AbstractMatrix{Union{T, Nothing}},
+    m_head::AbstractMatrix{Union{T, Nothing}}
+) where {T<:Real, D<:AbstractDict{Int, T}}
+
+    # Arbitrary, since sizes are identical
+    n, k = size(m_tail)
+
+    hg_tail = BasicHypergraph{T,D}(n, k)
+    hg_tail .= m_tail
+
+    hg_head = BasicHypergraph{T,D}(n, k)
+    hg_head .= m_head
+
+    BasicDirectedHypergraph{T,D}(hg_tail, hg_head)
+end
+
+
 function BasicDirectedHypergraph{T}(
     m_tail::AbstractMatrix{Union{T, Nothing}},
     m_head::AbstractMatrix{Union{T, Nothing}}

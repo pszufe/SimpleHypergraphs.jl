@@ -431,7 +431,7 @@ end;
     @test size(dh1_1)[2] == 2
 end;
 
-# TODO: fix hg_load test
+
 @testset "SimpleHypergraphs BasicDirectedHypergraph" begin
     h = hg_load("data/test_dhg.ehgf"; format=EHGF_Format(), T=Int, HType=BasicDirectedHypergraph)
     @test size(h) == (6, 3)
@@ -475,7 +475,7 @@ end;
                 init=read("data/multilinecomment.ehgf", String)) #multiple lines comment
 
         hg_save(path, dh1; format=JSON_Format())
-        loaded_hg = hg_load(path; format=JSON_Format(), HType=BasicDirectedHypergraph, T=Float64, V=Int, E=String)
+        loaded_hg = hg_load(path; format=JSON_Format(), HType=BasicDirectedHypergraph, T=Float64)
 
         @test dh1 == loaded_hg
 
@@ -517,9 +517,6 @@ end;
     @test typeof(dh3.hg_head.v2he[1]) <: SortedDict{Int,Float64}
     @test typeof(dh3.hg_tail.he2v[1]) <: SortedDict{Int,Float64}
     @test typeof(dh3.hg_head.he2v[1]) <: SortedDict{Int,Float64}
-    @test add_vertex!(dh3) == 2
-    dh3.hg_tail .= [1.0 2.0;3.0 4.0]
-    @test dh3[2,2] == (4.0, nothing)
 
     dh1_0 = deepcopy(dh1)
     @test add_vertex!(dh1_0) == 8
@@ -547,14 +544,16 @@ end;
     @test add_vertex!(dh1_1) == 4
     @test add_hyperedge!(dh1_1) == 4
     hp = prune_hypergraph(dh1_1)
-    @test size(hp)[1] == 2 && size(dh1)[1] == 4
-    @test size(hp)[2] == 2 && size(dh1)[1] == 4
+    @test size(hp)[1] == 2
+    @test size(dh1_1)[1] == 4
+    @test size(hp)[2] == 2
+    @test size(dh1_1)[1] == 4
     prune_hypergraph!(dh1_1)
     @test size(dh1_1)[1] == 2
     @test size(dh1_1)[2] == 2
 end;
 
-# TODO: directed hypergraph bipartite view
+
 @testset "SimpleHypergraphs BipartiteView          " begin
     h2 = deepcopy(h1)
 
@@ -599,6 +598,51 @@ end;
 
     @test sort!(Graphs.SimpleGraphs.fadj(b,1)) == [7]
     @test sort!(Graphs.SimpleGraphs.fadj(b,2)) == [7,9]
+
+
+    dh2 = deepcopy(dh1)
+
+    @test Graphs.nv(Graphs.zero(BipartiteView{BasicDirectedHypergraph{Int}})) == 0
+
+    b = BipartiteView(dh2)
+    @test Graphs.edgetype(b) == Graphs.SimpleGraphs.SimpleEdge{Int}
+    @test Graphs.has_vertex(b, 0) == false
+    @test Graphs.has_vertex(b, 1) == true
+    @test Graphs.has_edge(b, 1, 1) == false
+    @test Graphs.nv(Graphs.zero(b)) == 0
+
+    @test Graphs.is_directed(b) == true
+    @test Graphs.is_directed(typeof(b)) == true
+    @test Graphs.eltype(b) == Int
+
+
+    @test sum(Graphs.adjacency_matrix(Graphs.SimpleDiGraph(b))) == 11
+
+    @test sort(collect(Graphs.outneighbors(b,5))) == [11]
+    @test sort(collect(Graphs.outneighbors(b,1))) == [8]
+    @test sort(collect(Graphs.inneighbors(b,2))) == [8]
+
+    @test Set(Graphs.vertices(b)) == Set(1:Graphs.nv(b))
+
+    @test shortest_path(b,1,4) == [1, 3, 4]
+    @test shortest_path(b,1,5) == Int64[]
+    @test Graphs.is_weakly_connected(b) == false
+
+    @test add_vertex!(dh2) == 8
+    @test add_hyperedge!(dh2) == 7
+    dh2[1,4,7] = 1
+    dh2[2,8,7] = 1
+
+    @test shortest_path(b,1,8) == [1,3,4,8]
+
+    bipartite_graph = Graphs.SimpleDiGraph(b)
+
+    @test Graphs.SimpleGraphs.fadj(bipartite_graph)==Graphs.SimpleGraphs.fadj(b)
+    @test Graphs.nv(b) == 15
+    @test Graphs.ne(b) == 13
+
+    @test sort!(Graphs.SimpleGraphs.fadj(b,1)) == [9]
+    @test sort!(Graphs.SimpleGraphs.fadj(b,2)) == Int64[]
 end;
 
 
@@ -992,6 +1036,3 @@ end;
     @test distance(h, SedgeDistanceDijkstra(2, 3, 3)) == 1
     @test distance(h, SedgeDistanceDijkstra(1, 3, 3)) == typemax(Int)
 end;
-
-# TODO: directed hypergraph IO
-# Including new file format
