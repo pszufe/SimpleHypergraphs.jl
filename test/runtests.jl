@@ -938,7 +938,7 @@ end
     #@test comms.helabels == [4, 7, -1]
 end;
 
-# TODO: for directed hypergraph
+
 @testset "SimpleHypergraphs randomwalk             " begin
     h1 = Hypergraph{Float64}(5,4)
     h1[1:3,1] .= 1.5
@@ -997,7 +997,6 @@ end;
 
 end
 
-# TODO: strongly and weakly connected components for directed hypergraph
 @testset "SimpleHypergraphs connected components" begin
     bip = Graphs.SimpleGraph(BipartiteView(h1))
     cc = Graphs.connected_components(bip)
@@ -1008,7 +1007,19 @@ end
     @test sort!(sort!.(cc)) == sort!(sort!.(cc2))
     @test typeof(cc2) == Vector{Vector{Int}}
 
+    weak_conn = sort!(get_weakly_connected_components(dh1))
+    @test length(weak_conn) == 2
+    @test weak_conn[1] == [1,2,3,4,8]
+    @test weak_conn[2] == [5,6,7]
 
+    strong_conn = sort!(get_strongly_connected_components(dh1))
+    @test length(strong_conn) == 6
+    @test strong_conn[1] == [1]
+    @test strong_conn[2] == [2]
+    @test strong_conn[3] == [3]
+    @test strong_conn[4] == [4]
+    @test strong_conn[5] == [5,6,7]
+    @test strong_conn[6] == [8]
 end
 
 
@@ -1082,7 +1093,7 @@ end;
   @test_throws ErrorException SimpleHypergraphs.conductance(h, Set(1:nhv(h)))
 end;
 
-# TODO: directed hypergraph dual
+
 @testset "SimpleHypergraphs dual                   " begin
     m = [
           1         nothing   nothing   4

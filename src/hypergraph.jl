@@ -1067,9 +1067,9 @@ combine the weights, so we simply set the values to 1.0 if a given vertex
 is in a given hyperedge 
 
 """
-function to_undirected(h::DirectedHypergraph{T,V,E,D}) where {T <: Real, V, E, D <: AbstractDict{Int,T}}
-    incidence = Matrix{Union{Tuple{Union{T, Nothing}, Union{T, Nothing}}, Nothing}}(undef, nhv(h), nhe(h))
-    fill!(incidence, nothing)
+function to_undirected(h::DirectedHypergraph{T,V,E,D}) where {T <: Real, V, E, D <: AbstractDict{Int, T}}
+
+    incidence = Matrix{Union{T, Nothing}}(nothing, nhv(h), nhe(h))
 
     this_nhe = nhe(h)
 
@@ -2033,7 +2033,7 @@ function get_strongly_connected_components(h::H) where {H <: AbstractDirectedHyp
         push!(T[bcc_sorted], v)
     end
 
-    [v for (k, v) in T if length(v) != 0]
+    [sort!(collect(v)) for (k, v) in T if length(v) != 0]
 end
 
 """
