@@ -3,7 +3,7 @@
 
 Generates a random partition for vertices of a hypergraph `h` into `n` subsets.
 """
-randompartition(h::AbstractHypergraph, n::Int) = randompartition(nhv(h), n)
+randompartition(h::H, n::Int) where {H <: AbstractHypergraph} = randompartition(nhv(h), n)
 
 
 """

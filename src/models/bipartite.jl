@@ -156,7 +156,7 @@ function Graphs.SimpleGraph(b::BipartiteView{H}) where {H<:AbstractDirectedHyper
     g
 end
 
-# TODO: you are here
+
 """
     Graphs.SimpleDiGraph(b::BipartiteView{H}) where {H<:AbstractDirectedHypergraph}
 
