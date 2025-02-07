@@ -38,7 +38,7 @@ end
             with_he_labels::Bool=false,
             he_labels::Union{AbstractVector{String}, Nothing}=nothing,
             with_he_metadata_hover::Bool=false
-        ) where {H<:AbstractUndirectedHypergraph}
+        ) where {H<:AbstractSimpleHypergraph}
 
 Draw a hypergraph `h` in a web-based environment (e.g. Jupyter Notebook),
 using a js script based on the library (D3)[https://d3js.org/].
@@ -99,7 +99,7 @@ function draw(
         with_he_labels::Bool=false,
         he_labels::Union{AbstractVector{String}, Nothing}=nothing,
         with_he_metadata_hover::Bool=false
-    ) where {H<:AbstractUndirectedHypergraph}
+    ) where {H<:AbstractSimpleHypergraph}
 
     w = widget_graph(
         JSON3.write(h.v2he),
@@ -160,7 +160,7 @@ end
         with_edge_labels::Bool=true,
         with_node_labels::Bool=true,
         label_alpha::Float64=.35
-        ) where {H<:AbstractUndirectedHypergraph}
+        ) where {H<:AbstractSimpleHypergraph}
 
  Draw a hypergraph `h` as an Euler diagram, using the library [HyperNetX](https://github.com/pnnl/HyperNetX).
 
@@ -202,7 +202,7 @@ function draw(
         with_edge_labels::Bool=true,
         with_node_labels::Bool=true,
         label_alpha::Float64=.35
-        ) where {H<:AbstractUndirectedHypergraph}
+        ) where {H<:AbstractSimpleHypergraph}
     if (!SimpleHypergraphs.support_hypernetx())
         throw("HyperNetX is not installed in Python used by this Julia. Install HyperNetX and reload SimpleHypergraphs.jl")
     end

@@ -21,7 +21,7 @@ end
 
 
 """
-    HypergraphAggs(h::H) where {H<:AbstractUndirectedHypergraph}
+    HypergraphAggs(h::H) where {H<:AbstractSimpleHypergraph}
 
 Precomputes vertex and edge basic stats for a hypergraph.
 The stats are being used for efficiency reasons by community search algorithms.
@@ -32,7 +32,7 @@ struct HypergraphAggs
     Ed::Vector{Int}
     deg_vs::Vector{Int}
     volV::Int
-    HypergraphAggs(h::H) where {H<:AbstractUndirectedHypergraph} = begin
+    HypergraphAggs(h::H) where {H<:AbstractSimpleHypergraph} = begin
         hes = [length(h.he2v[i]) for i in 1:nhe(h)]
         max_hes = maximum(hes)
         Ed = zeros(Int, max_hes)
@@ -50,13 +50,13 @@ end
 
 """
     Graphs.modularity(h::H, partition::Vector{Set{Int}},
-ha::HypergraphAggs=HypergraphAggs(h)) where {H<:AbstractUndirectedHypergraph}
+ha::HypergraphAggs=HypergraphAggs(h)) where {H<:AbstractSimpleHypergraph}
 
 Calculates the strict modularity of a hypergraph `h` for a given `partition` using
 the precomputed aggregates `ha`.
 """
 @inline function Graphs.modularity(h::H, partition::Vector{Set{Int}},
-        ha::HypergraphAggs=HypergraphAggs(h)) where {H<:AbstractUndirectedHypergraph}
+        ha::HypergraphAggs=HypergraphAggs(h)) where {H<:AbstractSimpleHypergraph}
 
     @boundscheck sum(length.(partition)) == nhv(h)
     @boundscheck union(partition...) == Set(1:nhv(h))
@@ -64,67 +64,6 @@ the precomputed aggregates `ha`.
     eP = [count(i-> ha.hes[i]>0 && (keys(h.he2v[i]) ⊆ p), 1:nhe(h)) for p in partition]
     (sum(eP) - sum( ha.Ed[d]*sum(volP_volV.^d) for d in 1:ha.max_hes)) / nhe(h)
 end
-
-
-"""
-    DirectedHypergraphAggs(h::H) where {H<:AbstractDirectedHypergraph}
-
-Precomputes vertex and edge basic stats for a hypergraph.
-The stats are being used for efficiency reasons by community search algorithms.
-"""
-struct DirectedHypergraphAggs
-    hes_tail::Vector{Int}
-    hes_head::Vector{Int}
-    max_hes_tail::Int
-    max_hes_head::Int
-    Ed_tail::Vector{Int}
-    Ed_head::Vector{Int}
-    deg_vs_tail::Vector{Int}
-    deg_vs_head::Vector{Int}
-    volV_tail::Int
-    volV_head::Int
-    
-    DirectedHypergraphAggs(h::H) where {H<:AbstractDirectedHypergraph} = begin
-        hes_tail = [length(h.hg_tail.he2v[i]) for i in 1:nhe(h)]
-        hes_head = [length(h.hg_head.he2v[i]) for i in 1:nhe(h)]
-
-        max_hes_tail = maximum(hes_tail)
-        max_hes_head = maximum(hes_head)
-
-        Ed_tail = zeros(Int, max_hes_tail)
-        Ed_head = zeros(Int, max_hes_head)
-        for ii in 1:nhe(h)
-            if hes_tail[ii] >= 1
-                Ed_tail[hes_tail[ii]]+=1
-            end
-
-            if hes_head[ii] >= 1
-                Ed_head[hes_head[ii]]+=1
-            end
-        end
-
-        deg_vs_tail = [length(h.hg_tail.v2he[i]) for i in 1:nhv(h)]
-        deg_vs_head = [length(h.hg_head.v2he[i]) for i in 1:nhv(h)]
-
-        volV_tail = sum(deg_vs_tail)
-        volV_head = sum(deg_vs_head)
-
-        new(
-            hes_tail,
-            hes_head,
-            max_hes_tail,
-            max_hes_head,
-            Ed_tail,
-            Ed_head,
-            deg_vs_tail,
-            deg_vs_head,
-            volV_tail,
-            volV_head
-        )
-    end
-end
-
-# TODO: directed hypergraph modularity
 
 
 """
@@ -149,7 +88,7 @@ end
 
 
 """
-    findcommunities(h::H, method::CFModularityRandom) where {H<:AbstractUndirectedHypergraph}
+    findcommunities(h::H, method::CFModularityRandom) where {H<:AbstractSimpleHypergraph}
 
 Makes a random search over the hypergraph `h` and finds
 a partition into `method.n` communities (subsets) having the maximum modularity value.
@@ -160,7 +99,7 @@ one that was randomly found will be returned.
 Returns a `NamedTuple` where the field `bp` contains partition
 and the field `bm` contains the modularity value for that partition.
 """
-function findcommunities(h::H, method::CFModularityRandom) where {H<:AbstractUndirectedHypergraph}
+function findcommunities(h::H, method::CFModularityRandom) where {H<:AbstractSimpleHypergraph}
     bp = [Int[]]
     bm = -Inf
     ha = HypergraphAggs(h)
@@ -211,7 +150,7 @@ end
 
 
 """
-    findcommunities(h::H, method::CFModularityCNMLike) where {H<:AbstractUndirectedHypergraph}
+    findcommunities(h::H, method::CFModularityCNMLike) where {H<:AbstractSimpleHypergraph}
 
 Iterates a CNM-Like algorithm for finding communities.
 In the algorithm we start with a partition where each node is in its own part.
@@ -230,7 +169,7 @@ Clustering via Hypergraph Modularity (submitted to Plos ONE), authors:
 Bogumił Kamiński, Valerie Poulin, Paweł Prałat, Przemysław Szufel, Francois Theberge
 
 """
-function findcommunities(h::H, method::CFModularityCNMLike) where {H<:AbstractUndirectedHypergraph}
+function findcommunities(h::H, method::CFModularityCNMLike) where {H<:AbstractSimpleHypergraph}
     ha = HypergraphAggs(h)
     best_modularity = 0
     comms = [Set(i) for i in 1:nhv(h)]

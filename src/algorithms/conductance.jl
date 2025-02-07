@@ -1,5 +1,5 @@
 """
-    conductance(h::H, subset::Set{Int})::Float64 where {H<:AbstractUndirectedHypergraph}
+    conductance(h::H, subset::Set{Int})::Float64 where {H<:AbstractSimpleHypergraph}
 
 Calculate unweighted hypergraph conductance of `subset`.
 note: ∅ ⊊ `subset` ⊊ `1:nhv(h)`
@@ -8,7 +8,7 @@ For more information see `1. Introduction` at:
 Generalizing the Hypergraph Laplacian via a Diffusion Process with Mediators,
 authors: T-H. Hubert Chan, Xhibin Liang.
 """
-function conductance(h::H, subset::Set{Int})::Float64 where {H<:AbstractUndirectedHypergraph}
+function conductance(h::H, subset::Set{Int})::Float64 where {H<:AbstractSimpleHypergraph}
   if isempty(subset) error("`subset` is not allowed empty.") end
   if subset == Set(1:nhv(h)) error("`subset` is not allowed true subset of `h`.") end
   subset2 = setdiff(Set(1:nhv(h)), subset)

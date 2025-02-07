@@ -33,7 +33,7 @@ end
 
 
 """
-    distance(h::H, distance_method::SnodeDistanceDijkstra) where {H<:AbstractUndirectedHypergraph}
+    distance(h::H, distance_method::SnodeDistanceDijkstra) where {H<:AbstractSimpleHypergraph}
 
 Return the shortest `distance_method.s`-walk distance between the `distance_method.source_node` and
 the node `distance_method.target_node` in the hypergraph `h`.
@@ -48,7 +48,7 @@ An `s`-walk between nodes is a sequence of nodes that pairwise share
 at least `s` edges. The length of the shortest `s`-walk is 1 less than
 the number of nodes in the path sequence. If no such path exists returns typemax(T).
 """
-function distance(h::H, distance_method::SnodeDistanceDijkstra) where {H<:AbstractUndirectedHypergraph}
+function distance(h::H, distance_method::SnodeDistanceDijkstra) where {H<:AbstractSimpleHypergraph}
     checkbounds(h.v2he, distance_method.source_node)
     checkbounds(h.v2he, distance_method.target_node)
     A = adjacency_matrix(h; s=distance_method.s)
@@ -59,7 +59,7 @@ end
 
 
 """
-    distance(h::H, distance_method::SedgeDistanceDijkstra) where {H<:AbstractUndirectedHypergraph}
+    distance(h::H, distance_method::SedgeDistanceDijkstra) where {H<:AbstractSimpleHypergraph}
 
 Return the shortest `distance_method.s`-walk distance between the `distance_method.source_edge` and
 the node `distance_method.target_edge` in the hypergraph `h`.
@@ -74,7 +74,7 @@ An `s`-walk between edges is a sequence of edges such that consecutive pairwise
 edges intersect in at least `s` nodes. The length of the shortest `s`-walk is 1 less than
 the number of edges in the path sequence. If no such path exists returns typemax(T).
 """
-function distance(h::H, distance_method::SedgeDistanceDijkstra) where {H<:AbstractUndirectedHypergraph}
+function distance(h::H, distance_method::SedgeDistanceDijkstra) where {H<:AbstractSimpleHypergraph}
     checkbounds(h.he2v, distance_method.source_edge)
     checkbounds(h.he2v, distance_method.target_edge)
     A = edge_adjacency_matrix(h; s=distance_method.s)

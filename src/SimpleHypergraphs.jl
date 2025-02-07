@@ -11,10 +11,9 @@ using Random
 using LinearAlgebra
 using SimpleTraits
 
-export AbstractHypergraph, AbstractUndirectedHypergraph, AbstractDirectedHypergraph
+export AbstractHypergraph, AbstractSimpleHypergraph
 export isdirected, IsDirected, hasmeta, HasMeta
 export BasicHypergraph, Hypergraph, getvertices, gethyperedges
-export DirectedHypergraph, BasicDirectedHypergraph
 export add_vertex!, add_hyperedge!, remove_vertex!, remove_hyperedge!
 export prune_hypergraph!, prune_hypergraph
 export set_vertex_meta!, get_vertex_meta
@@ -27,7 +26,7 @@ export get_twosection_adjacency_mx, get_twosection_weighted_adjacency_mx
 export dual
 export random_model, random_kuniform_model, random_dregular_model, random_preferential_model
 
-export Abstract_HG_format, HGF_Format, EHGF_Format, JSON_Format
+export Abstract_HG_format, HGF_Format, JSON_Format
 export hg_load, hg_save
 
 export modularity
@@ -37,7 +36,7 @@ export findcommunities
 
 export nhv, nhe
 export random_walk
-export get_connected_components, get_weakly_connected_components, get_strongly_connected_components
+export get_connected_components
 export conductance
 export AbstractDistance, SnodeDistanceDijkstra, SedgeDistanceDijkstra
 export distance

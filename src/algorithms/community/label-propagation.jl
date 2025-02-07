@@ -11,7 +11,7 @@ end
 
 
 """
-    findcommunities(h::H, method::CFLabelPropagationFinder) where {H<:AbstractUndirectedHypergraph}
+    findcommunities(h::H, method::CFLabelPropagationFinder) where {H<:AbstractSimpleHypergraph}
 
 Implements the label propagation algorithm over a hypergraph `h`.
 
@@ -33,7 +33,7 @@ Vittorio Scarano, Carmine Spagnuolo, Przemyslaw Szufel
 *Analyzing, Exploring, and Visualizing Complex Networks via Hypergraphs Using SimpleHypergraphs.jl.*
 Journal Internet Mathematics (2020). https://doi.org/10.24166/im.01.2020
 """
-function findcommunities(h::H, method::CFLabelPropagationFinder) where {H<:AbstractUndirectedHypergraph}
+function findcommunities(h::H, method::CFLabelPropagationFinder) where {H<:AbstractSimpleHypergraph}
     @assert length(get_connected_components(h)) == 1
 
     rng = MersenneTwister(method.seed)
@@ -117,7 +117,7 @@ end
     vlabels::Dict{Int,Int},
     helabels::Dict{Int,Int},
     rng::MersenneTwister
-    ) where {H<:AbstractUndirectedHypergraph}
+    ) where {H<:AbstractSimpleHypergraph}
 
 Vertices labeling phase. Computes the label of each vertex according to the most
 frequent label among the hyperedges it belongs to.
@@ -128,7 +128,7 @@ function compute_vertex_label(
     vlabels::Dict{Int,Int},
     helabels::Dict{Int,Int},
     rng::MersenneTwister
-) where {H<:AbstractUndirectedHypergraph}
+) where {H<:AbstractSimpleHypergraph}
     hesᵥ = gethyperedges(h, v)
     vL = Dict{Int,Int}()
 
@@ -171,7 +171,7 @@ end
     vlabels::Dict{Int,Int},
     helabels::Dict{Int,Int},
     rng::MersenneTwister
-) where {H<:AbstractUndirectedHypergraph}
+) where {H<:AbstractSimpleHypergraph}
 
 Hyperedges labeling phase. Computes the labels of the hyperedges according  to
 the  most frequent label among the vertices contained in that hyperedge.
@@ -182,7 +182,7 @@ function compute_edge_label(
     vlabels::Dict{Int,Int},
     helabels::Dict{Int,Int},
     rng::MersenneTwister
-) where {H<:AbstractUndirectedHypergraph}
+) where {H<:AbstractSimpleHypergraph}
     vₑ = getvertices(h,e)
     eL = Dict{Int,Int}()
 
