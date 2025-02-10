@@ -44,9 +44,9 @@ end
 function Graphs.has_edge(b::BipartiteView{H}, s, d) where {H<:AbstractSimpleHypergraph}
     n1 = length(b.h.v2he)
     if s <= n1
-        d > n1 && has_key(b.v2he[s], d - n1)
+        d > n1 && haskey(b.v2he[s], d - n1)
     else
-        d <= n1 && has_key(b.h.he2v[s-n1], d)
+        d <= n1 && haskey(b.h.he2v[s-n1], d)
     end
 end
 

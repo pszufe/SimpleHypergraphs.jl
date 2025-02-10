@@ -3,7 +3,7 @@
 # TODO: Don't allow empty hyperedges, heads, tails
 
 """
-    Hypergraph{T} <: AbstractSimpleHypergraph{T}
+    Hypergraph{T} <: AbstractSimpleHypergraph{Union{T, Nothing}}
 
 An undirected hypergraph storing information about vertices and hyperedges.
 
@@ -73,7 +73,7 @@ A `SortedDict` will be used for internal data storage of the hypergraph.
 * `g` : a graph representation of the hypergraph
 """
 
-struct Hypergraph{T<:Real,V,E,D<:AbstractDict{Int,T}} <: AbstractSimpleHypergraph{T}
+struct Hypergraph{T<:Real,V,E,D<:AbstractDict{Int,T}} <: AbstractSimpleHypergraph{Union{T, Nothing}}
     v2he::Vector{D}
     he2v::Vector{D}
     v_meta::Vector{Union{V,Nothing}}
@@ -145,7 +145,7 @@ end
 
 
 """
-    BasicHypergraph{T} <: AbstractSimpleHypergraph{T}
+    BasicHypergraph{T} <: AbstractSimpleHypergraph{Union{T, Nothing}}
 
 An undirected hypergraph storing only incidence and weight information about vertices and
 hyperedges, without additional features/metadata.
@@ -185,7 +185,7 @@ A `SortedDict` will be used for internal data storage of the hypergraph.
 * `g` : a graph representation of the hypergraph
 """
 
-struct BasicHypergraph{T<:Real,D<:AbstractDict{Int,T}} <: AbstractSimpleHypergraph{T}
+struct BasicHypergraph{T<:Real,D<:AbstractDict{Int,T}} <: AbstractSimpleHypergraph{Union{T, Nothing}}
     v2he::Vector{D}
     he2v::Vector{D}
 

@@ -14,7 +14,7 @@ Abstract types
 ```@docs
 
 AbstractHypergraph{T} <: AbstractMatrix{T}
-AbstractSimpleHypergraph{T} <: AbstractHypergraph{Union{T, Nothing}}
+AbstractSimpleHypergraph{T} <: AbstractHypergraph{T} end
 ```
 
 Creating an undirected hypergraph

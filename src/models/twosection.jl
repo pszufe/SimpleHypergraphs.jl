@@ -171,7 +171,7 @@ function get_twosection_adjacency_mx(
     h::H;
     count_self_loops::Bool=false,
     replace_weights::Union{Nothing,Real}=nothing
-    ) where {H<:AbstractSimpleHypergraph}
+    ) where {T<:Real, H<:AbstractSimpleHypergraph{Union{T, Nothing}}}
     mx = zeros(replace_weights === nothing ? T : typeof(replace_weights), nhv(h), nhv(h))
     for he in 1:nhe(h)
         for v1 in keys(h.he2v[he])

@@ -12,7 +12,7 @@ abstract type AbstractHypergraph{T} <: AbstractMatrix{T} end
 
 An abstract undirected hypergraph type storing information about vertices and hyperedges.
 """
-abstract type AbstractSimpleHypergraph{T} <: AbstractHypergraph{Union{T, Nothing}} end
+abstract type AbstractSimpleHypergraph{T} <: AbstractHypergraph{T} end
 
 
 # fundamental traits
