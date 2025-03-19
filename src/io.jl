@@ -252,7 +252,7 @@ More info: https://github.com/pszufe/HIF-standard
 * `E` : type of values stored in the edges of the hypergraph
 
 """
-function hq_load(
+function hg_load(
     io::IO,
     format::HIF_Format;
     T::Type{U} = Bool,
@@ -264,11 +264,11 @@ function hq_load(
 
     data = JSON3.read(read(io, String))
 
-    k = length(data.edges)
+    dims = get_hg_dims_from_hif(data, V, E)
 
-    n = length(data.nodes)
+    print(dims)
 
-    h = Hypergraph{T, V, E, D}(n, k)
+    h = Hypergraph{T, V, E, D}(dims.num_nodes, dims.num_edges)
 
     h
 end
