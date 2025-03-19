@@ -3,6 +3,7 @@
 abstract type Abstract_HG_format end
 struct HGF_Format <: Abstract_HG_format end
 struct JSON_Format <: Abstract_HG_format end
+struct HIF_Format <: Abstract_HG_format end
 
 
 """
@@ -227,3 +228,47 @@ hg_load(
     V = Nothing,
     E = Nothing) where {U <: Real} =
     open(io -> hg_load(io, format; T=T, D=D, V=V, E=E), fname, "r")
+
+
+
+"""
+    hg_load(
+        io::IO,
+        format::HIF_Format;
+        T::Type{U} = Bool,
+        D::Type{<:AbstractDict{Int, U}} = Dict{Int,U},
+        V = Nothing,
+        E = Nothing
+    ) where {U <: Real}
+
+Loads a hypergraph from a stream `io` from `HIF` format.
+More info: https://github.com/pszufe/HIF-standard
+
+**Arguments**
+
+* `T` : type of weight values stored in the hypergraph's adjacency matrix
+* `D` : dictionary for storing values the default is `Dict{Int, T}`
+* `V` : type of values stored in the vertices of the hypergraph
+* `E` : type of values stored in the edges of the hypergraph
+
+"""
+function hq_load(
+    io::IO,
+    format::HIF_Format;
+    T::Type{U} = Bool,
+    D::Type{<:AbstractDict{Int, U}} = Dict{Int, T},
+    V = Nothing,
+    E = Nothing
+    ) where {U <: Real}
+    _ = format
+
+    data = JSON3.read(read(io, String))
+
+    k = length(data.edges)
+
+    n = length(data.nodes)
+
+    h = Hypergraph{T, V, E, D}(n, k)
+
+    h
+end
