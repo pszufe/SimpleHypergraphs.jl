@@ -19,20 +19,7 @@ function hg_save(io::IO, h::Hypergraph{T, V, E, D}, format::HIF_Format) where {T
 
     json_hg = Dict{Symbol,Any}()
     incidences = Vector{Dict{String, Union{String, Number}}}()
-    v_meta = Vector{Union{String, Int}}()
-    he_meta = Vector{Union{String, Int}}()
-
-    if any(isnothing, h.v_meta)
-        v_meta = [i for i = 1:length(h.v_meta)]
-    else
-        v_meta = [v for v in h.v_meta]
-    end
-
-    if any(isnothing, h.he_meta)
-        he_meta = [i for i = 1:length(h.he_meta)]
-    else
-        he_meta = [he for he in h.he_meta]
-    end
+    v_meta = handle_metadata(h.v_meta)
 
     node_dict = Dict(i => val for (i, val) in pairs(v_meta))
 
