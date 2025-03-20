@@ -74,6 +74,7 @@ end
 include("hypergraph.jl")
 include("io.jl")
 include("hif_io.jl")
+include("utils.jl")
 
 include("models/bipartite.jl")
 include("models/twosection.jl")

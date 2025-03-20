@@ -14,48 +14,34 @@ the user has to explicit tell the JSON3 package about it, for instance using:
 See the (JSON3.jl documentation)[https://github.com/quinnj/JSON3.jl] for more details.
 
 """
-function hg_save(io::IO, h::Hypergraph, format::HIF_Format)
+function hg_save(io::IO, h::Hypergraph{T, V, E, D}, format::HIF_Format) where {T, V, E, D}
     _ = format
 
     json_hg = Dict{Symbol,Any}()
-    incidences = []
-    v_meta = h.v_meta
-    he_meta = h.he_meta
+    incidences = Vector{Dict{String, Union{String, Number}}}()
+    v_meta = Vector{Union{String, Int}}()
+    he_meta = Vector{Union{String, Int}}()
 
     if any(isnothing, h.v_meta)
         v_meta = [i for i = 1:length(h.v_meta)]
+    else
+        v_meta = [v for v in h.v_meta]
     end
 
     if any(isnothing, h.he_meta)
         he_meta = [i for i = 1:length(h.he_meta)]
+    else
+        he_meta = [he for he in h.he_meta]
     end
 
     node_dict = Dict(i => val for (i, val) in pairs(v_meta))
-    edge_dict = Dict(i => val for (i, val) in pairs(he_meta))
 
-
-    types = collect(typeof(h).parameters)
-    V = types[2]
-    E = types[3]
-
-    for node_idx = 1:length(v_meta)
-        for edge_idx = 1:length(he_meta)
-            node = node_dict[node_idx]
-            if V == String
-                node = string(node)
-            end
-
-            edge = edge_dict[edge_idx]
-            if E == String
-                edge = string(edge)
-            end
-
-            weight = h[node_idx, edge_idx]
-
-            if isnothing(weight)
-                continue
-            end
-
+    for node_idx = eachindex(v_meta)
+        edges = gethyperedges(h, node_idx)
+        node = cast_value(node_dict[node_idx], V)
+        
+        for (_edge, weight) in edges
+            edge = cast_value(_edge, E)
             push!(incidences, Dict("edge" => edge, "node" => node, "weight" => weight))
         end
     end
@@ -99,8 +85,8 @@ function hg_load(
 
     data = JSON3.read(read(io, String))
 
-    nodes = get(data, "nodes", [])
-    edges = get(data, "edges", [])
+    nodes = get(data, "nodes", Vector{Union{String, Int}}())
+    edges = get(data, "edges", Vector{Union{String, Int}}())
 
     if length(nodes) == 0 || length(edges) == 0
         node_set = Set{V}()
