@@ -17,17 +17,17 @@ See the (JSON3.jl documentation)[https://github.com/quinnj/JSON3.jl] for more de
 function hg_save(io::IO, h::Hypergraph, format::HIF_Format)
     _ = format
 
-    json_hg = Dict{Symbol, Any}()
+    json_hg = Dict{Symbol,Any}()
     incidences = []
     v_meta = h.v_meta
     he_meta = h.he_meta
 
     if any(isnothing, h.v_meta)
-        v_meta = [i for i in 1:length(h.v_meta)]
+        v_meta = [i for i = 1:length(h.v_meta)]
     end
 
     if any(isnothing, h.he_meta)
-        he_meta = [i for i in 1:length(h.he_meta)]
+        he_meta = [i for i = 1:length(h.he_meta)]
     end
 
     node_dict = Dict(i => val for (i, val) in pairs(v_meta))
@@ -38,8 +38,8 @@ function hg_save(io::IO, h::Hypergraph, format::HIF_Format)
     V = types[2]
     E = types[3]
 
-    for node_idx in 1:length(v_meta)
-        for edge_idx in 1:length(he_meta)
+    for node_idx = 1:length(v_meta)
+        for edge_idx = 1:length(he_meta)
             node = node_dict[node_idx]
             if V == String
                 node = string(node)
@@ -56,16 +56,12 @@ function hg_save(io::IO, h::Hypergraph, format::HIF_Format)
                 continue
             end
 
-            push!(incidences, Dict(
-                "edge" => edge,
-                "node" => node,
-                "weight" => weight
-            ))
+            push!(incidences, Dict("edge" => edge, "node" => node, "weight" => weight))
         end
     end
 
     json_hg[:incidences] = incidences
-    
+
     JSON3.write(io, json_hg)
 end
 
@@ -95,10 +91,10 @@ function hg_load(
     io::IO,
     format::HIF_Format;
     T::Type{U} = Bool,
-    D::Type{<:AbstractDict{Int, U}} = Dict{Int, T},
-    V::Union{Type{String}, Type{Int}} = String,
-    E::Union{Type{String}, Type{Int}} = String
-    ) where {U <: Real}
+    D::Type{<:AbstractDict{Int,U}} = Dict{Int,T},
+    V::Union{Type{String},Type{Int}} = String,
+    E::Union{Type{String},Type{Int}} = String,
+) where {U<:Real}
     _ = format
 
     data = JSON3.read(read(io, String))
@@ -123,7 +119,7 @@ function hg_load(
         end
     else
         nodes = [node.node for node in nodes]
-        edges = [edge.edge for edge in edges]        
+        edges = [edge.edge for edge in edges]
     end
 
     sort!(nodes)
@@ -135,7 +131,7 @@ function hg_load(
     n = length(nodes)
     k = length(edges)
 
-    h = Hypergraph{T, V, E, D}(n, k, nodes, edges)
+    h = Hypergraph{T,V,E,D}(n, k, nodes, edges)
 
     for inc in data.incidences
         node_idx = node_dict[inc.node]
@@ -174,9 +170,9 @@ function hg_load(
     fname::AbstractString,
     format::HIF_Format;
     T::Type{U} = Bool,
-    D::Type{<:AbstractDict{Int, U}} = Dict{Int, T},
-    V::Union{Type{String}, Type{Int}} = String,
-    E::Union{Type{String}, Type{Int}} = String
-    ) where {U <: Real}
-    open(io -> hg_load(io, format; T=T, D=D, V=V, E=E), fname, "r")
+    D::Type{<:AbstractDict{Int,U}} = Dict{Int,T},
+    V::Union{Type{String},Type{Int}} = String,
+    E::Union{Type{String},Type{Int}} = String,
+) where {U<:Real}
+    open(io -> hg_load(io, format; T = T, D = D, V = V, E = E), fname, "r")
 end

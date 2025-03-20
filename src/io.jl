@@ -4,6 +4,7 @@ abstract type Abstract_HG_format end
 struct HGF_Format <: Abstract_HG_format end
 struct JSON_Format <: Abstract_HG_format end
 
+
 """
     hg_save(io::IO, h::Hypergraph, format::HGF_Format)
 
