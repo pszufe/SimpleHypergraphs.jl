@@ -237,8 +237,8 @@ hg_load(
         format::HIF_Format;
         T::Type{U} = Bool,
         D::Type{<:AbstractDict{Int, U}} = Dict{Int,U},
-        V = Nothing,
-        E = Nothing
+        V::Union{Type{String}, Type{Int}} = String,
+        E::Union{Type{String}, Type{Int}} = String
     ) where {U <: Real}
 
 Loads a hypergraph from a stream `io` from `HIF` format.
@@ -257,18 +257,84 @@ function hg_load(
     format::HIF_Format;
     T::Type{U} = Bool,
     D::Type{<:AbstractDict{Int, U}} = Dict{Int, T},
-    V = Nothing,
-    E = Nothing
+    V::Union{Type{String}, Type{Int}} = String,
+    E::Union{Type{String}, Type{Int}} = String
     ) where {U <: Real}
     _ = format
 
     data = JSON3.read(read(io, String))
 
-    dims = get_hg_dims_from_hif(data, V, E)
+    nodes = get(data, "nodes", [])
+    edges = get(data, "edges", [])
 
-    print(dims)
+    if length(nodes) == 0 || length(edges) == 0
+        node_set = Set{V}()
+        edge_set = Set{E}()
 
-    h = Hypergraph{T, V, E, D}(dims.num_nodes, dims.num_edges)
+        for inc in data.incidences
+            if inc.node ∉ node_set
+                push!(node_set, inc.node)
+                push!(nodes, inc.node)
+            end
+
+            if inc.edge ∉ edge_set
+                push!(edge_set, inc.edge)
+                push!(edges, inc.edge)
+            end
+        end
+    else
+        nodes = [node.node for node in nodes]
+        edges = [edge.edge for edge in edges]        
+    end
+
+    node_dict = Dict(val => i for (i, val) in pairs(nodes))
+    edge_dict = Dict(val => i for (i, val) in pairs(edges))
+
+    n = length(nodes)
+    k = length(edges)
+
+    h = Hypergraph{T, V, E, D}(n, k, nodes, edges)
+
+    for inc in data.incidences
+        node_idx = node_dict[inc.node]
+        he_idx = edge_dict[inc.edge]
+
+        h[node_idx, he_idx] = inc.weight
+    end
 
     h
+end
+
+
+"""
+    hg_load(
+        fname::AbstractString;
+        format::Abstract_HG_format = HIF_Format(),
+        T::Type{U} = Bool,
+        D::Type{<:AbstractDict{Int, U}} = Dict{Int,U},
+        V::Union{Type{String}, Type{Int}} = String,
+        E::Union{Type{String}, Type{Int}} = String
+        ) where {U <: Real}
+    )
+
+Loads a hypergraph from a file `fname`.
+The default saving format is `json`.
+
+**Arguments**
+
+* `T` : type of weight values stored in the hypergraph's adjacency matrix
+* `D` : dictionary for storing values the default is `Dict{Int, T}`
+* `V` : type of values stored in the vertices of the hypergraph
+* `E` : type of values stored in the edges of the hypergraph
+
+"""
+function hg_load(
+    fname::AbstractString,
+    format::HIF_Format;
+    T::Type{U} = Bool,
+    D::Type{<:AbstractDict{Int, U}} = Dict{Int, T},
+    V::Union{Type{String}, Type{Int}} = String,
+    E::Union{Type{String}, Type{Int}} = String
+    ) where {U <: Real}
+    open(io -> hg_load(io, format; T=T, D=D, V=V, E=E), fname, "r")
 end
