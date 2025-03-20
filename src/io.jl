@@ -76,6 +76,53 @@ hg_save(
 
 
 """
+    hg_save(io::IO, h::Hypergraph, format::HIF_Format)
+
+Saves a hypergraph `h` to an output stream `io` in `HIF` format.
+
+If `h` has `Composite Types` either for vertex metadata or hyperedges metadata,
+the user has to explicit tell the JSON3 package about it, for instance using:
+
+`JSON3.StructType(::Type{MyType}) = JSON3.Struct()`.
+
+See the (JSON3.jl documentation)[https://github.com/quinnj/JSON3.jl] for more details.
+
+"""
+function hg_save(io::IO, h::Hypergraph, format::HIF_Format)
+    _ = format
+
+    json_hg = Dict{Symbol, Any}()
+
+    node_dict = Dict(i => val for (i, val) in pairs(h.v_meta))
+    edge_dict = Dict(i => val for (i, val) in pairs(h.he_meta))
+
+    incidences = []
+
+    for node_idx in 1:length(h.v_meta)
+        for edge_idx in 1:length(h.he_meta)
+            node = node_dict[node_idx]
+            edge = edge_dict[edge_idx]
+            weight = h[node_idx, edge_idx]
+
+            if isnothing(weight)
+                continue
+            end
+
+            push!(incidences, Dict(
+                "edge" => edge,
+                "node" => node,
+                "weight" => weight
+            ))
+        end
+    end
+
+    json_hg[:incidences] = incidences
+    
+    JSON3.write(io, json_hg)
+end
+
+
+"""
     hg_load(
         io::IO,
         format::HGF_Format();
