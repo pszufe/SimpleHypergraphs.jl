@@ -92,16 +92,38 @@ function hg_save(io::IO, h::Hypergraph, format::HIF_Format)
     _ = format
 
     json_hg = Dict{Symbol, Any}()
-
-    node_dict = Dict(i => val for (i, val) in pairs(h.v_meta))
-    edge_dict = Dict(i => val for (i, val) in pairs(h.he_meta))
-
     incidences = []
+    v_meta = h.v_meta
+    he_meta = h.he_meta
 
-    for node_idx in 1:length(h.v_meta)
-        for edge_idx in 1:length(h.he_meta)
+    if any(isnothing, h.v_meta)
+        v_meta = [i for i in 1:length(h.v_meta)]
+    end
+
+    if any(isnothing, h.he_meta)
+        he_meta = [i for i in 1:length(h.he_meta)]
+    end
+
+    node_dict = Dict(i => val for (i, val) in pairs(v_meta))
+    edge_dict = Dict(i => val for (i, val) in pairs(he_meta))
+
+
+    types = collect(typeof(h).parameters)
+    V = types[2]
+    E = types[3]
+
+    for node_idx in 1:length(v_meta)
+        for edge_idx in 1:length(he_meta)
             node = node_dict[node_idx]
+            if V == String
+                node = string(node)
+            end
+
             edge = edge_dict[edge_idx]
+            if E == String
+                edge = string(edge)
+            end
+
             weight = h[node_idx, edge_idx]
 
             if isnothing(weight)
@@ -333,6 +355,9 @@ function hg_load(
         nodes = [node.node for node in nodes]
         edges = [edge.edge for edge in edges]        
     end
+
+    sort!(nodes)
+    sort!(edges)
 
     node_dict = Dict(val => i for (i, val) in pairs(nodes))
     edge_dict = Dict(val => i for (i, val) in pairs(edges))

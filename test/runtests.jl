@@ -73,6 +73,10 @@ h1[5,2] = 6.5
         @test get_vertex_meta(h1, 1) == get_vertex_meta(loaded_hg, 1)
         @test get_hyperedge_meta(h1, 2) == get_hyperedge_meta(loaded_hg, 2)
 
+        hg_save(path, h1, format=HIF_Format())
+        loaded_hg = hg_load(path; format=HIF_Format(), T=Float64, V=Int, E=String)
+
+        @test h1 == loaded_hg
     end
 
     @test_throws ArgumentError hg_load("data/test_malformedcomment.hgf"; T=Int)
