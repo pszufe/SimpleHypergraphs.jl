@@ -59,43 +59,6 @@ function hg_save(io::IO, h::Hypergraph, format::JSON_Format)
     JSON3.write(io, json_hg)
 end
 
-"""
-    hg_save(io::IO, h::BasicHypergraph, format::JSON_Format)
-
-Saves an undirected hypergraph `h` to an output stream `io` in `json` format.
-
-If `h` has `Composite Types` either for vertex metadata or hyperedges metadata,
-the user has to explicit tell the JSON3 package about it, for instance using:
-
-`JSON3.StructType(::Type{MyType}) = JSON3.Struct()`.
-
-See the (JSON3.jl documentation)[https://github.com/quinnj/JSON3.jl] for more details.
-
-The `json` in output contains the following information (keys):
-
-* `n` : number of vertices
-* `k` : number of hyperedges
-* `m` : a matrix representation of `h` where rows are vertices and columns are hyperedges
-* `v2he` : mapping vertices to hyperedges
-* `v_meta` : vertices metadata (`nothing` for a basic hypergraph)
-* `he_meta` : hyperedges metadata (`nothing` for a basic hypergraph)
-
-"""
-function hg_save(io::IO, h::BasicHypergraph, format::JSON_Format)
-    json_hg = Dict{Symbol, Any}()
-
-    json_hg[:n] = nhv(h)
-    json_hg[:k] = nhe(h)
-
-    json_hg[:m] = JSON3.write(Matrix(h))
-    json_hg[:v2he] = JSON3.write(h.v2he)
-
-    json_hg[:v_meta] = JSON3.write(nothing)
-    json_hg[:he_meta] = JSON3.write(nothing)
-
-    JSON3.write(io, json_hg)
-end
-
 
 """
     hg_save(
@@ -117,7 +80,7 @@ hg_save(
     hg_load(
         io::IO,
         format::HGF_Format;
-        HType::Type{H} = BasicHypergraph,
+        HType::Type{H} = Hypergraph,
         T::Type{U} = Bool,
         D::Type{<:AbstractDict{Int, U}} = Dict{Int, T},
     ) where {U <: Real, H <: AbstractSimpleHypergraph}
@@ -135,7 +98,7 @@ Skips a single initial comment.
 function hg_load(
     io::IO,
     format::HGF_Format;
-    HType::Type{H} = BasicHypergraph,
+    HType::Type{H} = Hypergraph,
     T::Type{U} = Bool,
     D::Type{<:AbstractDict{Int, U}} = Dict{Int, T},
 ) where {U <: Real, H <: AbstractSimpleHypergraph}
@@ -208,7 +171,7 @@ Loads a hypergraph from a stream `io` from `json` format.
 function hg_load(
         io::IO,
         format::JSON_Format;
-        HType::Type{H} = BasicHypergraph,
+        HType::Type{H} = Hypergraph,
         T::Type{U} = Bool,
         D::Type{<:AbstractDict{Int, U}} = Dict{Int, T},
         V = Nothing,
@@ -240,7 +203,7 @@ end
     hg_load(
         fname::AbstractString;
         format::Abstract_HG_format = HGF_Format(),
-        HType::Type{H} = BasicHypergraph,
+        HType::Type{H} = Hypergraph,
         T::Type{U} = Bool,
         D::Type{<:AbstractDict{Int, U}} = Dict{Int, T},
         V = Nothing,
@@ -262,7 +225,7 @@ The default saving format is `hgf`.
 function hg_load(
         fname::AbstractString;
         format::Abstract_HG_format = HGF_Format(),
-        HType::Type{H} = BasicHypergraph,
+        HType::Type{H} = Hypergraph,
         T::Type{U} = Bool,
         D::Type{<:AbstractDict{Int, U}} = Dict{Int, T},
         V = Nothing,
@@ -270,10 +233,10 @@ function hg_load(
     ) where {U <: Real, H <: AbstractSimpleHypergraph}
 
     if format == HGF_Format()
-        if HType == BasicHypergraph || HType == Hypergraph
+        if HType == Hypergraph
             open(io -> hg_load(io, format; HType=HType, T=T, D=D), fname, "r")
         else
-            error("HGF loading only implemented for BasicHypergraph and Hypergraph")
+            error("HGF loading only implemented for Hypergraph")
         end
     else
         open(io -> hg_load(io, format; HType=HType, T=T, D=D, V=V, E=E), fname, "r")

@@ -13,7 +13,7 @@ using SimpleTraits
 
 export AbstractHypergraph, AbstractSimpleHypergraph
 export isdirected, IsDirected, hasvertexmeta, HasVertexMeta, hashyperedgemeta, HasHyperedgeMeta
-export BasicHypergraph, Hypergraph, getvertices, gethyperedges
+export Hypergraph, getvertices, gethyperedges
 export add_vertex!, add_hyperedge!, remove_vertex!, remove_hyperedge!
 export prune_hypergraph!, prune_hypergraph
 export set_vertex_meta!, get_vertex_meta

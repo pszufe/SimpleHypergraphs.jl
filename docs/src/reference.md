@@ -23,7 +23,6 @@ Creating an undirected hypergraph
 ```@docs
 
 Hypergraph
-BasicHypergraph
 random_model(::Int, ::Int, ::Type{H}) where {H <: AbstractSimpleHypergraph}
 random_kuniform_model(::Int, ::Int, ::Int, ::Type{H}) where {H <: AbstractSimpleHypergraph}
 random_dregular_model(::Int, ::Int, ::Int, ::Type{H}) where {H <: AbstractSimpleHypergraph}
@@ -35,10 +34,8 @@ Manipulating vertices and hyperedges
 ```@docs
 
 add_hyperedge!(::Hypergraph{T, V, E, D}; ::D, ::Union{E,Nothing}) where {T <: Real, V, E, D <: AbstractDict{Int,T}}
-add_hyperedge!(::BasicHypergraph{T, D}; ::D) where {T <: Real, D <: AbstractDict{Int,T}}
 
 add_vertex!(::Hypergraph{T, V, E, D}; ::D, ::Union{V,Nothing}) where {T <: Real, V, E, D <: AbstractDict{Int,T}}
-add_vertex!(::BasicHypergraph{T, D}; ::D) where {T <: Real, D <: AbstractDict{Int,T}}
 
 set_vertex_meta!(Hypergraph{T, V, E, D}, ::Union{V,Nothing}, ::Int) where {T <: Real, V, E, D <: AbstractDict{Int,T}}
 get_vertex_meta(Hypergraph{T, V, E, D}, ::Int) where {T <: Real, V, E, D <: AbstractDict{Int,T}}
@@ -46,10 +43,8 @@ set_hyperedge_meta!(::Hypergraph{T, V, E, D}, ::Union{E,Nothing}, ::Int) where {
 get_hyperedge_meta(::Hypergraph{T, V, E, D}, ::Int) where {T <: Real, V, E, D <: AbstractDict{Int,T}}
 
 remove_vertex!(::Hypergraph, ::Int)
-remove_vertex!(::BasicHypergraph, ::Int)
 
 remove_hyperedge!(::Hypergraph, ::Int)
-remove_hyperedge!(::BasicHypergraph, ::Int)
 ```
 
 Hypergraph array getters and setters
@@ -108,7 +103,6 @@ get_twosection_adjacency_mx(::H; ::Bool, ::Union{Nothing,Real}) where {H<:Abstra
 random_walk(::H, ::Int; ::Function, ::Function) where {H <: AbstractSimpleHypergraph}
 
 dual(h::Hypergraph)
-dual(h::BasicHypergraph)
 
 modularity(::H, ::Vector{Set{Int}}, ::SimpleHypergraphs.HypergraphAggs) {H <: AbstractSimpleHypergraph}
 

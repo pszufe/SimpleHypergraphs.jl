@@ -144,87 +144,6 @@ function Hypergraph(g::Graphs.Graph)
 end
 
 
-"""
-    BasicHypergraph{T} <: AbstractSimpleHypergraph{Union{T, Nothing}}
-
-An undirected hypergraph storing only incidence and weight information about vertices and
-hyperedges, without additional features/metadata.
-
-**Constructors**
-
-    BasicHypergraph{T}(n::Integer,k::Integer) where {T<:Real}
-    BasicHypergraph{T,D}(n::Integer, k::Integer) where {T<:Real,D<:AbstractDict{Int,T}}
-
-Construct a hypergraph with a given number of vertices and hyperedges.
-By default the hypergraph uses a `Dict{Int,T}` for the internal data storage,
-however a different dictionary such as `SortedDict` to ensure result replicability
-can be used (e.g. when doing stochastic simulations on hypergraphs).
-
-    BasicHypergraph(m::AbstractMatrix{Union{T, Nothing}}) where {T<:Real}
-    BasicHypergraph{T, D}(m::AbstractMatrix{Union{T, Nothing}}) where {T<:Real,D<:AbstractDict{Int,T}}
-
-Construct a hypergraph using its matrix representation.
-In the matrix representation rows are vertices and columns are hyperedges.
-By default the hypergraph uses a `Dict{Int,T}` for the internal data storage,
-however a different dictionary such as `SortedDict` to ensure result
-replicability can be used (e.g. when doing stochastic simulations on
-hypergraphs).
-
-    BasicHypergraph(g::Graphs.Graph)
-
-Constructs a hypergraph of degree 2 by making a deep copy of Graphs.Graph.
-A `SortedDict` will be used for internal data storage of the hypergraph.
-
-**Arguments**
-
-* `T` : type of weight values stored in the hypergraph's adjacency matrix
-* `D` : dictionary for storing values the default is `Dict{Int, T}`
-* `n` : number of vertices
-* `k` : number of hyperedges
-* `m` : a matrix representation rows are vertices and columns are hyperedges
-* `g` : a graph representation of the hypergraph
-"""
-
-struct BasicHypergraph{T<:Real,D<:AbstractDict{Int,T}} <: AbstractSimpleHypergraph{Union{T, Nothing}}
-    v2he::Vector{D}
-    he2v::Vector{D}
-
-    BasicHypergraph{T,D}(n::Integer, k::Integer) where {T<:Real,D<:AbstractDict{Int,T}} =
-        new{T,D}([D() for i in 1:n],[D() for i in 1:k])
-end
-
-BasicHypergraph{T}(n::Integer, k::Integer) where {T<:Real} = BasicHypergraph{T,Dict{Int,T}}(n, k)
-
-BasicHypergraph(n::Integer, k::Integer) =  BasicHypergraph{Bool,Dict{Int,Bool}}(n, k)
-
-
-function BasicHypergraph{T,D}(m::AbstractMatrix{Union{T, Nothing}}) where {T<:Real,D<:AbstractDict{Int,T}}
-    n, k = size(m)
-    h = BasicHypergraph{T,D}(n, k)
-    h .= m
-    h
-end
-
-function BasicHypergraph(m::AbstractMatrix{Union{T, Nothing}}) where {T<:Real}
-    BasicHypergraph{T,Dict{Int,T}}(m)
-end
-
-function BasicHypergraph{T}(m::AbstractMatrix{Union{T, Nothing}}) where {T<:Real}
-    BasicHypergraph{T,Dict{Int,T}}(m)
-end
-
-
-function BasicHypergraph(g::Graphs.Graph)
-    h = BasicHypergraph{Bool,SortedDict{Int,Bool}}(maximum(vertices(g)), ne(g))
-    e = 0
-    for edge in edges(g)
-        e += 1
-        h[edge.src,e] = true
-        h[edge.dst,e] = true
-    end
-    h
-end
-
 hasvertexmeta(::Type{Hypergraph}) = true
 hasvertexmeta(X::Hypergraph) = true
 hashyperedgemeta(::Type{Hypergraph}) = true
@@ -329,28 +248,6 @@ function add_vertex!(h::Hypergraph{T, V, E, D};
     ix
 end
 
-"""
-    add_vertex!(h::BasicHypergraph{T, D};
-                hyperedges::D = D()
-                ) where {T <: Real, D <: AbstractDict{Int,T}}
-
-Adds a vertex to a given undirected hypergraph `h`. Optionally, the vertex can be added
-to existing hyperedges. The `hyperedges` parameter presents a dictionary
-of hyperedge identifiers and values stored at the hyperedges.
-
-"""
-function add_vertex!(h::BasicHypergraph{T, D};
-                     hyperedges::D = D()
-                    ) where {T <: Real, D <: AbstractDict{Int,T}}
-    @boundscheck (checkbounds(h,1,k) for k in keys(hyperedges))
-    push!(h.v2he,hyperedges)
-    ix = length(h.v2he)
-    for k in keys(hyperedges)
-        h[ix,k]=hyperedges[k]
-    end
-    ix
-end
-
 
 """
     remove_vertex!(h::Hypergraph, v::Int)
@@ -378,32 +275,6 @@ function remove_vertex!(h::Hypergraph, v::Int)
     end
     resize!(h.v2he, length(h.v2he) - 1)
     resize!(h.v_meta, length(h.v_meta) - 1)
-    h
-end
-
-"""
-    remove_vertex!(h::BasicHypergraph, v::Int)
-
-Removes the vertex `v` from a given undirected hypergraph `h`.
-Note that running this function will cause reordering of vertices in the
-hypergraph; the vertex `v` will replaced by the last vertex of the hypergraph
-and the list of vertices will be shrunk.
-"""
-function remove_vertex!(h::BasicHypergraph, v::Int)
-    n = nhv(h)
-    if v < n
-        h.v2he[v] = h.v2he[n]
-    end
-
-    for hv in h.he2v
-        if v < n && haskey(hv, n)
-            hv[v] = hv[n]
-            delete!(hv, n)
-        else
-            delete!(hv, v)
-        end
-    end
-    resize!(h.v2he, length(h.v2he) - 1)
     h
 end
 
@@ -435,31 +306,6 @@ end
 
 
 """
-    add_hyperedge!(h::BasicHypergraph{T, D};
-                   vertices::D = D()
-                   ) where {T <: Real, D <: AbstractDict{Int,T}}
-
-Adds a hyperedge to a given undirected hypergraph `h`.
-Optionally, existing vertices can be added to the created hyperedge.
-The paramater `vertices` represents a dictionary of vertex identifiers and
-values stored at the hyperedges.
-
-"""
-function add_hyperedge!(h::BasicHypergraph{T, D};
-                        vertices::D = D()
-                        ) where {T <: Real, D <: AbstractDict{Int,T}}
-    @boundscheck (checkbounds(h,k,1) for k in keys(vertices))
-    push!(h.he2v,vertices)
-    ix = length(h.he2v)
-    for k in keys(vertices)
-        h[k,ix]=vertices[k]
-    end
-
-    ix
-end
-
-
-"""
     remove_hyperedge!(h::Hypergraph, e::Int)
 Removes the hyperedge `e` from a given undirected hypergraph `h`.
 Note that running this function will cause reordering of hyperedges in the
@@ -484,33 +330,6 @@ function remove_hyperedge!(h::Hypergraph, e::Int)
     end
     resize!(h.he2v, length(h.he2v) - 1)
     resize!(h.he_meta, length(h.he_meta) - 1)
-    h
-end
-
-
-"""
-    remove_hyperedge!(h::BasicHypergraph, e::Int)
-Removes the hyperedge `e` from a given undirected hypergraph `h`.
-Note that running this function will cause reordering of hyperedges in the
-hypergraph: the hyperedge `e` will replaced by the last hyperedge of the hypergraph
-and the list of hyperedges will be shrunk.
-"""
-function remove_hyperedge!(h::BasicHypergraph, e::Int)
-    ne = nhe(h)
-	@assert(e <= ne)
-	if e < ne
-	    h.he2v[e] = h.he2v[ne]
-	end
-
-    for he in h.v2he
-	    if e < ne && haskey(he, ne)
-		    he[e] = he[ne]
-            delete!(he, ne)
-		else
-			delete!(he, e)
-		end
-    end
-    resize!(h.he2v, length(h.he2v) - 1)
     h
 end
 
@@ -560,9 +379,6 @@ function set_vertex_meta!(h::Hypergraph{T, V, E, D},
 end
 
 
-set_vertex_meta!(::BasicHypergraph, ::Any, ::Int) = throw("Not implemented!")
-
-
 """
     get_vertex_meta(h::Union{Hypergraph{T, V, E, D}, DirectedHypergraph{T, V, E, D}}, id::Int
                     ) where {T <: Real, V, E, D <: AbstractDict{Int,T}}
@@ -575,9 +391,6 @@ function get_vertex_meta(h::Hypergraph{T, V, E, D}, id::Int
     checkbounds(h.v_meta, id)
     h.v_meta[id]
 end
-
-
-get_vertex_meta(::BasicHypergraph, ::Int) = throw("Not implemented!")
 
 
 """
@@ -597,9 +410,6 @@ function set_hyperedge_meta!(h::Hypergraph{T, V, E, D},
 end
 
 
-set_hyperedge_meta!(::BasicHypergraph, ::Any, ::Int) = throw("Not implemented!")
-
-
 """
     get_hyperedge_meta(h::Hypergraph{T, V, E, D}, id::Int)
         where {T <: Real, V, E, D <: AbstractDict{Int,T}}
@@ -611,9 +421,6 @@ function get_hyperedge_meta(h::Hypergraph{T, V, E, D}, id::Int
     checkbounds(h.he_meta, id)
     h.he_meta[id]
 end
-
-
-get_hyperedge_meta(::BasicHypergraph, ::Int) = throw("Not implemented!")
 
 
 """
