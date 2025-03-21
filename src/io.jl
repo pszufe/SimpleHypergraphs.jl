@@ -218,10 +218,16 @@ function hg_load(
 
     m = reshape(JSON3.read(json_hg.m, Array{Union{T, Nothing}}), json_hg.n, json_hg.k)
 
-    if V != Nothing && E != Nothing && hasmeta(HType)
+    if V != Nothing && E != Nothing && hasvertexmeta(HType) && hashyperedgemeta(HType)
         v_meta = JSON3.read(json_hg.v_meta, Array{Union{V, Nothing}})
         he_meta = JSON3.read(json_hg.he_meta, Array{Union{E, Nothing}})
         h = HType{T, V, E, D}(m; v_meta=v_meta, he_meta=he_meta)
+    elseif V != Nothing && hasvertexmeta(HType)
+        v_meta = JSON3.read(json_hg.v_meta, Array{Union{V, Nothing}})
+        h = HType{T, V, D}(m; v_meta=v_meta)
+    elseif E != Nothing && hashyperedgemeta(HType)
+        he_meta = JSON3.read(json_hg.he_meta, Array{Union{E, Nothing}})
+        h = HType{T, E, D}(m; he_meta=he_meta)
     else
         h = HType{T, D}(m)
     end

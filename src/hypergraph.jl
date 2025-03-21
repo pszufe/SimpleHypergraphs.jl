@@ -225,8 +225,10 @@ function BasicHypergraph(g::Graphs.Graph)
     h
 end
 
-hasmeta(::Type{Hypergraph}) = true
-hasmeta(X::Hypergraph) = true
+hasvertexmeta(::Type{Hypergraph}) = true
+hasvertexmeta(X::Hypergraph) = true
+hashyperedgemeta(::Type{Hypergraph}) = true
+hashyperedgemeta(X::Hypergraph) = true
 
 # AbstractArray interface functions
 

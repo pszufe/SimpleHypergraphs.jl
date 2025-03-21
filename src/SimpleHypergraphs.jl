@@ -12,7 +12,7 @@ using LinearAlgebra
 using SimpleTraits
 
 export AbstractHypergraph, AbstractSimpleHypergraph
-export isdirected, IsDirected, hasmeta, HasMeta
+export isdirected, IsDirected, hasvertexmeta, HasVertexMeta, hashyperedgemeta, HasHyperedgeMeta
 export BasicHypergraph, Hypergraph, getvertices, gethyperedges
 export add_vertex!, add_hyperedge!, remove_vertex!, remove_hyperedge!
 export prune_hypergraph!, prune_hypergraph
