@@ -73,8 +73,10 @@ end
 
 include("hypergraph.jl")
 include("io.jl")
-include("hif_io.jl")
-include("utils.jl")
+
+include("hif/hif.jl")
+include("hif/hif_load.jl")
+include("hif/hif_save.jl")
 
 include("models/bipartite.jl")
 include("models/twosection.jl")

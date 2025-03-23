@@ -1,0 +1,7 @@
+{
+    "network-type": "undirected",
+    "metadata": {},
+    "nodes": [{"node": "n1"}, {"node": "n1"}],
+    "edges": [{"edge": "e1"}, {"edge": "e1"}],
+    "incidences": [{"edge": "e1", "node": "n1"}, {"edge": "e1", "node": "n1"}]
+}
