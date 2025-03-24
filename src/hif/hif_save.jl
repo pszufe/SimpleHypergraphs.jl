@@ -1,5 +1,7 @@
 using JSON3
 
+HIFEntryType = Dict{String, Union{String, Number, JSON3.Object}}
+
 """
     hg_save(io::IO, h::Hypergraph, format::HIF_Format)
 
@@ -17,44 +19,130 @@ function hg_save(io::IO, h::Hypergraph{T, V, E, D}, format::HIF_Format) where {T
     _ = format
 
     json_hg = Dict{Symbol,Any}()
-    incidences = Vector{Dict{String, Union{String, Number}}}()
-    v_meta = handle_metadata(h.v_meta)
 
-    node_dict = Dict(i => val for (i, val) in pairs(v_meta))
+    nodes_meta = prepare_metadata(h.v_meta, handle_node)
+    edges_meta = prepare_metadata(h.he_meta, handle_edge)
 
-    for node_idx = eachindex(v_meta)
-        edges = gethyperedges(h, node_idx)
-        node = cast_value(node_dict[node_idx], V)
-        
-        for (_edge, weight) in edges
-            edge = cast_value(_edge, E)
-            push!(incidences, Dict("edge" => edge, "node" => node, "weight" => weight))
-        end
+    incidences = prepare_incidences(h)
+    
+    json_hg[:incidences] = incidences
+
+    if !isempty(nodes_meta)
+        json_hg[:nodes] = nodes_meta
     end
 
-    json_hg[:incidences] = incidences
+    if !isempty(edges_meta)
+        json_hg[:edges] = edges_meta
+    end
 
     JSON3.write(io, json_hg)
 end
+
+
+function prepare_incidences(h::Hypergraph{T, V, E, D}) where {T, V, E, D}
+    incidences = Vector{HIFEntryType}()
+
+    node_dict = Dict(i => val for (i, val) in pairs(h.v_meta))
+    edge_dict = Dict(i => val for (i, val) in pairs(h.he_meta))
+
+    for node_idx = eachindex(h.v_meta)
+        edges = gethyperedges(h, node_idx)
+        node = isnothing(node_dict[node_idx]) ? node_idx : node_dict[node_idx]
+
+        _node = (V == JSON3.Object) ? node["node"] : node
+
+        
+        for (edge, weight) in edges
+            if isnothing(weight)
+                continue
+            end
+
+            _edge = isnothing(edge_dict[edge]) ? edge : edge_dict[edge] 
+
+            push!(incidences, Dict("edge" => _edge, "node" => _node, "weight" => weight))
+        end
+    end
+
+    return incidences
+end
+
+
+function prepare_metadata(
+    metadata::Vector{Union{T, Nothing}}, 
+    handling_func::Function
+) where {T}
+    result = Vector{HIFEntryType}()
+
+    for item in metadata
+        if isnothing(item)
+            continue
+        end
+
+        handled = handling_func(item)
+        push!(result, handled)
+    end
+
+    return result
+end
+
+
+function handle_node(node::Union{String, Int})
+    return Dict{String, Union{String, Int}}(
+        "node" => node
+    )
+end
+
+function handle_node(node::JSON3.Object)
+    result = HIFEntryType(
+        "node" => node["node"]
+    )
+
+    add_optional_params!(result, node)
+
+    return result
+end
+
+
+function handle_edge(edge::Union{String, Int})
+    return Dict{String, Union{String, Int}}(
+        "edge" => edge
+    )
+end
+
+
+function handle_edge(edge::JSON3.Object)
+    result = HIFEntryType(
+        "edge" => edge["edge"]
+    )
+
+    add_optional_params!(result, edge)
+
+    return result
+end
+
+
+function add_optional_params!(result::HIFEntryType, item::JSON3.Object)
+    if haskey(item, "weight")
+        result["weight"] = item["weight"]
+    end
+
+    if haskey(item, "attrs")
+        result["attrs"] = item["attrs"]
+    end
+end
+
 
 function cast_value(val::Union{String, Int}, t::Type{String}) 
     return string(val)
 end
 
 
-function cast_value(val::Union{Int, JSON3.Object}, t::Type{Union{Int, JSON3.Object}})
+function cast_value(val::Int, t::Type{Int})
     return val
 end
 
 
-function handle_metadata(metadata::Array)
-    result = Vector{Union{String, Int, JSON3.Object}}()
-
-    if any(isnothing, metadata)
-        append!(result, 1:length(metadata))
-    else
-        append!(result, metadata)
-    end
-
-    return result
+function cast_value(val::JSON3.Object, t::Type{JSON3.Object})
+    return val
 end
+

@@ -74,7 +74,7 @@ h1[5,2] = 6.5
         @test get_hyperedge_meta(h1, 2) == get_hyperedge_meta(loaded_hg, 2)
 
         hg_save(path, h1, format=HIF_Format())
-        loaded_hg = hg_load(path; format=HIF_Format(), T=Float64, V=Int, E=String)
+        loaded_hg = hg_load(path, HIF_Format(), T=Float64)
 
         @test h1 == loaded_hg
     end
