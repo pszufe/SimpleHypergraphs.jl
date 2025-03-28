@@ -7,6 +7,7 @@ using Random
 using DataStructures
 import Graphs
 
+
 h1 = Hypergraph{Float64, Int, String}(5,4)
 h1[1:3,1] .= 1.5
 h1[3,4] = 2.5
@@ -16,9 +17,9 @@ h1[5,4] = 5.5
 h1[5,2] = 6.5
 
 
-@testset "SimpleHypergraphs Hypergraph          " begin
+@testset "SimpleHypergraphs Hypergraph             " begin
 
-    h = hg_load("data/test1.hgf"; T=Int)
+    h = hg_load("data/test1.hgf"; T=Int, HType=Hypergraph)
     @test size(h) == (4, 4)
     @test nhv(h) == 4
     @test nhe(h) == 4
@@ -64,7 +65,7 @@ h1[5,2] = 6.5
         end
 
         hg_save(path, h1; format=JSON_Format())
-        loaded_hg = hg_load(path; format=JSON_Format(), T=Float64, V=Int, E=String)
+        loaded_hg = hg_load(path; format=JSON_Format(), HType=Hypergraph, T=Float64, V=Int, E=String)
 
         @test h1 == loaded_hg
         @test h1.v_meta == loaded_hg.v_meta
@@ -157,10 +158,10 @@ h1[5,2] = 6.5
 end;
 
 
-@testset "SimpleHypergraphs BipartiteView       " begin
+@testset "SimpleHypergraphs BipartiteView          " begin
     h2 = deepcopy(h1)
 
-    @test Graphs.nv(Graphs.zero(BipartiteView{Int})) == 0
+    @test Graphs.nv(Graphs.zero(BipartiteView{Hypergraph{Int}})) == 0
 
     b = BipartiteView(h2)
     @test Graphs.edgetype(b) == Graphs.SimpleGraphs.SimpleEdge{Int}
@@ -204,7 +205,7 @@ end;
 end;
 
 
-@testset "SimpleHypergraphs TwoSectionView      " begin
+@testset "SimpleHypergraphs TwoSectionView         " begin
 
     ht = Hypergraph{Float64}(3,3)
     ht[1:2,1:2] .= 2.
@@ -215,7 +216,7 @@ end;
     h1[5,5] = 1
     h1[6,5] = 1
 
-    @test Graphs.nv(Graphs.zero(TwoSectionView{Int})) == 0
+    @test Graphs.nv(Graphs.zero(TwoSectionView{Hypergraph{Int64}})) == 0
 
     t = TwoSectionView(h1)
     @test Graphs.edgetype(t) == Graphs.SimpleGraphs.SimpleEdge{Int}
@@ -263,33 +264,33 @@ end;
 end;
 
 
-@testset "SimpleHypergraphs random-models       " begin
+@testset "SimpleHypergraphs random-models          " begin
 
-    Hᵣ = random_model(5,5)
+    Hᵣ = random_model(5, 5, Hypergraph)
     @test nhv(Hᵣ) == 5
     @test nhe(Hᵣ) == 5
     @test  all(length.(Hᵣ.v2he) .> 0)
     @test  all(length.(Hᵣ.v2he) .<= 5)
 
-    Hᵣ2 = random_model(5,0)
+    Hᵣ2 = random_model(5, 0, Hypergraph)
     add_hyperedge!(Hᵣ2;vertices=Dict(2 => true, 4 => true))
     @test nhv(Hᵣ2) == 5
     @test nhe(Hᵣ2) == 1
 
-    Hᵣ3  = random_model(5,1)
+    Hᵣ3  = random_model(5, 1, Hypergraph)
     @test nhe(Hᵣ3) == 1
 
-    Hκ = random_kuniform_model(5, 5, 3)
+    Hκ = random_kuniform_model(5, 5, 3, Hypergraph)
     @test nhv(Hκ) == 5
     @test nhe(Hκ) == 5
     @test all(length.(Hκ.he2v) .== 3)
 
-    Hδ = random_dregular_model(5, 5, 3)
+    Hδ = random_dregular_model(5, 5, 3, Hypergraph)
     @test nhv(Hδ) == 5
     @test nhe(Hδ) == 5
     @test all(length.(Hδ.v2he) .== 3)
 
-    H∂ = random_preferential_model(20, 0.5)
+    H∂ = random_preferential_model(20, 0.5, Hypergraph)
     @test nhv(H∂) == 20
 end;
 
@@ -345,7 +346,7 @@ end;
 end;
 
 
-@testset "SimpleHypergraphs randomized tests    " begin
+@testset "SimpleHypergraphs randomized tests       " begin
     Random.seed!(0)
     N = 500
     res = Vector{Bool}(undef, N)
@@ -362,7 +363,7 @@ end;
 end
 
 
-@testset "SimpleHypergraphs label propagation   " begin
+@testset "SimpleHypergraphs label propagation      " begin
     Random.seed!(1234);
     hg = Hypergraph{Bool}(10, 12)
     for i in eachindex(hg)
@@ -391,7 +392,7 @@ end
 end;
 
 
-@testset "SimpleHypergraphs randomwalk          " begin
+@testset "SimpleHypergraphs randomwalk             " begin
     h1 = Hypergraph{Float64}(5,4)
     h1[1:3,1] .= 1.5
     h1[3,4] = 2.5
@@ -414,7 +415,6 @@ end;
     @test_throws ArgumentError random_walk(h1, 0)
 end
 
-
 @testset "SimpleHypergraphs connected components" begin
     bip = Graphs.SimpleGraph(BipartiteView(h1))
     cc = Graphs.connected_components(bip)
@@ -427,7 +427,7 @@ end
 end
 
 
-@testset "SimpleHypergraphs hypernetx bridge    " begin
+@testset "SimpleHypergraphs hypernetx bridge       " begin
 
     if (!SimpleHypergraphs.support_hypernetx())
         @warn "HyperNetX is not installed. Skipping hypernetx tests"
@@ -470,7 +470,7 @@ end
 end;
 
 
-@testset "SimpleHypergraphs conductance         " begin
+@testset "SimpleHypergraphs conductance            " begin
   h = Hypergraph{Float64, Int}(5,4)
   h[1:3,1] .= 1
   h[3,4] = 1
@@ -498,7 +498,7 @@ end;
 end;
 
 
-@testset "SimpleHypergraphs dual                " begin
+@testset "SimpleHypergraphs dual                   " begin
     m = [
           1         nothing   nothing   4
           1         2         3         nothing
@@ -530,7 +530,7 @@ end;
 end;
 
 
-@testset "SimpleHypergraphs s-distance          " begin
+@testset "SimpleHypergraphs s-distance             " begin
     h = Hypergraph{Int}(6,4)
 
     h[1:3, 1] .= 1

@@ -9,7 +9,10 @@ using PyPlot
 using JSON3
 using Random
 using LinearAlgebra
+using SimpleTraits
 
+export AbstractHypergraph, AbstractSimpleHypergraph
+export isdirected, IsDirected, hasvertexmeta, HasVertexMeta, hashyperedgemeta, HasHyperedgeMeta
 export Hypergraph, getvertices, gethyperedges
 export add_vertex!, add_hyperedge!, remove_vertex!, remove_hyperedge!
 export prune_hypergraph!, prune_hypergraph
@@ -71,6 +74,7 @@ function support_hypernetx()
 end
 
 
+include("abstracttypes.jl")
 include("hypergraph.jl")
 include("io.jl")
 

@@ -7,7 +7,6 @@ Return the dual of the hypergraph `h`.
 NOTE
 `h` needs to have at least one dimension greater than 0.
 """
-
 function dual(h::Hypergraph)
     @assert(nhv(h)>0 || nhe(h)>0)
 
