@@ -1,0 +1,9 @@
+{
+    "incidences": [
+        {
+            "edge": "abcd",
+            "node": 42,
+            "weight": -2
+        }
+    ]
+}

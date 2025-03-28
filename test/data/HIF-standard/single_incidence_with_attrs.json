@@ -1,0 +1,12 @@
+{
+    "incidences": [
+        {
+            "edge": "abcd",
+            "node": 42,
+            "attrs": {
+                "role": "PI",
+                "age": 42
+            }
+        }
+    ]
+}
