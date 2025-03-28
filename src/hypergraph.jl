@@ -1,5 +1,4 @@
 # TODO: think more carefully about ensuring that metadata vectors are of appropriate lengths
-# TODO: use haskey instead of x in keys(...)
 # TODO: Don't allow empty hyperedges, heads, tails
 
 """
@@ -72,7 +71,6 @@ A `SortedDict` will be used for internal data storage of the hypergraph.
 * `m` : a matrix representation rows are vertices and columns are hyperedges
 * `g` : a graph representation of the hypergraph
 """
-
 struct Hypergraph{T<:Real,V,E,D<:AbstractDict{Int,T}} <: AbstractSimpleHypergraph{Union{T, Nothing}}
     v2he::Vector{D}
     he2v::Vector{D}
@@ -257,7 +255,6 @@ Note that running this function will cause reordering of vertices in the
 hypergraph; the vertex `v` will replaced by the last vertex of the hypergraph
 and the list of vertices will be shrunk.
 """
-
 function remove_vertex!(h::Hypergraph, v::Int)
     n = nhv(h)
     if v < n

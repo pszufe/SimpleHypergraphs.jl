@@ -13,8 +13,8 @@ Abstract types
 
 ```@docs
 
-AbstractHypergraph{T} <: AbstractMatrix{T}
-AbstractSimpleHypergraph{T} <: AbstractHypergraph{T} end
+AbstractHypergraph
+AbstractSimpleHypergraph
 ```
 
 Creating an undirected hypergraph
@@ -37,8 +37,8 @@ add_hyperedge!(::Hypergraph{T, V, E, D}; ::D, ::Union{E,Nothing}) where {T <: Re
 
 add_vertex!(::Hypergraph{T, V, E, D}; ::D, ::Union{V,Nothing}) where {T <: Real, V, E, D <: AbstractDict{Int,T}}
 
-set_vertex_meta!(Hypergraph{T, V, E, D}, ::Union{V,Nothing}, ::Int) where {T <: Real, V, E, D <: AbstractDict{Int,T}}
-get_vertex_meta(Hypergraph{T, V, E, D}, ::Int) where {T <: Real, V, E, D <: AbstractDict{Int,T}}
+set_vertex_meta!(::Hypergraph{T, V, E, D}, ::Union{V,Nothing}, ::Int) where {T <: Real, V, E, D <: AbstractDict{Int,T}}
+get_vertex_meta(::Hypergraph{T, V, E, D}, ::Int) where {T <: Real, V, E, D <: AbstractDict{Int,T}}
 set_hyperedge_meta!(::Hypergraph{T, V, E, D}, ::Union{E,Nothing}, ::Int) where {T <: Real, V, E, D <: AbstractDict{Int,T}}
 get_hyperedge_meta(::Hypergraph{T, V, E, D}, ::Int) where {T <: Real, V, E, D <: AbstractDict{Int,T}}
 
@@ -80,10 +80,10 @@ This has been achieved by providing types that are subtypes of the
 
 ```@docs
 BipartiteView
-shortest_path(::BipartiteView, ::Int, ::Int)
+shortest_path(::BipartiteView{H}, ::Int, ::Int) where {H<:AbstractSimpleHypergraph}
 
 TwoSectionView
-shortest_path(::TwoSectionView, ::Int, ::Int)
+shortest_path(::TwoSectionView{H}, ::Int, ::Int) where {H<:AbstractSimpleHypergraph}
 ```
 
 Hypergraph info
@@ -99,12 +99,12 @@ gethyperedges(::Hypergraph, ::Int) where {H <: AbstractSimpleHypergraph}
 get_connected_components(::H) where {H <: AbstractSimpleHypergraph}
 
 conductance(::Hypergraph, ::Set{Int})
-get_twosection_adjacency_mx(::H; ::Bool, ::Union{Nothing,Real}) where {H<:AbstractSimpleHypergraph}
+get_twosection_adjacency_mx(::H; ::Bool, ::Union{Nothing,Real}) where {T<:Real, H<:AbstractSimpleHypergraph{Union{T, Nothing}}}
 random_walk(::H, ::Int; ::Function, ::Function) where {H <: AbstractSimpleHypergraph}
 
 dual(h::Hypergraph)
 
-modularity(::H, ::Vector{Set{Int}}, ::SimpleHypergraphs.HypergraphAggs) {H <: AbstractSimpleHypergraph}
+modularity(::H, ::Vector{Set{Int}}, ::SimpleHypergraphs.HypergraphAggs) where {H <: AbstractSimpleHypergraph}
 
 SimpleHypergraphs.HypergraphAggs
 

@@ -1,9 +1,8 @@
 """
-    AbstractHypergraph{T} <: AbstractMatrix{Union{T, Nothing}}
+    AbstractHypergraph{T} <: AbstractMatrix{T}
 
 An abstract hypergraph type storing information about vertices and hyperedges.
 """
-
 abstract type AbstractHypergraph{T} <: AbstractMatrix{T} end
 
 """
