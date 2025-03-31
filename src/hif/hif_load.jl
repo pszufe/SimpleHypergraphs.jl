@@ -24,7 +24,7 @@ function hg_load(
 ) where {U<:Real}
     _ = format
 
-    data = JSON3.read(read(io, String))
+    data = JSON3.read(read(io, String), Dict{String, Any})
 
     if !haskey(data, "incidences")
         throw(ArgumentError("Invalid JSON schema: missing required key 'incidences'"))
@@ -34,21 +34,21 @@ function hg_load(
 
     h = init_hypergraph(data, length(nodes), length(edges), T, D)
 
-    add_weights_from_incidences!(h, data.incidences, nodes, edges)
+    add_weights_from_incidences!(h, data["incidences"], nodes, edges)
 
     h
 end
 
 
 function init_hypergraph(
-    data::JSON3.Object,
+    data::Dict{String, Any},
     n::Int64,
     k::Int64,
     T::Type{U},
     D::Type{<:AbstractDict{Int,U}},
 ) where {U<:Real}
-    node_metadata = Vector{Union{JSON3.Object, Nothing}}()
-    edge_metadata = Vector{Union{JSON3.Object, Nothing}}()
+    node_metadata = Vector{Union{Dict{String, Any}, Nothing}}()
+    edge_metadata = Vector{Union{Dict{String, Any}, Nothing}}()
 
     if haskey(data, "nodes")
         append!(node_metadata, data["nodes"])
@@ -62,31 +62,28 @@ function init_hypergraph(
         append!(edge_metadata, [nothing for _ in 1:k])
     end
 
-    return Hypergraph{T,JSON3.Object,JSON3.Object,D}(n, k, node_metadata, edge_metadata)
+    return Hypergraph{T,Dict{String, Any},Dict{String, Any},D}(n, k, node_metadata, edge_metadata)
 end
 
 
-function get_nodes_and_edges(data::JSON3.Object)
+function get_nodes_and_edges(data::Dict{String, Any})
     node_set = Set{Union{String, Int}}()
     edge_set = Set{Union{String, Int}}()
 
     nodes = Vector{Union{String, Int}}()
     edges = Vector{Union{String, Int}}()
 
-    for inc in data.incidences
-        if inc.node ∉ node_set
-            push!(node_set, inc.node)
-            push!(nodes, inc.node)
+    for inc in data["incidences"]
+        if inc["node"] ∉ node_set
+            push!(node_set, inc["node"])
+            push!(nodes, inc["node"])
         end
 
-        if inc.edge ∉ edge_set
-            push!(edge_set, inc.edge)
-            push!(edges, inc.edge)
+        if inc["edge"] ∉ edge_set
+            push!(edge_set, inc["edge"])
+            push!(edges, inc["edge"])
         end
     end
-
-    sort!(nodes)
-    sort!(edges)
 
     return nodes, edges
 end
@@ -94,7 +91,7 @@ end
 
 function add_weights_from_incidences!(
     h::Hypergraph, 
-    incidences::JSON3.Array{JSON3.Object},
+    incidences::AbstractVector,
     nodes::Vector{Union{String, Int}},
     edges::Vector{Union{String, Int}}
     )
@@ -102,10 +99,10 @@ function add_weights_from_incidences!(
     edge_dict = Dict(val => i for (i, val) in pairs(edges))
 
     for inc in incidences
-        node_idx = node_dict[inc.node]
-        he_idx = edge_dict[inc.edge]
+        node_idx = node_dict[inc["node"]]
+        he_idx = edge_dict[inc["edge"]]
 
-        h[node_idx, he_idx] = inc.weight
+        h[node_idx, he_idx] = inc["weight"]
     end
 end
 
