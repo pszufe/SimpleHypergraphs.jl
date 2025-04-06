@@ -73,10 +73,12 @@ h1[5,2] = 6.5
         @test get_vertex_meta(h1, 1) == get_vertex_meta(loaded_hg, 1)
         @test get_hyperedge_meta(h1, 2) == get_hyperedge_meta(loaded_hg, 2)
 
-        hg_save(path, h1, format=HIF_Format())
-        loaded_hg = hg_load(path, HIF_Format(), T=Float64)
+        hg_save("test.json", h1, format=HIF_Format())
+        loaded_hg = hg_load("test.json", HIF_Format(), T=Float64, V=Int, E=String)
 
         @test h1 == loaded_hg
+        @test h1.v_meta == loaded_hg.v_meta
+        @test h1.he_meta == loaded_hg.he_meta
     end
 
     @test_throws ArgumentError hg_load("data/test_malformedcomment.hgf"; T=Int)
@@ -159,6 +161,16 @@ h1[5,2] = 6.5
     @test size(h1_1)[1] == 3
     @test size(h1_1)[2] == 3
 end;
+
+
+@testset "SimpleHypergraphs HIF Format          " begin
+    data_dir = "data/HIF-standard/"
+
+    files = [file for file in readdir(data_dir) if split(file, ".")[end] == "json"]
+
+
+
+end
 
 
 @testset "SimpleHypergraphs BipartiteView       " begin

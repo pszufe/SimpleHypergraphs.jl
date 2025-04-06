@@ -1,6 +1,6 @@
 using JSON3
 
-HIFEntryType = Dict{String, Union{String, Number, JSON3.Object}}
+HIFEntryType = Dict{String, Union{String, Number, Dict{String, Any}}}
 
 """
     hg_save(io::IO, h::Hypergraph, format::HIF_Format)
@@ -42,24 +42,20 @@ end
 function prepare_incidences(h::Hypergraph{T, V, E, D}) where {T, V, E, D}
     incidences = Vector{HIFEntryType}()
 
-    node_dict = Dict(i => val for (i, val) in pairs(h.v_meta))
-    edge_dict = Dict(i => val for (i, val) in pairs(h.he_meta))
-
-    for node_idx = eachindex(h.v_meta)
+    for node_idx in eachindex(h.v_meta)
         edges = gethyperedges(h, node_idx)
-        node = isnothing(node_dict[node_idx]) ? node_idx : node_dict[node_idx]
 
-        _node = (V == JSON3.Object) ? node["node"] : node
+        node = isnothing(h.v_meta[node_idx]) ? node_idx : h.v_meta[node_idx]
 
-        
+        _node = (V == Dict{String, Any}) ? node["node"] : node
+
         for (edge, weight) in edges
-            if isnothing(weight)
-                continue
+            _edge = isnothing(h.he_meta[edge]) ? edge : h.he_meta[edge]
+            if T == Bool
+                push!(incidences, Dict("edge" => _edge, "node" => _node))
+            else
+                push!(incidences, Dict("edge" => _edge, "node" => _node, "weight" => weight))
             end
-
-            _edge = isnothing(edge_dict[edge]) ? edge : edge_dict[edge] 
-
-            push!(incidences, Dict("edge" => _edge, "node" => _node, "weight" => weight))
         end
     end
 
@@ -92,7 +88,7 @@ function handle_node(node::Union{String, Int})
     )
 end
 
-function handle_node(node::JSON3.Object)
+function handle_node(node::Dict{String, Any})
     result = HIFEntryType(
         "node" => node["node"]
     )
@@ -110,7 +106,7 @@ function handle_edge(edge::Union{String, Int})
 end
 
 
-function handle_edge(edge::JSON3.Object)
+function handle_edge(edge::Dict{String, Any})
     result = HIFEntryType(
         "edge" => edge["edge"]
     )
@@ -121,7 +117,7 @@ function handle_edge(edge::JSON3.Object)
 end
 
 
-function add_optional_params!(result::HIFEntryType, item::JSON3.Object)
+function add_optional_params!(result::HIFEntryType, item::Dict{String, Any})
     if haskey(item, "weight")
         result["weight"] = item["weight"]
     end
@@ -130,19 +126,3 @@ function add_optional_params!(result::HIFEntryType, item::JSON3.Object)
         result["attrs"] = item["attrs"]
     end
 end
-
-
-function cast_value(val::Union{String, Int}, t::Type{String}) 
-    return string(val)
-end
-
-
-function cast_value(val::Int, t::Type{Int})
-    return val
-end
-
-
-function cast_value(val::JSON3.Object, t::Type{JSON3.Object})
-    return val
-end
-
