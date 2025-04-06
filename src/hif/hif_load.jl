@@ -49,8 +49,11 @@ function init_hypergraph(
     V = Nothing,
     E = Nothing
 ) where {U<:Real}
-    node_metadata = Vector{Union{V, Nothing}}([nothing for _ in 1:length(nodes)])
-    edge_metadata = Vector{Union{E, Nothing}}([nothing for _ in 1:length(edges)])
+    n = haskey(data, "nodes") ? max(length(nodes), length(data["nodes"])) : length(nodes)
+    k = haskey(data, "edges") ? max(length(edges), length(data["edges"])) : length(edges)
+
+    node_metadata = Vector{Union{V, Nothing}}([nothing for _ in 1:n])
+    edge_metadata = Vector{Union{E, Nothing}}([nothing for _ in 1:k])
 
     if haskey(data, "nodes")
         tmp = [node_obj["node"] for node_obj in data["nodes"]]
@@ -78,11 +81,9 @@ function init_hypergraph(
             edge_metadata[i] = edge
             push!(s_tmp, edge)
         end
-    else
-        append!(edge_metadata, [nothing for _ in 1:length(edges)])
     end
 
-    return Hypergraph{T,V,E,D}(length(nodes), length(edges), node_metadata, edge_metadata)
+    return Hypergraph{T,V,E,D}(n, k, node_metadata, edge_metadata)
 end
 
 
