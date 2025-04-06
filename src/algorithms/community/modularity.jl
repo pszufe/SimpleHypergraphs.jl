@@ -3,7 +3,7 @@
 
 Generates a random partition for vertices of a hypergraph `h` into `n` subsets.
 """
-randompartition(h::Hypergraph, n::Int) = randompartition(nhv(h), n)
+randompartition(h::H, n::Int) where {H <: AbstractHypergraph} = randompartition(nhv(h), n)
 
 
 """
@@ -21,7 +21,7 @@ end
 
 
 """
-    HypergraphAggs(h::Hypergraph)
+    HypergraphAggs(h::H) where {H<:AbstractSimpleHypergraph}
 
 Precomputes vertex and edge basic stats for a hypergraph.
 The stats are being used for efficiency reasons by community search algorithms.
@@ -32,7 +32,7 @@ struct HypergraphAggs
     Ed::Vector{Int}
     deg_vs::Vector{Int}
     volV::Int
-    HypergraphAggs(h::Hypergraph) = begin
+    HypergraphAggs(h::H) where {H<:AbstractSimpleHypergraph} = begin
         hes = [length(h.he2v[i]) for i in 1:nhe(h)]
         max_hes = maximum(hes)
         Ed = zeros(Int, max_hes)
@@ -49,14 +49,14 @@ end
 
 
 """
-    Graphs.modularity(h::Hypergraph, partition::Vector{Set{Int}},
-ha::HypergraphAggs=HypergraphAggs(h))
+    Graphs.modularity(h::H, partition::Vector{Set{Int}},
+ha::HypergraphAggs=HypergraphAggs(h)) where {H<:AbstractSimpleHypergraph}
 
 Calculates the strict modularity of a hypergraph `h` for a given `partition` using
 the precomputed aggregates `ha`.
 """
-@inline function Graphs.modularity(h::Hypergraph, partition::Vector{Set{Int}},
-        ha::HypergraphAggs=HypergraphAggs(h))
+@inline function Graphs.modularity(h::H, partition::Vector{Set{Int}},
+        ha::HypergraphAggs=HypergraphAggs(h)) where {H<:AbstractSimpleHypergraph}
 
     @boundscheck sum(length.(partition)) == nhv(h)
     @boundscheck union(partition...) == Set(1:nhv(h))
@@ -88,7 +88,7 @@ end
 
 
 """
-    findcommunities(h::Hypergraph, method::CFModularityRandom)
+    findcommunities(h::H, method::CFModularityRandom) where {H<:AbstractSimpleHypergraph}
 
 Makes a random search over the hypergraph `h` and finds
 a partition into `method.n` communities (subsets) having the maximum modularity value.
@@ -99,7 +99,7 @@ one that was randomly found will be returned.
 Returns a `NamedTuple` where the field `bp` contains partition
 and the field `bm` contains the modularity value for that partition.
 """
-function findcommunities(h::Hypergraph, method::CFModularityRandom)
+function findcommunities(h::H, method::CFModularityRandom) where {H<:AbstractSimpleHypergraph}
     bp = [Int[]]
     bm = -Inf
     ha = HypergraphAggs(h)
@@ -150,7 +150,7 @@ end
 
 
 """
-    findcommunities(h::Hypergraph, method::CFModularityCNMLike)
+    findcommunities(h::H, method::CFModularityCNMLike) where {H<:AbstractSimpleHypergraph}
 
 Iterates a CNM-Like algorithm for finding communities.
 In the algorithm we start with a partition where each node is in its own part.
@@ -169,7 +169,7 @@ Clustering via Hypergraph Modularity (submitted to Plos ONE), authors:
 Bogumił Kamiński, Valerie Poulin, Paweł Prałat, Przemysław Szufel, Francois Theberge
 
 """
-function findcommunities(h::Hypergraph, method::CFModularityCNMLike)
+function findcommunities(h::H, method::CFModularityCNMLike) where {H<:AbstractSimpleHypergraph}
     ha = HypergraphAggs(h)
     best_modularity = 0
     comms = [Set(i) for i in 1:nhv(h)]

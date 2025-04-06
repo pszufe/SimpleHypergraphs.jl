@@ -5,13 +5,15 @@ struct HGF_Format <: Abstract_HG_format end
 struct JSON_Format <: Abstract_HG_format end
 
 
-"""
-    hg_save(io::IO, h::Hypergraph, format::HGF_Format)
+"""``
+    hg_save(io::IO, h::H, format::HGF_Format) where {H <: AbstractSimpleHypergraph}
 
-Saves a hypergraph `h` to an output stream `io` in `hgf` format.
+Saves an undirected hypergraph `h` to an output stream `io` in `hgf` format.
+
+TODO: what to do about metadata?
 
 """
-function hg_save(io::IO, h::Hypergraph, format::HGF_Format)
+function hg_save(io::IO, h::H, format::HGF_Format) where {H <: AbstractSimpleHypergraph}
     println(io, length(h.v2he), " ", length(h.he2v))
     for he in h.he2v
         skeys = sort(collect(keys(he)))
@@ -23,7 +25,7 @@ end
 """
     hg_save(io::IO, h::Hypergraph, format::JSON_Format)
 
-Saves a hypergraph `h` to an output stream `io` in `json` format.
+Saves an undirected hypergraph `h` to an output stream `io` in `json` format.
 
 If `h` has `Composite Types` either for vertex metadata or hyperedges metadata,
 the user has to explicit tell the JSON3 package about it, for instance using:
@@ -49,7 +51,7 @@ function hg_save(io::IO, h::Hypergraph, format::JSON_Format)
     json_hg[:k] = nhe(h)
 
     json_hg[:m] = JSON3.write(Matrix(h))
-    json_hg[:v2he] = JSON3.write(h. v2he)
+    json_hg[:v2he] = JSON3.write(h.v2he)
 
     json_hg[:v_meta] = JSON3.write(h.v_meta)
     json_hg[:he_meta] = JSON3.write(h.he_meta)
@@ -60,7 +62,7 @@ end
 
 """
     hg_save(
-        fname::AbstractString, h::Hypergraph;
+        fname::AbstractString, h::AbstractHypergraph;
         format::Abstract_HG_format=HGF_Format()
     )
 
@@ -69,20 +71,19 @@ The default saving format is `hgf`.
 
 """
 hg_save(
-    fname::AbstractString, h::Hypergraph;
-    format::Abstract_HG_format=HGF_Format()) =
-    open(io -> hg_save(io, h, format), fname, "w")
+    fname::AbstractString, h::AbstractHypergraph;
+    format::Abstract_HG_format=HGF_Format()
+    ) = open(io -> hg_save(io, h, format), fname, "w")
 
 
 """
     hg_load(
         io::IO,
-        format::HGF_Format();
+        format::HGF_Format;
+        HType::Type{H} = Hypergraph,
         T::Type{U} = Bool,
-        D::Type{<:AbstractDict{Int, U}} = Dict{Int,U},
-        V=Nothing,
-        E=Nothing
-    ) where {U <: Real}
+        D::Type{<:AbstractDict{Int, U}} = Dict{Int, T},
+    ) where {U <: Real, H <: AbstractSimpleHypergraph}
 
 Loads a hypergraph from a stream `io` from `hgf` format.
 
@@ -90,8 +91,6 @@ Loads a hypergraph from a stream `io` from `hgf` format.
 
 * `T` : type of weight values stored in the hypergraph's adjacency matrix
 * `D` : dictionary for storing values the default is `Dict{Int, T}`
-* `V` : type of values stored in the vertices of the hypergraph
-* `E` : type of values stored in the edges of the hypergraph
 
 Skips a single initial comment.
 
@@ -99,11 +98,10 @@ Skips a single initial comment.
 function hg_load(
     io::IO,
     format::HGF_Format;
+    HType::Type{H} = Hypergraph,
     T::Type{U} = Bool,
     D::Type{<:AbstractDict{Int, U}} = Dict{Int, T},
-    V=Nothing,
-    E=Nothing
-) where {U <: Real}
+) where {U <: Real, H <: AbstractSimpleHypergraph}
     line = readline(io)
 
     if startswith(line, "\"\"\"")
@@ -126,7 +124,7 @@ function hg_load(
     l = split(line)
     length(l) == 2 || throw(ArgumentError("expected two integers"))
     n, k = parse.(Int, l)
-    h = Hypergraph{T, V, E, D}(n, k)
+    h = HType{T, D}(n, k)
 
     for i in 1:k
         lastv = 0
@@ -152,12 +150,13 @@ end
 """
     hg_load(
         io::IO,
+        T::Type{H},
         format::JSON_Format;
         T::Type{U} = Bool,
         D::Type{<:AbstractDict{Int, U}} = Dict{Int,U},
         V = Nothing,
         E = Nothing
-    ) where {U <: Real}
+    ) where {H <: AbstractHypergraph, U <: Real}
 
 Loads a hypergraph from a stream `io` from `json` format.
 
@@ -172,27 +171,29 @@ Loads a hypergraph from a stream `io` from `json` format.
 function hg_load(
         io::IO,
         format::JSON_Format;
+        HType::Type{H} = Hypergraph,
         T::Type{U} = Bool,
         D::Type{<:AbstractDict{Int, U}} = Dict{Int, T},
         V = Nothing,
         E = Nothing
-    ) where {U <: Real}
+    ) where {H <: AbstractSimpleHypergraph, U <: Real}
     json_hg = JSON3.read(readline(io))
 
     m = reshape(JSON3.read(json_hg.m, Array{Union{T, Nothing}}), json_hg.n, json_hg.k)
 
-    v_meta = Vector{Union{Nothing,V}}(nothing, size(m, 1))
-    he_meta = Vector{Union{Nothing,E}}(nothing, size(m, 2))
-
-    if V != Nothing
+    if V != Nothing && E != Nothing && hasvertexmeta(HType) && hashyperedgemeta(HType)
         v_meta = JSON3.read(json_hg.v_meta, Array{Union{V, Nothing}})
-    end
-
-    if E != Nothing
         he_meta = JSON3.read(json_hg.he_meta, Array{Union{E, Nothing}})
+        h = HType{T, V, E, D}(m; v_meta=v_meta, he_meta=he_meta)
+    elseif V != Nothing && hasvertexmeta(HType)
+        v_meta = JSON3.read(json_hg.v_meta, Array{Union{V, Nothing}})
+        h = HType{T, V, D}(m; v_meta=v_meta)
+    elseif E != Nothing && hashyperedgemeta(HType)
+        he_meta = JSON3.read(json_hg.he_meta, Array{Union{E, Nothing}})
+        h = HType{T, E, D}(m; he_meta=he_meta)
+    else
+        h = HType{T, D}(m)
     end
-
-    h = Hypergraph{T, V, E, D}(m; v_meta=v_meta, he_meta=he_meta)
 
     h
 end
@@ -202,28 +203,42 @@ end
     hg_load(
         fname::AbstractString;
         format::Abstract_HG_format = HGF_Format(),
+        HType::Type{H} = Hypergraph,
         T::Type{U} = Bool,
-        D::Type{<:AbstractDict{Int, U}} = Dict{Int,U},
+        D::Type{<:AbstractDict{Int, U}} = Dict{Int, T},
         V = Nothing,
-        E = Nothing) where {U <: Real}
-    )
+        E = Nothing
+    ) where {U <: Real, H <: AbstractSimpleHypergraph}
 
 Loads a hypergraph from a file `fname`.
 The default saving format is `hgf`.
 
 **Arguments**
 
+* `HType`: type of hypergraph to store data in
 * `T` : type of weight values stored in the hypergraph's adjacency matrix
 * `D` : dictionary for storing values the default is `Dict{Int, T}`
 * `V` : type of values stored in the vertices of the hypergraph
 * `E` : type of values stored in the edges of the hypergraph
 
 """
-hg_load(
-    fname::AbstractString;
-    format::Abstract_HG_format = HGF_Format(),
-    T::Type{U} = Bool,
-    D::Type{<:AbstractDict{Int, U}} = Dict{Int, T},
-    V = Nothing,
-    E = Nothing) where {U <: Real} =
-    open(io -> hg_load(io, format; T=T, D=D, V=V, E=E), fname, "r")
+function hg_load(
+        fname::AbstractString;
+        format::Abstract_HG_format = HGF_Format(),
+        HType::Type{H} = Hypergraph,
+        T::Type{U} = Bool,
+        D::Type{<:AbstractDict{Int, U}} = Dict{Int, T},
+        V = Nothing,
+        E = Nothing
+    ) where {U <: Real, H <: AbstractSimpleHypergraph}
+
+    if format == HGF_Format()
+        if HType == Hypergraph
+            open(io -> hg_load(io, format; HType=HType, T=T, D=D), fname, "r")
+        else
+            error("HGF loading only implemented for Hypergraph")
+        end
+    else
+        open(io -> hg_load(io, format; HType=HType, T=T, D=D, V=V, E=E), fname, "r")
+    end
+end
