@@ -78,9 +78,7 @@ include("abstracttypes.jl")
 include("hypergraph.jl")
 include("io.jl")
 
-include("hif/hif.jl")
-include("hif/hif_load.jl")
-include("hif/hif_save.jl")
+include("hif.jl")
 
 include("models/bipartite.jl")
 include("models/twosection.jl")
