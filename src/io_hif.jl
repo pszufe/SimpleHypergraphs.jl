@@ -3,6 +3,115 @@ using JSON3
 
 struct HIF_Format <: Abstract_HG_format end
 
+
+function hg_load(
+    io::IO,
+    format::HIF_Format;
+    T::Type{U} = Bool,
+    D::Type{<:AbstractDict{Int, U}} = Dict{Int, T},
+    V::Type{Z} = Int,
+    E::Type{Z} = Int,
+    sort_by_id::bool=false,
+    show_warning::bool=true,
+) where {U<:Real, Z<:Union{Int, String}}
+    data = JSON3.read(read(io, String), Dict{String, Any})
+
+    edges = build_edges_dataframe(data, E)
+    nodes = build_nodes_dataframe(data, V)
+
+    add_nodes_and_edges_from_incidences!(data, edges, nodes, V, E)
+
+    if sort_by_id
+        sort!(edges, (:edge))
+        sort!(nodes, (:node))
+    end
+
+    if show_warning
+        if edges.edge != 1:nrow(edges)
+            @warn "<warning here>"  # TODO: Add warning message 
+        end
+
+        if nodes.node != 1:nrow(nodes)
+            @warn "<warning here>"  # TODO: Add warning message 
+        end
+    end
+
+    hg = Hypergraph{T, V, E, D}(nrow(nodes), nrow(edges))
+
+    hg
+end
+
+
+function build_edges_dataframe(
+    data::Dict{String, Any},
+    E::Type{Z}
+) where {Z<:Union{Int, String}}
+    edges = DataFrame(
+        ; 
+        edge=E[], 
+        weight=Union{Missing, Float64}[],
+        attrs=Union{Missing, Dict{String, Any}}[]
+    )
+
+    for edge in data["edges"]
+        weight = (haskey(edge, "weight")) ? edge["weight"] : missing
+        attrs = (haskey(edge, "attrs")) ? edge["attrs"] : missing
+
+        push!(edges, [edge["edge"], weight, attrs])
+    end
+
+    edges
+end
+
+function build_nodes_dataframe(
+    data::Dict{String, Any},
+    V::Type{Z}
+) where {Z<:Union{Int, String}}
+    nodes = DataFrame(
+        ; 
+        node=V[], 
+        weight=Union{Missing, Float64}[],
+        attrs=Union{Missing, Dict{String, Any}}[]
+    )
+
+    for node in data["nodes"]
+        weight = (haskey(node, "weight")) ? node["weight"] : missing
+        attrs = (haskey(node, "attrs")) ? node["attrs"] : missing
+
+        push!(nodes, [node["node"], weight, attrs])
+    end
+
+    nodes
+end
+
+
+function add_nodes_and_edges_from_incidences!(
+    data::Dict{String, Any},
+    edges::DataFrame,
+    nodes::DataFrame,
+    V::Type{Z},
+    E::Type{Z}
+) where {Z<:Union{Int, String}}
+    edge_ids = Set{E}(edges.edge)
+    node_ids = Set{V}(nodes.node)
+
+    for incidence in data["incidences"]
+        node = incidence["node"]
+        edge = incidence["edge"]
+
+        if node ∉ node_ids
+            push!(nodes, [node, missing, missing])
+            push!(node_ids, node)
+        end
+
+        if edge ∉ edge_ids
+            push!(edges, [edge, missing, missing])
+            push!(edge_ids, edge)
+        end
+
+    end
+end
+
 """
     hg_load(
         io::IO,
