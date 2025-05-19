@@ -1,4 +1,5 @@
 using JSON3
+using DataFrames
 
 
 struct HIF_Format <: Abstract_HG_format end
@@ -11,8 +12,8 @@ function hg_load(
     D::Type{<:AbstractDict{Int, U}} = Dict{Int, T},
     V::Type{Z} = Int,
     E::Type{Z} = Int,
-    sort_by_id::bool=false,
-    show_warning::bool=true,
+    sort_by_id::Bool=false,
+    show_warning::Bool=true,
 ) where {U<:Real, Z<:Union{Int, String}}
     data = JSON3.read(read(io, String), Dict{String, Any})
 
@@ -36,11 +37,61 @@ function hg_load(
         end
     end
 
-    hg = Hypergraph{T, V, E, D}(nrow(nodes), nrow(edges))
+    v_meta = Vector{Union{V, Dict{String, Any}}}()
+    he_meta = Vector{Union{V, Dict{String, Any}}}()
+
+    for row in eachrow(nodes)
+        attrs = row.attrs
+        if isnothing(attrs)
+            attrs = row.node
+        end
+        push!(v_meta, attrs)
+    end
+
+    for row in eachrow(edges)
+        attrs = row.attrs
+        if isnothing(attrs)
+            attrs = row.edge
+        end
+
+        push!(he_meta, attrs)
+    end
+
+    hg = Hypergraph{
+        T, 
+        Union{V, Dict{String, Any}}, 
+        Union{E, Dict{String, Any}}, 
+        D,
+    }(nrow(nodes), nrow(edges), v_meta, he_meta)
+
+    add_weights_from_incidences!(data, hg, edges, nodes, V, E)
 
     hg
 end
 
+
+function add_weights_from_incidences!(
+    data::Dict{String, Any},
+    hg::Hypergraph,
+    edges::DataFrame,
+    nodes::DataFrame,
+    V::Type{Z},
+    E::Type{Z}
+) where {Z<:Union{Int, String}}
+    edge_dict = Dict{E, Int}(row.edge => idx for (row, idx) in zip(eachrow(edges), 1:nrow(edges))) 
+    node_dict = Dict{V, Int}(row.node => idx for (row, idx) in zip(eachrow(nodes), 1:nrow(nodes)))
+
+    incidences = data["incidences"]
+
+    for inc in incidences
+        edge_idx = edge_dict[inc["edge"]]
+        node_idx = node_dict[inc["node"]]
+
+        weight = (haskey(inc, "weight")) ? inc["weight"] : 1
+
+        hg[node_idx, edge_idx] = weight
+    end
+end
 
 function build_edges_dataframe(
     data::Dict{String, Any},
@@ -49,15 +100,13 @@ function build_edges_dataframe(
     edges = DataFrame(
         ; 
         edge=E[], 
-        weight=Union{Missing, Float64}[],
-        attrs=Union{Missing, Dict{String, Any}}[]
+        attrs=Union{Nothing, Dict{String, Any}}[]
     )
 
     for edge in data["edges"]
-        weight = (haskey(edge, "weight")) ? edge["weight"] : missing
-        attrs = (haskey(edge, "attrs")) ? edge["attrs"] : missing
+        attrs = (haskey(edge, "attrs")) ? edge["attrs"] : nothing
 
-        push!(edges, [edge["edge"], weight, attrs])
+        push!(edges, [edge["edge"], attrs])
     end
 
     edges
@@ -70,15 +119,13 @@ function build_nodes_dataframe(
     nodes = DataFrame(
         ; 
         node=V[], 
-        weight=Union{Missing, Float64}[],
-        attrs=Union{Missing, Dict{String, Any}}[]
+        attrs=Union{Nothing, Dict{String, Any}}[]
     )
 
     for node in data["nodes"]
-        weight = (haskey(node, "weight")) ? node["weight"] : missing
-        attrs = (haskey(node, "attrs")) ? node["attrs"] : missing
+        attrs = (haskey(node, "attrs")) ? node["attrs"] : nothing
 
-        push!(nodes, [node["node"], weight, attrs])
+        push!(nodes, [node["node"], attrs])
     end
 
     nodes
@@ -100,150 +147,15 @@ function add_nodes_and_edges_from_incidences!(
         edge = incidence["edge"]
 
         if node ∉ node_ids
-            push!(nodes, [node, missing, missing])
+            push!(nodes, [node, nothing])
             push!(node_ids, node)
         end
 
         if edge ∉ edge_ids
-            push!(edges, [edge, missing, missing])
+            push!(edges, [edge, nothing])
             push!(edge_ids, edge)
         end
 
-    end
-end
-
-"""
-    hg_load(
-        io::IO,
-        format::HIF_Format;
-        T::Type{U} = Bool,
-        D::Type{<:AbstractDict{Int, U}} = Dict{Int,U},
-    ) where {U <: Real}
-
-Loads a hypergraph from a stream `io` from `HIF` format.
-More info: https://github.com/pszufe/HIF-standard
-
-**Arguments**
-
-* `T` : type of weight values stored in the hypergraph's adjacency matrix
-* `D` : dictionary for storing values the default is `Dict{Int, T}`
-"""
-function hg_load(
-    io::IO,
-    format::HIF_Format;
-    T::Type{U} = Bool,
-    D::Type{<:AbstractDict{Int, U}} = Dict{Int, T},
-    V = Nothing,
-    E = Nothing
-) where {U<:Real}
-    data = JSON3.read(read(io, String), Dict{String, Any})
-
-    if !haskey(data, "incidences")
-        throw(ArgumentError("Invalid JSON schema: missing required key 'incidences'"))
-    end
-
-    nodes, edges = get_nodes_and_edges(data, V, E)
-
-    h = init_hypergraph(data, nodes, edges, T, D, V, E)
-
-    add_weights_from_incidences!(h, data["incidences"], nodes, edges)
-
-    h
-end
-
-
-function init_hypergraph(
-    data::Dict{String, Any},
-    nodes::AbstractVector{Union{String, Int}},
-    edges::AbstractVector{Union{String, Int}},
-    T::Type{U},
-    D::Type{<:AbstractDict{Int,U}},
-    V = Nothing,
-    E = Nothing
-) where {U<:Real}
-    n = haskey(data, "nodes") ? max(length(nodes), length(data["nodes"])) : length(nodes)
-    k = haskey(data, "edges") ? max(length(edges), length(data["edges"])) : length(edges)
-
-    node_metadata = Vector{Union{V, Nothing}}([nothing for _ in 1:n])
-    edge_metadata = Vector{Union{E, Nothing}}([nothing for _ in 1:k])
-
-    if haskey(data, "nodes")
-        tmp = [node_obj["node"] for node_obj in data["nodes"]]
-        s_tmp = Set{V}()
-
-        for (i, node) in pairs(tmp)
-            if node in s_tmp
-                continue
-            end
-
-            node_metadata[i] = node
-            push!(s_tmp, node)
-        end
-    end
-
-    if haskey(data, "edges")
-        tmp = [edge_obj["edge"] for edge_obj in data["edges"]]
-        s_tmp = Set{E}()
-
-        for (i, edge) in pairs(tmp)
-            if edge in s_tmp
-                continue
-            end
-
-            edge_metadata[i] = edge
-            push!(s_tmp, edge)
-        end
-    end
-
-    return Hypergraph{T,V,E,D}(n, k, node_metadata, edge_metadata)
-end
-
-
-function get_nodes_and_edges(data::Dict{String, Any}, V, E)
-    node_set = Set{Union{String, Int}}()
-    edge_set = Set{Union{String, Int}}()
-
-    nodes = Vector{Union{String, Int}}()
-    edges = Vector{Union{String, Int}}()
-
-    for inc in data["incidences"]
-        node = (V == String) ? string(inc["node"]) : inc["node"]
-        edge = (E == String) ? string(inc["edge"]) : inc["edge"]
-
-        if node ∉ node_set
-            push!(node_set, node)
-            push!(nodes, node)
-        end
-
-        if edge ∉ edge_set
-            push!(edge_set, edge)
-            push!(edges, edge)
-        end
-    end
-
-    sort!(nodes)
-    sort!(edges)
-
-    return nodes, edges
-end
-
-
-function add_weights_from_incidences!(
-    h::Hypergraph{T,V,E,D}, 
-    incidences::AbstractVector,
-    nodes::Vector{Union{String, Int}},
-    edges::Vector{Union{String, Int}}
-    ) where {T, V, E, D}
-    node_dict = Dict(val => i for (i, val) in pairs(nodes))
-    edge_dict = Dict(val => i for (i, val) in pairs(edges))
-
-    for inc in incidences
-        node = (V == String) ? string(inc["node"]) : inc["node"]
-        edge = (E == String) ? string(inc["edge"]) : inc["edge"]
-        node_idx = node_dict[node]
-        he_idx = edge_dict[edge]
-
-        h[node_idx, he_idx] = haskey(inc, "weight") ? inc["weight"] : 1
     end
 end
 
