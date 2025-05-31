@@ -10,8 +10,8 @@ function hg_load(
     format::HIF_Format;
     T::Type{U} = Bool,
     D::Type{<:AbstractDict{Int, U}} = Dict{Int, T},
-    V::Type{Z} = Int,
-    E::Type{Z} = Int,
+    V::Type{Z} = Union{String, Int},
+    E::Type{Z} = Union{String, Int},
     sort_by_id::Bool=false,
     show_warning::Bool=true,
 ) where {U<:Real, Z<:Union{Int, String}}
@@ -103,6 +103,10 @@ function build_edges_dataframe(
         attrs=Union{Nothing, Dict{String, Any}}[]
     )
 
+    if !haskey(data, "edges")
+        return edges
+    end
+
     for edge in data["edges"]
         attrs = (haskey(edge, "attrs")) ? edge["attrs"] : nothing
 
@@ -121,6 +125,10 @@ function build_nodes_dataframe(
         node=V[], 
         attrs=Union{Nothing, Dict{String, Any}}[]
     )
+
+    if !haskey(data, "nodes")
+        return nodes
+    end
 
     for node in data["nodes"]
         attrs = (haskey(node, "attrs")) ? node["attrs"] : nothing
