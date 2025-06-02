@@ -8,13 +8,34 @@ using DataStructures
 import Graphs
 
 
-h1 = Hypergraph{Float64, Int, String}(5,4)
-h1[1:3,1] .= 1.5
-h1[3,4] = 2.5
-h1[2,3] = 3.5
-h1[4,3:4] .= 4.5
-h1[5,4] = 5.5
-h1[5,2] = 6.5
+@testset "HIF test" begin
+    dir = "data/HIF-standard"
+
+    for file in readdir(dir)
+        full_path = joinpath(dir, file)
+
+        endswith(file, ".json") || continue
+
+        @testset "File: $file" begin
+            h = hg_load(full_path, HIF_Format(), T=Real)
+
+            io_h = IOBuffer()
+
+            hg_save(io_h, h, HIF_Format())
+
+            seekstart(io_h)
+
+            h_loaded = hg_load(io_h, HIF_Format(), T=Real)
+
+            @test h == h_loaded
+        end
+    end
+end
+
+
+        @test h1 == loaded_hg
+        @test h1.v_meta == loaded_hg.v_meta
+        @test h1.he_meta == loaded_hg.he_meta
 
 
 @testset "SimpleHypergraphs Hypergraph             " begin

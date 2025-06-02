@@ -17,6 +17,21 @@ function hg_load(
 ) where {U<:Real, Z<:Union{Int, String}}
     data = JSON3.read(read(io, String), Dict{String, Any})
 
+    haskey(data, "incidences") || throw(ArgumentError("Missing required attribute 'incidences'"))
+
+    if isempty(data["incidences"])
+        if isempty(get(data, "edges", [])) && isempty(get(data, "nodes", []))
+            return Hypergraph{
+                T, 
+                Union{V, Dict{String, Any}}, 
+                Union{E, Dict{String, Any}}, 
+                D,
+            }(0, 0)
+        elseif isempty(data["edges"]) || isempty(data["nodes"])
+            throw(ArgumentError("When incidences are empty, both 'nodes' and 'edges' must contain data"))
+        end
+    end
+
     edges = build_edges_dataframe(data, E)
     nodes = build_nodes_dataframe(data, V)
 
@@ -70,6 +85,21 @@ function hg_load(
 end
 
 
+function hg_load(
+    fname::String,
+    format::HIF_Format;
+    T::Type{U} = Bool,
+    D::Type{<:AbstractDict{Int, U}} = Dict{Int, T},
+    V::Type{Z} = Union{String, Int},
+    E::Type{Z} = Union{String, Int},
+    sort_by_id::Bool=false,
+    show_warning::Bool=true,
+) where {U<:Real, Z<:Union{Int, String}}
+    open(io -> hg_load(io, format, T=T, D=D, V=V, E=E, sort_by_id=sort_by_id, show_warning=show_warning), fname, "r")
+end
+
+
+
 function add_weights_from_incidences!(
     data::Dict{String, Any},
     hg::Hypergraph,
@@ -107,10 +137,16 @@ function build_edges_dataframe(
         return edges
     end
 
+    seen = Set{Union{Int, String}}()
+
     for edge in data["edges"]
+        if edge["edge"] ∈ seen
+            continue
+        end
         attrs = (haskey(edge, "attrs")) ? edge["attrs"] : nothing
 
         push!(edges, [edge["edge"], attrs])
+        push!(seen, edge["edge"])
     end
 
     edges
@@ -130,10 +166,17 @@ function build_nodes_dataframe(
         return nodes
     end
 
+    seen = Set{Union{String, Int}}()
+
     for node in data["nodes"]
+        if node["node"] ∈ seen
+            continue
+        end
+
         attrs = (haskey(node, "attrs")) ? node["attrs"] : nothing
 
         push!(nodes, [node["node"], attrs])
+        push!(seen, node["node"])
     end
 
     nodes
@@ -149,7 +192,6 @@ function add_nodes_and_edges_from_incidences!(
 ) where {Z<:Union{Int, String}}
     edge_ids = Set{E}(edges.edge)
     node_ids = Set{V}(nodes.node)
-
     for incidence in data["incidences"]
         node = incidence["node"]
         edge = incidence["edge"]
@@ -194,8 +236,6 @@ function hg_load(
 end
 
 
-HIFEntryType = Dict{String, Union{String, Number, Dict{String, Any}}}
-
 """
     hg_save(io::IO, h::Hypergraph, format::HIF_Format)
 
@@ -212,111 +252,22 @@ See the (JSON3.jl documentation)[https://github.com/quinnj/JSON3.jl] for more de
 function hg_save(io::IO, h::Hypergraph{T, V, E, D}, format::HIF_Format) where {T, V, E, D}
     _ = format
 
-    json_hg = Dict{Symbol,Any}()
+    incidences = Vector{Dict{String, Union{String, Int}}}()
 
-    nodes_meta = prepare_metadata(h.v_meta, handle_node)
-    edges_meta = prepare_metadata(h.he_meta, handle_edge)
+    for i in 1:length(h.v_meta)
+        for j in 1:length(h.he_meta)
 
-    incidences = prepare_incidences(h)
-    
-    json_hg[:incidences] = incidences
+            if isnothing(h[i, j])
+                continue
+            end
 
-    if !isempty(nodes_meta)
-        json_hg[:nodes] = nodes_meta
+            weight = h[i, j]
+
+            push!(incidences, Dict{String, Union{String, Int}}("edge" => i, "node" => j, "weight" => Int(weight)))
+        end
     end
 
-    if !isempty(edges_meta)
-        json_hg[:edges] = edges_meta
-    end
+    json_hg = Dict{Symbol, Any}(:incidences => incidences)
 
     JSON3.write(io, json_hg)
-end
-
-
-function prepare_incidences(h::Hypergraph{T, V, E, D}) where {T, V, E, D}
-    incidences = Vector{HIFEntryType}()
-
-    for node_idx in eachindex(h.v_meta)
-        edges = gethyperedges(h, node_idx)
-
-        node = isnothing(h.v_meta[node_idx]) ? node_idx : h.v_meta[node_idx]
-
-        _node = (V == Dict{String, Any}) ? node["node"] : node
-
-        for (edge, weight) in edges
-            _edge = isnothing(h.he_meta[edge]) ? edge : h.he_meta[edge]
-            if T == Bool
-                push!(incidences, Dict("edge" => _edge, "node" => _node))
-            else
-                push!(incidences, Dict("edge" => _edge, "node" => _node, "weight" => weight))
-            end
-        end
-    end
-
-    return incidences
-end
-
-
-function prepare_metadata(
-    metadata::Vector{Union{T, Nothing}}, 
-    handling_func::Function
-) where {T}
-    result = Vector{HIFEntryType}()
-
-    for item in metadata
-        if isnothing(item)
-            continue
-        end
-
-        handled = handling_func(item)
-        push!(result, handled)
-    end
-
-    return result
-end
-
-
-function handle_node(node::Union{String, Int})
-    return Dict{String, Union{String, Int}}(
-        "node" => node
-    )
-end
-
-function handle_node(node::Dict{String, Any})
-    result = HIFEntryType(
-        "node" => node["node"]
-    )
-
-    add_optional_params!(result, node)
-
-    return result
-end
-
-
-function handle_edge(edge::Union{String, Int})
-    return Dict{String, Union{String, Int}}(
-        "edge" => edge
-    )
-end
-
-
-function handle_edge(edge::Dict{String, Any})
-    result = HIFEntryType(
-        "edge" => edge["edge"]
-    )
-
-    add_optional_params!(result, edge)
-
-    return result
-end
-
-
-function add_optional_params!(result::HIFEntryType, item::Dict{String, Any})
-    if haskey(item, "weight")
-        result["weight"] = item["weight"]
-    end
-
-    if haskey(item, "attrs")
-        result["attrs"] = item["attrs"]
-    end
 end
