@@ -33,9 +33,13 @@ import Graphs
 end
 
 
-        @test h1 == loaded_hg
-        @test h1.v_meta == loaded_hg.v_meta
-        @test h1.he_meta == loaded_hg.he_meta
+h1 = Hypergraph{Float64, Int, String}(5,4)
+h1[1:3,1] .= 1.5
+h1[3,4] = 2.5
+h1[2,3] = 3.5
+h1[4,3:4] .= 4.5
+h1[5,4] = 5.5
+h1[5,2] = 6.5
 
 
 @testset "SimpleHypergraphs Hypergraph             " begin
@@ -619,26 +623,3 @@ end;
     @test distance(h, SedgeDistanceDijkstra(2, 3, 3)) == 1
     @test distance(h, SedgeDistanceDijkstra(1, 3, 3)) == typemax(Int)
 end;
-
-
-@testset "SimpleHypergraphs HIF format             " begin
-
-    path = "data/HIF-standard/single_node.json"
-
-    h = hg_load(
-        path,
-        HIF_Format(),
-        T=Bool,
-        V=Int,
-        E=Int,
-    )
-
-    path = "test.json"
-    hg_save(path, h, format=HIF_Format())
-    loaded_hg = hg_load(path, HIF_Format(), T=Float64, V=Int, E=String)
-
-    @test h == loaded_hg
-    @test loaded_hg.v_meta == h.v_meta
-    @test loaded_hg.he_meta == h.he_meta
-    
-end

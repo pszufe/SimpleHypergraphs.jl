@@ -44,11 +44,11 @@ function hg_load(
 
     if show_warning
         if edges.edge != 1:nrow(edges)
-            @warn "<warning here>"  # TODO: Add warning message 
+            @warn "Edges in the source file were not sorted - their order was changed."
         end
 
         if nodes.node != 1:nrow(nodes)
-            @warn "<warning here>"  # TODO: Add warning message 
+            @warn "Nodes in the source file were not sorted - their order was changed"
         end
     end
 
@@ -114,13 +114,24 @@ function add_weights_from_incidences!(
     incidences = data["incidences"]
 
     for inc in incidences
+        haskey(edge_dict, inc["edge"]) || continue  # duplicates
+        haskey(node_dict, inc["node"]) || continue  # duplicates
         edge_idx = edge_dict[inc["edge"]]
         node_idx = node_dict[inc["node"]]
 
         weight = (haskey(inc, "weight")) ? inc["weight"] : 1
 
         hg[node_idx, edge_idx] = weight
+
+        pop!(edge_dict, inc["edge"])
+        pop!(node_dict, inc["node"])
     end
+
+    # add remaining items
+    for (node, edge) in zip(values(node_dict), values(edge_dict))
+        hg[node, edge] = 1
+    end
+
 end
 
 function build_edges_dataframe(
