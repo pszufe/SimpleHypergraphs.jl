@@ -101,12 +101,16 @@ function draw(
         with_he_metadata_hover::Bool=false
     ) where {H<:AbstractSimpleHypergraph}
 
+    # generate a copy of the hypergraph to remove empty hyperedges
+    _h = deepcopy(h)
+    prune_hypergraph!(_h)
+
     w = widget_graph(
-        JSON3.write(h.v2he),
-        JSON3.write(h.he2v),
+        JSON3.write(_h.v2he),
+        JSON3.write(_h.he2v),
         element;
-        v_meta=h.v_meta,
-        he_meta=h.he_meta,
+        v_meta=_h.v_meta,
+        he_meta=_h.he_meta,
         width=width,
         height=height,
         radius=radius,
@@ -129,7 +133,7 @@ function draw(
         with_he_labels=with_he_labels,
         he_labels=he_labels,
         with_he_metadata_hover=with_he_metadata_hover
-        )
+    )
 
     display(w)
 end
