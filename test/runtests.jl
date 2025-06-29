@@ -8,6 +8,31 @@ using DataStructures
 import Graphs
 
 
+@testset "HIF test" begin
+    dir = "data/HIF-standard"
+
+    for file in readdir(dir)
+        full_path = joinpath(dir, file)
+
+        endswith(file, ".json") || continue
+
+        @testset "File: $file" begin
+            h = hg_load(full_path, HIF_Format(), T=Real)
+
+            io_h = IOBuffer()
+
+            hg_save(io_h, h, HIF_Format())
+
+            seekstart(io_h)
+
+            h_loaded = hg_load(io_h, HIF_Format(), T=Real)
+
+            @test h == h_loaded
+        end
+    end
+end
+
+
 h1 = Hypergraph{Float64, Int, String}(5,4)
 h1[1:3,1] .= 1.5
 h1[3,4] = 2.5
@@ -74,6 +99,12 @@ h1[5,2] = 6.5
         @test get_vertex_meta(h1, 1) == get_vertex_meta(loaded_hg, 1)
         @test get_hyperedge_meta(h1, 2) == get_hyperedge_meta(loaded_hg, 2)
 
+        hg_save("test.json", h1, format=HIF_Format())
+        loaded_hg = hg_load("test.json", HIF_Format(), T=Float64, V=Int, E=String)
+
+        @test h1 == loaded_hg
+        @test h1.v_meta == loaded_hg.v_meta
+        @test h1.he_meta == loaded_hg.he_meta
     end
 
     @test_throws ArgumentError hg_load("data/test_malformedcomment.hgf"; T=Int)

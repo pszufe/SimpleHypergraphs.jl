@@ -1,0 +1,15 @@
+{
+    "network-type": "asc",
+    "metadata": {
+        "level1": {
+            "level2": {
+                "level3": {
+                    "key": "value"
+                }
+            }
+        }
+    },
+    "incidences": [{"edge": 1, "node": 2}],
+    "nodes": [{"node": "n1", "attrs": {"nested_attr": {"key1": "value1"}}}],
+    "edges": [{"edge": "e1", "attrs": {"nested_attr": {"key2": "value2"}}}]
+}

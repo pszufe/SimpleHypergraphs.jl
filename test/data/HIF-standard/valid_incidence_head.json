@@ -1,0 +1,5 @@
+{
+    "network-type": "directed",
+    "metadata": {},
+    "incidences": [{"edge": 1, "node": 2, "direction": "head"}]
+}
