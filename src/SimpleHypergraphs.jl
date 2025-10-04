@@ -33,6 +33,7 @@ export modularity
 export randompartition
 export AbstractCommunityFinder, CFModularityRandom, CFModularityCNMLike, CFLabelPropagationFinder
 export findcommunities
+export quad_clustering_coefficient
 
 export nhv, nhe
 export random_walk
@@ -88,6 +89,7 @@ include("algorithms/distance.jl")
 
 include("algorithms/community/modularity.jl")
 include("algorithms/community/label-propagation.jl")
+include("algorithms/community/clustering.jl")
 
 include("viz/drawing.jl")
 include("viz/widget.jl")
