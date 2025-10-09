@@ -39,7 +39,8 @@ export nhv, nhe
 export random_walk
 export get_connected_components
 export conductance
-export AbstractDistance, SnodeDistanceDijkstra, SedgeDistanceDijkstra
+export AbstractDistance
+export SnodeDistanceDijkstra, SedgeDistanceDijkstra, SnodeDistanceBFS, SedgeDistanceBFS
 export distance
 
 export HyperNetX, GraphBased

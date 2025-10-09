@@ -636,4 +636,8 @@ end;
     @test distance(h, SedgeDistanceDijkstra(1, 3, 1)) == 1
     @test distance(h, SedgeDistanceDijkstra(2, 3, 3)) == 1
     @test distance(h, SedgeDistanceDijkstra(1, 3, 3)) == typemax(Int)
+
+    @test Graphs.diameter(h, SnodeDistanceDijkstra(1,1,1)) == 2
+    @test Graphs.diameter(h, SnodeDistanceDijkstra(1,1,2)) == typemax(Int)
+    @test Graphs.diameter(h, SedgeDistanceDijkstra(1,1,1)) == 1
 end;

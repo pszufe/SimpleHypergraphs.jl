@@ -3,33 +3,6 @@ The base type for all algorithms representing various distances metrics.
 """
 abstract type AbstractDistance end
 
-"""
-    struct SnodeDistanceBFS(source_node::Int, target_node::Int, s::Int) <: AbstractDistance
-
-Represent a distance between two nodes of the hypergraph `h`, which is the minimum `s`-walk length between the two
-nodes, using a breadth-first search (BFS) strategy. Note that BFS is an unweighted method. When weights are not
-important, BFS may be more efficient, for instance in defining the diameter of a hypergraph (see `diameter`).
-"""
-struct SnodeDistanceBFS <: AbstractDistance
-    source_node::Int
-    target_node::Int
-    s::Int
-end
-
-"""
-    struct SedgeDistanceBFS(source_edge::Int, target_edge::Int, s::Int) <: AbstractDistance
-
-Represent a distance between two edges of the hypergraph `h`, which is the minimum `s`-walk length between the two
-edges, using a breadth-first search (BFS) strategy. Note that BFS is an unweighted method. When weights are not
-important, BFS may be more efficient, for instance in defining the diameter of a hypergraph (see `diameter`).
-
-"""
-struct SedgeDistanceBFS <: AbstractDistance
-    source_edge::Int
-    target_edge::Int
-    s::Int
-end
-
 
 """
     struct SnodeDistanceDijkstra(source_node::Int, target_node::Int, s::Int) <: AbstractDistance
@@ -60,12 +33,10 @@ end
 
 
 """
-distance(h::H, distance_method::SnodeDistanceBFS) where {H<:AbstractSimpleHypergraph}    
 distance(h::H, distance_method::SnodeDistanceDijkstra) where {H<:AbstractSimpleHypergraph}
 
 Return the shortest `distance_method.s`-walk distance between the `distance_method.source_node` and the node
-`distance_method.target_node` in the hypergraph `h` using either an (unweighted) breadth-first search strategy
-(`SnodeDistanceBFS`) or Dijkstra's algorithm (`SnodeDistanceDijkstra`).
+`distance_method.target_node` in the hypergraph `h` using Dijkstra's algorithm (`SnodeDistanceDijkstra`).
 
 NOTE
 The concepts of `s`-distance and `s`-walk have been defined in the Python library
@@ -77,15 +48,6 @@ An `s`-walk between nodes is a sequence of nodes that pairwise share
 at least `s` edges. The length of the shortest `s`-walk is 1 less than
 the number of nodes in the path sequence. If no such path exists returns typemax(T).
 """
-function distance(h::H, distance_method::SnodeDistanceBFS) where {H<:AbstractSimpleHypergraph}
-    checkbounds(h.v2he, distance_method.source_node)
-    checkbounds(h.v2he, distance_method.target_node)
-    A = adjacency_matrix(h; s=distance_method.s)
-    g = Graphs.Graph(A)
-    bfs = Graphs.shortest_paths(g, distance_method.source_node, BFS())
-    bfs.dists[distance_method.target_node]
-end
-
 function distance(h::H, distance_method::SnodeDistanceDijkstra) where {H<:AbstractSimpleHypergraph}
     checkbounds(h.v2he, distance_method.source_node)
     checkbounds(h.v2he, distance_method.target_node)
@@ -97,12 +59,10 @@ end
 
 
 """
-    distance(h::H, distance_method::SedgeDistanceBFS) where {H<:AbstractSimpleHypergraph}
     distance(h::H, distance_method::SedgeDistanceDijkstra) where {H<:AbstractSimpleHypergraph}
 
 Return the shortest `distance_method.s`-walk distance between the `distance_method.source_edge` and the node
-`distance_method.target_edge` in the hypergraph `h` using either an (unweighted) breadth-first search strategy
-(`SedgeDistanceBFS`) or Dijkstra's algorithm (`SedgeDistanceDijkstra`).
+`distance_method.target_edge` in the hypergraph `h` using Dijkstra's algorithm (`SedgeDistanceDijkstra`).
 
 NOTE
 The concepts of `s`-distance and `s`-walk have been defined in the Python library
@@ -114,15 +74,6 @@ An `s`-walk between edges is a sequence of edges such that consecutive pairwise
 edges intersect in at least `s` nodes. The length of the shortest `s`-walk is 1 less than
 the number of edges in the path sequence. If no such path exists returns typemax(T).
 """
-function distance(h::H, distance_method::SedgeDistanceBFS) where {H<:AbstractSimpleHypergraph}
-    checkbounds(h.he2v, distance_method.source_edge)
-    checkbounds(h.he2v, distance_method.target_edge)
-    A = edge_adjacency_matrix(h; s=distance_method.s, weighted=false)
-    g = Graphs.Graph(A)
-    bfs = Graphs.shortest_paths(g, distance_method.source_edge, BFS())
-    bfs.dists[distance_method.target_edge]
-end
-
 function distance(h::H, distance_method::SedgeDistanceDijkstra) where {H<:AbstractSimpleHypergraph}
     checkbounds(h.he2v, distance_method.source_edge)
     checkbounds(h.he2v, distance_method.target_edge)
@@ -133,64 +84,36 @@ function distance(h::H, distance_method::SedgeDistanceDijkstra) where {H<:Abstra
 end
 
 """
-    diameter(h::H, distance_method::SnodeDistanceBFS) where {H<:AbstractSimpleHypergraph
     diameter(h::H, distance_method::SnodeDistanceDijkstra) where {H<:AbstractSimpleHypergraph}}
 
-    Return the diameter of a hypergraph `h` (maximum distance between any two nodes) based on breadth-first search
-    traversal (using the unweighted `distance_method.s`-walk distance) or Dijkstra's algorithm (using a weighted
-    `s`-walk) applied starting from each node in `h`.
+    Return the diameter of a hypergraph `h` (maximum distance between any two nodes) based on Dijkstra's algorithm
+    (using a weighted `s`-walk) applied starting from each node in `h`.
 """
-function diameter(h::H, distance_method::SedgeDistanceDijkstra) where {H<:AbstractSimpleHypergraph}
-    A = adjacency_matrix(h; s=distance_method.s, weighted=false)
-    g = Graphs.Graph(A)
-    nv = nhv(h)
-    dist_mat = zeros(nv, nv)
-    for i in 1:nv
-        dist_mat[i, :] .= Graphs.shortest_paths(g, i, BFS())
-    end
-
-    maximum(dist_mat)
-end
-
-function diameter(h::H, distance_method::SnodeDistanceDijkstra) where {H<:AbstractSimpleHypergraph}
+function Graphs.diameter(h::H, distance_method::SnodeDistanceDijkstra) where {H<:AbstractSimpleHypergraph}
     A = adjacency_matrix(h; s=distance_method.s)
     g = Graphs.Graph(A)
     nv = nhv(h)
-    dist_mat = zeros(nv, nv)
+    dist_mat = zeros(Int, nv, nv)
     for i in 1:nv
-        dist_mat[i, :] .= Graphs.dijkstra_shortest_paths(g, i)
+        dist_mat[i, :] .= Graphs.dijkstra_shortest_paths(g, i).dists
     end
 
     maximum(dist_mat)
 end
 
 """
-    diameter(h::H, distance_method::SnodeDistanceBFS) where {H<:AbstractSimpleHypergraph
     diameter(h::H, distance_method::SnodeDistanceDijkstra) where {H<:AbstractSimpleHypergraph}}
 
-    Return the diameter of a hypergraph `h` (maximum distance between any two edges) based on breadth-first search
-    traversal (using the unweighted `distance_method.s`-walk distance) or Dijkstra's algorithm (using a weighted
-    `s`-walk) applied starting from each edge in `h`.
+    Return the diameter of a hypergraph `h` (maximum distance between any two edges) based Dijkstra's algorithm
+    (using a weighted `s`-walk) applied starting from each edge in `h`.
 """
-function diameter(h::H, distance_method::SedgeDistanceBFS) where {H<:AbstractSimpleHypergraph}
-    A = edge_adjacency_matrix(h; s=distance_method.s, weighted=false)
-    g = Graphs.Graph(A)
-    ne = nhe(h)
-    dist_mat = zeros(ne, ne)
-    for i in 1:ne
-        dist_mat[i, :] .= Graphs.shortest_paths(g, i, BFS())
-    end
-
-    maximum(dist_mat)
-end
-
-function diameter(h::H, distance_method::SedgeDistanceDijkstra) where {H<:AbstractSimpleHypergraph}
+function Graphs.diameter(h::H, distance_method::SedgeDistanceDijkstra) where {H<:AbstractSimpleHypergraph}
     A = edge_adjacency_matrix(h; s=distance_method.s)
     g = Graphs.Graph(A)
     ne = nhe(h)
-    dist_mat = zeros(ne, ne)
+    dist_mat = zeros(Int, ne, ne)
     for i in 1:ne
-        dist_mat[i, :] .= Graphs.dijkstra_shortest_paths(g, i)
+        dist_mat[i, :] .= Graphs.dijkstra_shortest_paths(g, i).dists
     end
 
     maximum(dist_mat)
