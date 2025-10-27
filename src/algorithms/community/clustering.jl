@@ -1,13 +1,7 @@
-function _bool_incidence_matrix(hg::H) where {H <: AbstractSimpleHypergraph}
-    M = zeros(Bool, nhv(hg), nhe(hg))
-    M[hg .!== nothing] .= true
-
-    M
-end
-
-function _num_quads(inc::Matrix{Bool}, i::Int)
+function _num_quads(hg::H, i::Int) where {H <: AbstractSimpleHypergraph}
     quads = 0
-    nv, ne = size(inc)
+    nv = nhv(hg)
+    ne = nhe(hg)
     # TODO: there must be a better implementation
     for α in 1:ne
         for β in α+1:ne
@@ -15,23 +9,26 @@ function _num_quads(inc::Matrix{Bool}, i::Int)
                 if i == j
                     continue
                 end
-                # 0 if quad does not exist between i and j using hyperedges α and β
-                # 1 if that quad does exist
-                quads += inc[i,α] * inc[i,β] * inc[j,α] * inc[j,β]
+
+                if !(isnothing(hg[i,α]) || isnothing(hg[i,β]) || isnothing(hg[j,α]) || isnothing(hg[j,β]))
+                    quads += 1
+                end
             end
         end
     end
     quads
 end
 
-function _max_num_quads(inc::Matrix{Bool}, i::Int)
-    _, ne = size(inc)
-    he_degrees = sum(inc, dims=1)
+function _max_num_quads(hg::H, i::Int) where {H <: AbstractSimpleHypergraph}
+    ne = nhe(hg)
+    he_degrees = length.(hg.he2v)
     # TODO: there must be a better implementation
     qmax = 0
     for α in 1:ne
         for β in α+1:ne
-            qmax += (min(he_degrees[α], he_degrees[β]) - 1) * inc[i,α] * inc[i,β]
+            if !(isnothing(hg[i,α]) || isnothing(hg[i,β]))
+                qmax += (min(he_degrees[α], he_degrees[β]) - 1)
+            end
         end
     end
     qmax
@@ -39,7 +36,6 @@ end
 
 
 """
-    quad_clustering_coefficient(inc::Matrix{Bool}, i::Int)
     quad_clustering_coefficient(hg::H, i::Int) where {H <: AbstractSimpleHypergraph}
     quad_clustering_coefficient(hg::H) where {H <: AbstractSimpleHypergraph}
 
@@ -52,24 +48,17 @@ end
     the *incidence matrix* of a hypergraph `hg`. Note that, if a vertex is incident on less than two hyperedges, its
     QCC must be 0.
 """
-function quad_clustering_coefficient(inc::Matrix{Bool}, i::Int)
-    if sum(inc[i,:]) < 2
+function quad_clustering_coefficient(hg::H, i::Int) where {H <: AbstractSimpleHypergraph}
+    if length(hg.v2he[i]) < 2
         return 0.0
     end
     
-    q = _num_quads(inc, i)
-    qmax = _max_num_quads(inc, i)
+    q = _num_quads(hg, i)
+    qmax = _max_num_quads(hg, i)
 
     return q / qmax
 end
 
-function quad_clustering_coefficient(hg::H, i::Int) where {H <: AbstractSimpleHypergraph}
-    inc = _bool_incidence_matrix(hg)
-    quad_clustering_coefficient(inc, i)
-end
-
 function quad_clustering_coefficient(hg::H) where {H <: AbstractSimpleHypergraph}
-    inc = _bool_incidence_matrix(hg)
-    
-    return [quad_clustering_coefficient(inc, i) for i in 1:nhv(hg)]
+    return [quad_clustering_coefficient(hg, i) for i in 1:nhv(hg)]
 end

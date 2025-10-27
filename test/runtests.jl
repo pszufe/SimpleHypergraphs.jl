@@ -314,20 +314,10 @@ end;
         nothing true
         nothing true
     ]
-    inc2 = [
-        true true
-        true false
-        true true
-        false true
-        false true
-    ]
     hg2 = Hypergraph(m2)
     @test quad_clustering_coefficient(hg2, 1) == 0.5
     @test quad_clustering_coefficient(hg2, 2) == 0.0
     @test quad_clustering_coefficient(hg2) == [0.5, 0.0, 0.5, 0.0, 0.0]
-    for i in 1:5
-        @test quad_clustering_coefficient(hg2, i) == quad_clustering_coefficient(inc2, i)
-    end
 
     m3 = [
         true true
