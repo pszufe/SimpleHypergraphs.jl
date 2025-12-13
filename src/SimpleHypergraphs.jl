@@ -44,8 +44,6 @@ export AbstractDistance
 export SnodeDistanceDijkstra, SedgeDistanceDijkstra, SnodeDistanceBFS, SedgeDistanceBFS
 export distance
 
-# export SparseHypergraphView
-
 export HyperNetX, GraphBased
 export draw
 
@@ -87,7 +85,6 @@ include("models/bipartite.jl")
 include("models/twosection.jl")
 include("models/random-models.jl")
 include("models/dual.jl")
-# include("models/sparse.jl")
 
 include("algorithms/conductance.jl")
 include("algorithms/distance.jl")
