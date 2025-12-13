@@ -9,6 +9,7 @@ using PyPlot
 using JSON3
 using Random
 using LinearAlgebra
+using SparseArrays
 using SimpleTraits
 
 export AbstractHypergraph, AbstractSimpleHypergraph
@@ -33,12 +34,14 @@ export modularity
 export randompartition
 export AbstractCommunityFinder, CFModularityRandom, CFModularityCNMLike, CFLabelPropagationFinder
 export findcommunities
+export quad_clustering_coefficient
 
 export nhv, nhe
 export random_walk
 export get_connected_components
 export conductance
-export AbstractDistance, SnodeDistanceDijkstra, SedgeDistanceDijkstra
+export AbstractDistance
+export SnodeDistanceDijkstra, SedgeDistanceDijkstra, SnodeDistanceBFS, SedgeDistanceBFS
 export distance
 
 export HyperNetX, GraphBased
@@ -88,6 +91,7 @@ include("algorithms/distance.jl")
 
 include("algorithms/community/modularity.jl")
 include("algorithms/community/label-propagation.jl")
+include("algorithms/community/clustering.jl")
 
 include("viz/drawing.jl")
 include("viz/widget.jl")
