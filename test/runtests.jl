@@ -325,6 +325,41 @@ end;
     @test nhv(H∂) == 20
 end;
 
+@testset "SimpleHypergraphs quad clustering coefficient" begin
+    m1 = [
+        true true
+        true nothing
+        true nothing
+        nothing true
+        nothing true
+        nothing true
+    ]
+    hg1 = Hypergraph(m1)
+    @test quad_clustering_coefficient(hg1) == zeros(6)
+    @test quad_clustering_coefficient(hg1, 1) == 0.0
+
+    m2 = [
+        true true
+        true nothing
+        true true
+        nothing true
+        nothing true
+    ]
+    hg2 = Hypergraph(m2)
+    @test quad_clustering_coefficient(hg2, 1) == 0.5
+    @test quad_clustering_coefficient(hg2, 2) == 0.0
+    @test quad_clustering_coefficient(hg2) == [0.5, 0.0, 0.5, 0.0, 0.0]
+
+    m3 = [
+        true true
+        true true
+        true true
+        nothing true
+    ]
+    hg3 = Hypergraph(m3)
+    @test quad_clustering_coefficient(hg3) == [1.0, 1.0, 1.0, 0.0]
+end
+
 
 @testset "SimpleHypergraphs modularity          " begin
     Random.seed!(1234);
@@ -622,4 +657,8 @@ end;
     @test distance(h, SedgeDistanceDijkstra(1, 3, 1)) == 1
     @test distance(h, SedgeDistanceDijkstra(2, 3, 3)) == 1
     @test distance(h, SedgeDistanceDijkstra(1, 3, 3)) == typemax(Int)
+
+    @test Graphs.diameter(h, SnodeDistanceDijkstra(1,1,1)) == 2
+    @test Graphs.diameter(h, SnodeDistanceDijkstra(1,1,2)) == typemax(Int)
+    @test Graphs.diameter(h, SedgeDistanceDijkstra(1,1,1)) == 1
 end;
