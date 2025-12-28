@@ -1,0 +1,12 @@
+{
+    "incidences": [],
+    "edges": [
+        {
+            "edge": 3,
+            "attrs": {
+                "timestamp": "2020-04-01",
+                "weight": 2.0
+            }
+        }
+    ]
+}

@@ -7,31 +7,8 @@ using Random
 using DataStructures
 import Graphs
 
-
-@testset "HIF test" begin
-    dir = "data/HIF-standard"
-
-    for file in readdir(dir)
-        full_path = joinpath(dir, file)
-
-        endswith(file, ".json") || continue
-
-        @testset "File: $file" begin
-            h = hg_load(full_path, HIF_Format(), T=Real)
-
-            io_h = IOBuffer()
-
-            hg_save(io_h, h, HIF_Format())
-
-            seekstart(io_h)
-
-            h_loaded = hg_load(io_h, HIF_Format(), T=Real)
-
-            @test h == h_loaded
-        end
-    end
-end
-
+#Test the HIF standard support
+include("hif-standard-tests.jl")
 
 h1 = Hypergraph{Float64, Int, String}(5,4)
 h1[1:3,1] .= 1.5
@@ -41,10 +18,14 @@ h1[4,3:4] .= 4.5
 h1[5,4] = 5.5
 h1[5,2] = 6.5
 
+#if !endswith(pwd(),"test")
+#    cd(@__DIR__)
+#end
+#h = hg_load("data/hgf/test1.hgf"; T=Int, HType=Hypergraph)
 
 @testset "SimpleHypergraphs Hypergraph             " begin
 
-    h = hg_load("data/test1.hgf"; T=Int, HType=Hypergraph)
+    h = hg_load("data/hgf/test1.hgf"; T=Int, HType=Hypergraph)
     @test size(h) == (4, 4)
     @test nhv(h) == 4
     @test nhe(h) == 4
@@ -54,61 +35,59 @@ h1[5,2] = 6.5
                 2       3       nothing nothing
                 nothing nothing 5       nothing
                 nothing nothing 6       nothing]
-    mktemp("data") do path, _
-        println(path)
-        hg_save(path, h)
+    path1, _ = mktemp("data")
+    path2, _ = mktemp("data")
 
-        loaded_hg = replace(read(path, String), r"\n*$" => "")
+    hg_save(path1, h)
 
-        @test loaded_hg ==
-            reduce(replace,
-                ["\r\n"=>"\n",
-                r"^\"\"\"(?s).*\"\"\"\n"=>"", #remove initial comments
-                r"\n*$"=>""], #remove final \n*
-                init=read("data/test1.hgf", String)) #no comments
+    loaded_hg = replace(read(path1, String), r"\n*$" => "")
 
-        @test loaded_hg ==
-            reduce(replace,
-                ["\r\n"=>"\n",
-                r"^\"\"\"(?s).*\"\"\"\n"=>"", #remove initial comments
-                r"\n*$"=>""], #remove final \n*
-                init=read("data/test_singlelinecomment.hgf", String)) #single line comment
+    @test loaded_hg ==
+        reduce(replace,
+            ["\r\n"=>"\n",
+            r"^\"\"\"(?s).*\"\"\"\n"=>"", #remove initial comments
+            r"\n*$"=>""], #remove final \n*
+            init=read("data/hgf/test1.hgf", String)) #no comments
 
-        @test loaded_hg ==
-            reduce(replace,
-                ["\r\n"=>"\n",
-                r"^\"\"\"(?s).*\"\"\"\n"=>"", #remove initial comments
-                r"\n*$"=>""], #remove final \n*
-                init=read("data/test_multiplelinescomment.hgf", String)) #multiple lines comment
+    @test loaded_hg ==
+        reduce(replace,
+            ["\r\n"=>"\n",
+            r"^\"\"\"(?s).*\"\"\"\n"=>"", #remove initial comments
+            r"\n*$"=>""], #remove final \n*
+            init=read("data/hgf/test_singlelinecomment.hgf", String)) #single line comment
 
-        for v=1:nhv(h)
-            set_vertex_meta!(h1, v, v)
-        end
+    @test loaded_hg ==
+        reduce(replace,
+            ["\r\n"=>"\n",
+            r"^\"\"\"(?s).*\"\"\"\n"=>"", #remove initial comments
+            r"\n*$"=>""], #remove final \n*
+            init=read("data/hgf/test_multiplelinescomment.hgf", String)) #multiple lines comment
 
-        for he=1:nhe(h)
-            set_hyperedge_meta!(h1, string(he), he)
-        end
-
-        hg_save(path, h1; format=JSON_Format())
-        loaded_hg = hg_load(path; format=JSON_Format(), HType=Hypergraph, T=Float64, V=Int, E=String)
-
-        @test h1 == loaded_hg
-        @test h1.v_meta == loaded_hg.v_meta
-        @test h1.he_meta == loaded_hg.he_meta
-
-        @test get_vertex_meta(h1, 1) == get_vertex_meta(loaded_hg, 1)
-        @test get_hyperedge_meta(h1, 2) == get_hyperedge_meta(loaded_hg, 2)
-
-        hg_save("test.json", h1, format=HIF_Format())
-        loaded_hg = hg_load("test.json", HIF_Format(), T=Float64, V=Int, E=String)
-
-        @test h1 == loaded_hg
-        @test h1.v_meta == loaded_hg.v_meta
-        @test h1.he_meta == loaded_hg.he_meta
+    for v=1:nhv(h)
+        set_vertex_meta!(h1, v, v)
     end
 
-    @test_throws ArgumentError hg_load("data/test_malformedcomment.hgf"; T=Int)
-    @test_throws ArgumentError hg_load("data/test_argumenterror.hgf"; T=Int)
+    for he=1:nhe(h)
+        set_hyperedge_meta!(h1, string(he), he)
+    end
+
+    hg_save(path1, h1; format=JSON_Format(), pretty=false)
+    hg_save(path2, h1; format=JSON_Format(), pretty=true)
+
+    loaded_hg = hg_load(path1; format=JSON_Format(), HType=Hypergraph, T=Float64, V=Int, E=String)
+    loaded_hg2 = hg_load(path2; format=JSON_Format(), HType=Hypergraph, T=Float64, V=Int, E=String)
+
+
+    @test h1 == loaded_hg == loaded_hg2
+    @test h1.v_meta == loaded_hg.v_meta == loaded_hg2.v_meta
+    @test h1.he_meta == loaded_hg.he_meta == loaded_hg2.he_meta
+
+    @test get_vertex_meta(h1, 1) == get_vertex_meta(loaded_hg, 1) == get_vertex_meta(loaded_hg2, 1)
+    @test get_hyperedge_meta(h1, 2) == get_hyperedge_meta(loaded_hg, 2) == get_hyperedge_meta(loaded_hg2, 2)
+
+
+    @test_throws ArgumentError hg_load("data/hgf/test_malformedcomment.hgf"; T=Int)
+    @test_throws ArgumentError hg_load("data/hgf/test_argumenterror.hgf"; T=Int)
 
     h2 = Hypergraph{Float64}(0,0)
     @test h2 == Hypergraph{Float64,Nothing}(0,0)
@@ -662,3 +641,4 @@ end;
     @test Graphs.diameter(h, SnodeDistanceDijkstra(1,1,2)) == typemax(Int)
     @test Graphs.diameter(h, SedgeDistanceDijkstra(1,1,1)) == 1
 end;
+

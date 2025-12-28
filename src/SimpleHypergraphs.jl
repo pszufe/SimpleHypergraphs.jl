@@ -3,10 +3,11 @@ module SimpleHypergraphs
 using Graphs
 using StatsBase
 using DataStructures
+using DataFrames
 using PyCall
 using Conda
 using PyPlot
-using JSON3
+using JSON
 using Random
 using LinearAlgebra
 using SparseArrays
@@ -81,6 +82,7 @@ include("abstracttypes.jl")
 include("hypergraph.jl")
 include("io.jl")
 
+# support for HIF standard
 include("io_hif.jl")
 
 include("models/bipartite.jl")
