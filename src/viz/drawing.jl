@@ -106,8 +106,11 @@ function draw(
     prune_hypergraph!(_h)
 
     w = widget_graph(
-        JSON3.write(_h.v2he),
-        JSON3.write(_h.he2v),
+        # JSON.json(_h.v2he),
+        # JSON.json(_h.he2v), 
+        # TODO: check if upgrade to JSON.jl works
+        JSON.json(_h.v2he),
+        JSON.json(_h.he2v),
         element;
         v_meta=_h.v_meta,
         he_meta=_h.he_meta,

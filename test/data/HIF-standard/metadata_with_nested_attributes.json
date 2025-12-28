@@ -1,0 +1,13 @@
+{
+    "network-type": "asc",
+    "metadata": {
+        "creator": "nested_test",
+        "extra_info": {
+            "key1": "value1",
+            "key2": "value2"
+        }
+    },
+    "incidences": [{"edge": 10, "node": 20}],
+    "nodes": [{"node": 20, "attrs": {"color": "blue", "size": "large"}}],
+    "edges": [{"edge": 10, "attrs": {"priority": "high"}}]
+}

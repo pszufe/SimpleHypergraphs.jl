@@ -13,3 +13,5 @@
 /docs/site/
 /.vscode
 
+.ipynb_checkpoints
+.ipynb_checkpoints/*
