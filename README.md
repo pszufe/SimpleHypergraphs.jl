@@ -59,7 +59,7 @@ The full paper is available at [https://doi.org/10.24166/im.01.2020](https://doi
 [docs-stable-img]: https://img.shields.io/badge/docs-stable-blue.svg
 [docs-dev-url]: https://pszufe.github.io/SimpleHypergraphs.jl/dev
 [docs-stable-url]: https://pszufe.github.io/SimpleHypergraphs.jl/stable
-[tutorial-url]: https://nbviewer.jupyter.org/github/pszufe/SimpleHypergraphs.jl/blob/master/tutorials/basics/SimpleHypergraphs_tutorial_v4.ipynb
+[tutorial-url]: https://nbviewer.jupyter.org/github/pszufe/SimpleHypergraphs.jl/blob/master/tutorials/basics/SimpleHypergraphs_tutorial_v5.ipynb
 [got-url]: https://nbviewer.jupyter.org/github/pszufe/SimpleHypergraphs.jl/blob/master/tutorials/basics/A%20case%20study%20-%20Game%20of%20Thrones.ipynb
 
 [tutorial-raw]: https://github.com/pszufe/SimpleHypergraphs.jl/raw/master/tutorials/basics/SimpleHypergraphs_tutorial_v5.ipynb
