@@ -213,20 +213,32 @@ function hg_load(
         E = Nothing
     ) where {H <: AbstractSimpleHypergraph, U <: Real}
     json_hg = JSON.parse(read(io, String))
+    if json_hg.m isa String
+        json_hg.m = JSON.parse(json_hg.m)
+    end
+    if json_hg.v2he isa String
+        json_hg.v2he = JSON.parse(json_hg.v2he)
+    end
+    if json_hg.v_meta isa String
+        json_hg.v_meta = JSON.parse(json_hg.v_meta)
+    end
+    if json_hg.he_meta isa String
+        json_hg.he_meta = JSON.parse(json_hg.he_meta)
+    end
     m = reshape(Vector{Union{T, Nothing}}(json_hg.m), json_hg.n, json_hg.k)
     
     V2 = (V == :auto) ? ("v_meta" ∈ keys(json_hg) && length(json_hg.v_meta) > 0 ? elemtypes(json_hg.v_meta) : Nothing) : V
     E2 = (E == :auto) ? ("he_meta" ∈ keys(json_hg) && length(json_hg.he_meta) > 0 ? elemtypes(json_hg.he_meta) : Nothing) : E
 
     if V2 != Nothing && E2 != Nothing && hasvertexmeta(HType) && hashyperedgemeta(HType)
-        v_meta = Vector{Union{V2, Nothing}}(json_hg.v_meta)
-        he_meta = Vector{Union{E2, Nothing}}(json_hg.he_meta)
+        v_meta  = Union{V2, Nothing}[isnothing(e) ? e : V2(e) for e in json_hg.v_meta]
+        he_meta = Union{E2, Nothing}[isnothing(e) ? e : E2(e) for e in json_hg.he_meta]
         h = HType{T, V2, E2, D}(m; v_meta, he_meta)
     elseif V2 != Nothing && hasvertexmeta(HType)
-        v_meta = Vector{Union{V2, Nothing}}(json_hg.v_meta)
+        v_meta = Union{V2, Nothing}[isnothing(e) ? e : V2(e) for e in json_hg.v_meta]
         h = HType{T, V2, D}(m; v_meta=v_meta)
     elseif E2 != Nothing && hashyperedgemeta(HType)
-        he_meta = Vector{Union{E2, Nothing}}(json_hg.he_meta)
+        he_meta = Union{E2, Nothing}[isnothing(e) ? e : E2(e) for e in json_hg.he_meta]
         h = HType{T, E2, D}(m; he_meta=he_meta)
     else
         h = HType{T, V2, E2, D}(m)

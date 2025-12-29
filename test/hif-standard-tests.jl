@@ -72,6 +72,10 @@ end
 #==
 using Revise
 using SimpleHypergraphs
+pathof(SimpleHypergraphs)
+pth = joinpath(dirname(pathof(SimpleHypergraphs)),"..","tutorials", "basics", "data", "hg_seasons_all.json");
+h = SimpleHypergraphs.hg_load(pth; format=JSON_Format(), T=Int, V=Symbol, E=Symbol);
+
 cd("test")
 full_path = "data/HIF-standard/missing_direction.json"
 run(`cat $full_path`);

@@ -52,8 +52,8 @@ Antelmi, A., Cordasco, G., Kamiński, B., Prałat, P., Scarano, V., Spagnuolo, C
 The full paper is available at [https://doi.org/10.24166/im.01.2020](https://doi.org/10.24166/im.01.2020)
 
 ## Acknowledgement
-The research is financed by NAWA - The Polish National Agency for Academic Exchange.
-
+- The research was initially financed by NAWA - The Polish National Agency for Academic Exchange.
+- The development of HIF standard format support for exchange of hypergraphs was financed by the National Science Centre (NCN), Poland (grant number: 2021/41/B/HS4/03349).
 
 [docs-latest-img]: https://img.shields.io/badge/docs-latest-blue.svg
 [docs-stable-img]: https://img.shields.io/badge/docs-stable-blue.svg
@@ -62,7 +62,7 @@ The research is financed by NAWA - The Polish National Agency for Academic Excha
 [tutorial-url]: https://nbviewer.jupyter.org/github/pszufe/SimpleHypergraphs.jl/blob/master/tutorials/basics/SimpleHypergraphs_tutorial_v4.ipynb
 [got-url]: https://nbviewer.jupyter.org/github/pszufe/SimpleHypergraphs.jl/blob/master/tutorials/basics/A%20case%20study%20-%20Game%20of%20Thrones.ipynb
 
-[tutorial-raw]: https://github.com/pszufe/SimpleHypergraphs.jl/raw/master/tutorials/basics/SimpleHypergraphs_tutorial_v4.ipynb
+[tutorial-raw]: https://github.com/pszufe/SimpleHypergraphs.jl/raw/master/tutorials/basics/SimpleHypergraphs_tutorial_v5.ipynb
 [got-raw]: https://github.com/pszufe/SimpleHypergraphs.jl/raw/master/tutorials/basics/A%20case%20study%20-%20Game%20of%20Thrones.ipynb
 
 [travis-img]: https://travis-ci.org/pszufe/SimpleHypergraphs.jl.svg?branch=master
