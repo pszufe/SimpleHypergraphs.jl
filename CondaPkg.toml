@@ -1,0 +1,7 @@
+[deps]
+networkx = ""
+matplotlib = ""
+
+[pip.deps]
+hypernetx = "==2.4.0"
+fastjsonschema = ""

@@ -4,9 +4,9 @@ using Graphs
 using StatsBase
 using DataStructures
 using DataFrames
-using PyCall
-using Conda
-using PyPlot
+using PythonCall
+using CondaPkg
+using PythonPlot
 using JSON
 using Random
 using LinearAlgebra
@@ -48,8 +48,8 @@ export distance
 export HyperNetX, GraphBased
 export draw
 
-const hnx  = PyNULL()
-const nx = PyNULL()
+const hnx = Ref{Py}()
+const nx = Ref{Py}()
 const has_plotting = Ref(false)
 
 
@@ -57,19 +57,19 @@ function __init__()
     has_networkx = false
     has_hypernetx = false
     try
-        copy!(nx, pyimport("networkx"))
+        nx[] = pyimport("networkx")
         has_networkx = true
     catch e; end
     try
-        copy!(hnx, pyimport("hypernetx"))
+        hnx[] = pyimport("hypernetx")
         has_hypernetx = true
     catch e; end
     has_plotting[] = has_networkx && has_hypernetx
     if !has_plotting[]
         @warn "The plotting functionality of HyperNetX will not work!\n"* 
-		(has_networkx ? "" : "Conda Python networkx not found.\n")*
-        (has_hypernetx ? "" : "Conda Python HyperNetX not found.\n")*        
-        "To test your installation try running `using PyCall;pyimport(\"networkx\");pyimport(\"hypernetx\")`"
+		(has_networkx ? "" : "CondaPkg Python networkx not found.\n")*
+        (has_hypernetx ? "" : "CondaPkg Python HyperNetX not found.\n")*        
+        "To test your installation try running `using PythonCall;pyimport(\"networkx\");pyimport(\"hypernetx\")`"
     end
 end
 

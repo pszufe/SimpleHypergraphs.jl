@@ -156,9 +156,9 @@ end
         with_color::Bool=true,
         with_node_counts::Bool=false,
         with_edge_counts::Bool=false,
-        layout::PyObject=nx.spring_layout,
+        layout::Py=nx[],
         layout_kwargs::Dict=Dict{String, Any}(),
-        ax::Union{PyObject, Nothing}=nothing,
+        ax::Union{Py, Nothing}=nothing,
         no_border::Bool=false,
         edges_kwargs::Dict=Dict{String, Any}(),
         nodes_kwargs::Dict=Dict{String, Any}(),
@@ -198,9 +198,9 @@ function draw(
         with_color::Bool=true,
         with_node_counts::Bool=false,
         with_edge_counts::Bool=false,
-        layout::PyObject=nx.spring_layout,
+        layout::Py=nx[],
         layout_kwargs::Dict=Dict{String, Any}(),
-        ax::Union{PyObject, Nothing}=nothing,
+        ax::Union{Py, Nothing}=nothing,
         no_border::Bool=false,
         edges_kwargs::Dict=Dict{String, Any}(),
         nodes_kwargs::Dict=Dict{String, Any}(),
@@ -235,7 +235,8 @@ function draw(
         end
     end
 
-    hnx.draw(h_hnx,
+    # pyimport("hypernetx").draw(h_hnx,
+    hnx[].draw(h_hnx,
         pos=pos,
         with_color=with_color,
         with_node_counts=with_node_counts,
@@ -271,23 +272,28 @@ function _convert_to_hnx(h::Hypergraph;
         node_labels::Union{Dict{Int, String}, Nothing}=nothing,
         edge_labels::Union{Dict{Int, String}, Nothing}=nothing,
         )
-    h_hnx = hnx.Hypergraph()
+    pybuiltins = pyimport("builtins")
+    edges_dict = pybuiltins.dict()
 
     for he=1:nhe(h)
-        if node_labels === nothing #isnothing(node_labels)
-            vertices = collect(keys(getvertices(h, he)))
+        vertices = collect(keys(getvertices(h, he)))
+        
+        if node_labels === nothing
+            vertices = [string(v) for v in vertices]
         else
-            vertices = [get(node_labels, v, v) for v in collect(keys(getvertices(h, he)))]
+            vertices = [get(node_labels, v, string(v)) for v in vertices]
         end
-
-        if edge_labels === nothing #isnothing(edge_labels)
-            he_hnx = hnx.Entity(string(he), elements=vertices)
+        
+        edge_label = if edge_labels === nothing
+            string(he)
         else
-            he_hnx = hnx.Entity(get(edge_labels, he, string(he)), elements=vertices)
+            get(edge_labels, he, string(he))
         end
-
-        h_hnx.add_edge(he_hnx)
+        
+        edges_dict[edge_label] = pybuiltins.list(vertices)
     end
-
+    
+    h_hnx = hnx[].Hypergraph(edges_dict)
+    
     h_hnx
 end

@@ -1,6 +1,6 @@
 ENV["MPLBACKEND"]="agg" # no GUI
-using PyPlot, PyCall
-@info("SimpleHypergraphs is using Matplotlib $(PyPlot.version) with Python $(PyCall.pyversion)")
+using PythonPlot, PythonCall
+@info("SimpleHypergraphs is using Matplotlib $(PythonPlot.matplotlib.__version__) with Python $(PythonCall.python_version())")
 
 using Test, SimpleHypergraphs, StatsBase
 using Random
@@ -480,16 +480,17 @@ end
     end
 
     h_hnx = SimpleHypergraphs._convert_to_hnx(h1)
-    data = Dict{String, Array{Int, 1}}(
-        "1" => [1, 2, 3],
-        "2" => [5],
-        "3" => [2, 4],
-        "4" => [3, 4, 5],
-        "5" => [5, 6, 7]
-    )
-    h2 = SimpleHypergraphs.hnx.Hypergraph(data)
-	#TODO update for HyperNetX 2.0.0
-    #@test h_hnx == h2
+    pybuiltins = pyimport("builtins")
+    data = pybuiltins.dict()
+    data["1"] = pybuiltins.list(["1", "2", "3"])
+    data["2"] = pybuiltins.list(["5"])
+    data["3"] = pybuiltins.list(["2", "4"])
+    data["4"] = pybuiltins.list(["3", "4", "5"])
+    data["5"] = pybuiltins.list(["5", "6", "7"])
+    
+    h2 = SimpleHypergraphs.hnx[].Hypergraph(data)
+
+    @test pyconvert(Bool, h_hnx == h2)
 
     h_hnx =
         SimpleHypergraphs._convert_to_hnx(
@@ -499,16 +500,15 @@ end
             edge_labels = Dict{Int, String}(
                 1=>"HE1", 2=>"HE2", 3=>"HE3", 4=>"HE4", 5=>"HE5"
             ))
-    data = Dict{String, Array{String, 1}}(
-        "HE1" => ["A", "B", "C"],
-        "HE2" => ["E"],
-        "HE3" => ["B", "D"],
-        "HE4" => ["C", "D", "E"],
-        "HE5" => ["E", "F", "G"]
-    )
-    h2 = SimpleHypergraphs.hnx.Hypergraph(data)
-	#TODO update for HyperNetX 2.0.0
-    #@test h_hnx == h2
+    data = pybuiltins.dict()
+    data["HE1"] = pybuiltins.list(["A", "B", "C"])
+    data["HE2"] = pybuiltins.list(["E"])
+    data["HE3"] = pybuiltins.list(["B", "D"])
+    data["HE4"] = pybuiltins.list(["C", "D", "E"])
+    data["HE5"] = pybuiltins.list(["E", "F", "G"])
+    h2 = SimpleHypergraphs.hnx[].Hypergraph(data)
+    
+    @test pyconvert(Bool, h_hnx == h2)
 
     @test SimpleHypergraphs.get_next_div_id() == 1
     @test SimpleHypergraphs.get_next_div_id() == 2
