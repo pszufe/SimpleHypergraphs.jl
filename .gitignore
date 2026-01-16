@@ -17,3 +17,5 @@
 .ipynb_checkpoints/*
 
 .CondaPkg
+
+.DS_Store

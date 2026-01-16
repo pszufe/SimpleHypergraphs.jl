@@ -490,7 +490,11 @@ end
     
     h2 = SimpleHypergraphs.hnx[].Hypergraph(data)
 
-    @test pyconvert(Bool, h_hnx == h2)
+    h_hnx_incidence_matrix = h_hnx.incidence_matrix()
+    h2_incidence_matrix = h2.incidence_matrix()
+
+    @test pyconvert(Bool, h_hnx_incidence_matrix.shape == h2_incidence_matrix.shape)
+    @test pyconvert(Bool, (h_hnx_incidence_matrix != h2_incidence_matrix).nnz == 0)
 
     h_hnx =
         SimpleHypergraphs._convert_to_hnx(
@@ -508,7 +512,11 @@ end
     data["HE5"] = pybuiltins.list(["E", "F", "G"])
     h2 = SimpleHypergraphs.hnx[].Hypergraph(data)
     
-    @test pyconvert(Bool, h_hnx == h2)
+    h_hnx_incidence_matrix = h_hnx.incidence_matrix()
+    h2_incidence_matrix = h2.incidence_matrix()
+
+    @test pyconvert(Bool, h_hnx_incidence_matrix.shape == h2_incidence_matrix.shape)
+    @test pyconvert(Bool, (h_hnx_incidence_matrix != h2_incidence_matrix).nnz == 0)
 
     @test SimpleHypergraphs.get_next_div_id() == 1
     @test SimpleHypergraphs.get_next_div_id() == 2

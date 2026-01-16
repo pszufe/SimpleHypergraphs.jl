@@ -195,10 +195,7 @@ function draw(
         collapse_nodes::Bool=false,
         collapse_edges::Bool=false,
         pos::Union{Dict{Int,Pair{Int,Int}}, Nothing}=nothing,
-        with_color::Bool=true,
-        with_node_counts::Bool=false,
-        with_edge_counts::Bool=false,
-        layout::Py=nx[],
+        layout::Py=nx[].spring_layout,
         layout_kwargs::Dict=Dict{String, Any}(),
         ax::Union{Py, Nothing}=nothing,
         no_border::Bool=false,
@@ -208,7 +205,8 @@ function draw(
         node_labels_kwargs::Dict=Dict{String, Any}(),
         with_edge_labels::Bool=true,
         with_node_labels::Bool=true,
-        label_alpha::Float64=.35
+        node_label_alpha::Float64=.35,
+        edge_label_alpha::Float64=.35
         ) where {H<:AbstractSimpleHypergraph}
     if (!SimpleHypergraphs.support_hypernetx())
         throw("HyperNetX is not installed in Python used by this Julia. Install HyperNetX and reload SimpleHypergraphs.jl")
@@ -227,20 +225,16 @@ function draw(
     end
 
     if ax === nothing #isnothing(ax)
-        fig = plt.figure(figsize=[width,height])
-        ax = plt.gca()
+        fig = pyplot.figure(figsize=[width,height])
+        ax = pyplot.gca()
 
         if no_border
             ax.axis("off")
         end
     end
 
-    # pyimport("hypernetx").draw(h_hnx,
     hnx[].draw(h_hnx,
         pos=pos,
-        with_color=with_color,
-        with_node_counts=with_node_counts,
-        with_edge_counts=with_edge_counts,
         layout=layout,
         layout_kwargs=layout_kwargs,
         ax=ax,
@@ -250,7 +244,8 @@ function draw(
         node_labels_kwargs=node_labels_kwargs,
         with_edge_labels=with_edge_labels,
         with_node_labels=with_node_labels,
-        label_alpha=label_alpha
+        node_label_alpha=node_label_alpha,
+        edge_label_alpha=edge_label_alpha
     )
 end
 
