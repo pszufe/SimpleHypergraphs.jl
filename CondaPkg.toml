@@ -1,7 +1,8 @@
 [deps]
 networkx = ""
 matplotlib = ""
+pandas = "<2.3"
 
 [pip.deps]
-hypernetx = "==2.4.0"
+hypernetx = ">=2.4.0,<3"
 fastjsonschema = ""

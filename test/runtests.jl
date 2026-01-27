@@ -518,10 +518,12 @@ end
     @test pyconvert(Bool, h_hnx_incidence_matrix.shape == h2_incidence_matrix.shape)
     @test pyconvert(Bool, (h_hnx_incidence_matrix != h2_incidence_matrix).nnz == 0)
 
+    @test Set(pyconvert(Vector{String}, h_hnx.nodes)) == Set(pyconvert(Vector{String}, h2.nodes))
+    @test Set(pyconvert(Vector{String}, h_hnx.edges)) == Set(pyconvert(Vector{String}, h2.edges))
+
     @test SimpleHypergraphs.get_next_div_id() == 1
     @test SimpleHypergraphs.get_next_div_id() == 2
 end;
-
 
 @testset "SimpleHypergraphs conductance            " begin
   h = Hypergraph{Float64, Int}(5,4)
