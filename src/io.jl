@@ -241,9 +241,12 @@ end
         format::Abstract_HG_format = HGF_Format(),
         HType::Type{H} = Hypergraph,
         T::Type{U} = Bool,
-        D::Type{<:AbstractDict{Int, U}} = Dict{Int, T},
         V = Nothing,
-        E = Nothing
+        E = Nothing,
+        D::Type{<:AbstractDict{Int, U}} = Dict{Int, T}, 
+        show_warning::Bool=true,
+        sort_by_id::Bool=false,
+        add_original_id_to_meta::Union{Symbol, Nothing}=nothing
     ) where {U <: Real, H <: AbstractSimpleHypergraph}
 
 Loads a hypergraph from a file `fname`.
