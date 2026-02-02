@@ -213,8 +213,20 @@ function hg_load(
         E = Nothing
     ) where {H <: AbstractSimpleHypergraph, U <: Real}
     json_hg = JSON.parse(read(io, String))
+    if json_hg.m isa String
+        json_hg.m = JSON.parse(json_hg.m)
+    end
+    if json_hg.v2he isa String
+        json_hg.v2he = JSON.parse(json_hg.v2he)
+    end
+    if json_hg.v_meta isa String
+        json_hg.v_meta = JSON.parse(json_hg.v_meta)
+    end
+    if json_hg.he_meta isa String
+        json_hg.he_meta = JSON.parse(json_hg.he_meta)
+    end
     m = reshape(Vector{Union{T, Nothing}}(json_hg.m), json_hg.n, json_hg.k)
-    
+
     V2 = (V == :auto) ? ("v_meta" ∈ keys(json_hg) && length(json_hg.v_meta) > 0 ? elemtypes(json_hg.v_meta) : Nothing) : V
     E2 = (E == :auto) ? ("he_meta" ∈ keys(json_hg) && length(json_hg.he_meta) > 0 ? elemtypes(json_hg.he_meta) : Nothing) : E
 

@@ -50,12 +50,14 @@ export draw
 
 const hnx = Ref{Py}()
 const nx = Ref{Py}()
+const pyplot = Ref{Py}()
 const has_plotting = Ref(false)
 
 
 function __init__()
     has_networkx = false
     has_hypernetx = false
+    has_pyplot = false
     try
         nx[] = pyimport("networkx")
         has_networkx = true
@@ -64,12 +66,19 @@ function __init__()
         hnx[] = pyimport("hypernetx")
         has_hypernetx = true
     catch e; end
-    has_plotting[] = has_networkx && has_hypernetx
+    try
+        pyplot[] = pyimport("matplotlib.pyplot")
+        has_pyplot = true
+    catch e; end
+    has_plotting[] = has_networkx && has_hypernetx && has_pyplot
     if !has_plotting[]
         @warn "The plotting functionality of HyperNetX will not work!\n"* 
 		(has_networkx ? "" : "CondaPkg Python networkx not found.\n")*
-        (has_hypernetx ? "" : "CondaPkg Python HyperNetX not found.\n")*        
-        "To test your installation try running `using PythonCall;pyimport(\"networkx\");pyimport(\"hypernetx\")`"
+        (has_hypernetx ? "" : "CondaPkg Python HyperNetX not found.\n")*
+        (has_pyplot ? "" : "CondaPkg Python matplotlib.pyplot not found.\n")*        
+        "To test your installation try running `using PythonCall;pyimport(\"networkx\");pyimport(\"hypernetx\");pyimport(\"matplotlib.pyplot\")`"
+    else
+        @info "HyperNetX plotting support loaded successfully"
     end
 end
 

@@ -194,6 +194,7 @@ function draw(
         edge_labels::Union{Dict{Int, String}, Nothing}=nothing,
         collapse_nodes::Bool=false,
         collapse_edges::Bool=false,
+        node_radius::Union{Int, Nothing}=nothing,
         pos::Union{Dict{Int,Pair{Int,Int}}, Nothing}=nothing,
         layout::Py=nx[].spring_layout,
         layout_kwargs::Dict=Dict{String, Any}(),
@@ -225,8 +226,8 @@ function draw(
     end
 
     if ax === nothing #isnothing(ax)
-        fig = pyplot.figure(figsize=[width,height])
-        ax = pyplot.gca()
+        fig = pyplot[].figure(figsize=[width,height])
+        ax = pyplot[].gca()
 
         if no_border
             ax.axis("off")
@@ -238,6 +239,7 @@ function draw(
         layout=layout,
         layout_kwargs=layout_kwargs,
         ax=ax,
+        node_radius=node_radius,
         edges_kwargs=edges_kwargs,
         nodes_kwargs=nodes_kwargs,
         edge_labels_kwargs=edge_labels_kwargs,
@@ -247,6 +249,8 @@ function draw(
         node_label_alpha=node_label_alpha,
         edge_label_alpha=edge_label_alpha
     )
+    
+    return pyplot[].gcf()
 end
 
 

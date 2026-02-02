@@ -72,8 +72,19 @@ end
 
 @testset "Tutorials JSON Data          " begin
     pth = joinpath(dirname(dirname(pathof(SimpleHypergraphs))), "tutorials", "basics", "data");
+    pth2 = joinpath(dirname(dirname(pathof(SimpleHypergraphs))), "tutorials", "hif-standard", "data");
     files = String[]
     for (root, dirs, filenames) in walkdir(pth)
+        for file in filenames
+            if endswith(file, ".json")
+                if contains(file, "hif.json")
+                    continue
+                end
+                push!(files, joinpath(root, file))
+            end
+        end
+    end
+    for (root, dirs, filenames) in walkdir(pth2)
         for file in filenames
             if endswith(file, ".json")
                 if contains(file, "hif.json")
@@ -107,8 +118,16 @@ end;
 
 @testset "Tutorials as HIF Data          " begin
     pth = joinpath(dirname(dirname(pathof(SimpleHypergraphs))), "tutorials", "basics", "data");
+    pth2 = joinpath(dirname(dirname(pathof(SimpleHypergraphs))), "tutorials", "hif-standard", "data");
     files = String[]
     for (root, dirs, filenames) in walkdir(pth)
+        for file in filenames
+            if endswith(file, "hif.json")
+                push!(files, joinpath(root, file))
+            end
+        end
+    end
+    for (root, dirs, filenames) in walkdir(pth2)
         for file in filenames
             if endswith(file, "hif.json")
                 push!(files, joinpath(root, file))
@@ -147,6 +166,23 @@ end;
     end
 
 end;
+
+@testset "JSON and HIF correct load test" begin
+    path = joinpath(dirname(dirname(pathof(SimpleHypergraphs))), "tutorials", "basics", "data", "hg_seasons_min.json");
+    
+    h1 = SimpleHypergraphs.hg_load(
+        path; format=JSON_Format(), HType=Hypergraph, T=Int, V=:auto, E=:auto
+    )
+    
+    @test nhv(h1) == 149
+    @test nhe(h1) == 8
+
+    pth_hif = joinpath(dirname(dirname(pathof(SimpleHypergraphs))), "tutorials", "basics", "data", "hg_seasons_min.hif.json")
+    h2 = SimpleHypergraphs.hg_load(pth_hif; format=HIF_Format(), T=Int, V=:auto, E=:auto)
+    
+    @test nhv(h2) == 149
+    @test nhe(h2) == 8 
+end
 
 #==
 using Revise
