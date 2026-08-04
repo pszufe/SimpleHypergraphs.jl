@@ -226,7 +226,7 @@ function hg_load(
         json_hg.he_meta = JSON.parse(json_hg.he_meta)
     end
     m = reshape(Vector{Union{T, Nothing}}(json_hg.m), json_hg.n, json_hg.k)
-    
+
     V2 = (V == :auto) ? ("v_meta" ∈ keys(json_hg) && length(json_hg.v_meta) > 0 ? elemtypes(json_hg.v_meta) : Nothing) : V
     E2 = (E == :auto) ? ("he_meta" ∈ keys(json_hg) && length(json_hg.he_meta) > 0 ? elemtypes(json_hg.he_meta) : Nothing) : E
 
@@ -253,9 +253,12 @@ end
         format::Abstract_HG_format = HGF_Format(),
         HType::Type{H} = Hypergraph,
         T::Type{U} = Bool,
-        D::Type{<:AbstractDict{Int, U}} = Dict{Int, T},
         V = Nothing,
-        E = Nothing
+        E = Nothing,
+        D::Type{<:AbstractDict{Int, U}} = Dict{Int, T}, 
+        show_warning::Bool=true,
+        sort_by_id::Bool=false,
+        add_original_id_to_meta::Union{Symbol, Nothing}=nothing
     ) where {U <: Real, H <: AbstractSimpleHypergraph}
 
 Loads a hypergraph from a file `fname`.

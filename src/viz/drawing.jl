@@ -156,9 +156,9 @@ end
         with_color::Bool=true,
         with_node_counts::Bool=false,
         with_edge_counts::Bool=false,
-        layout::PyObject=nx.spring_layout,
+        layout::Py=nx[],
         layout_kwargs::Dict=Dict{String, Any}(),
-        ax::Union{PyObject, Nothing}=nothing,
+        ax::Union{Py, Nothing}=nothing,
         no_border::Bool=false,
         edges_kwargs::Dict=Dict{String, Any}(),
         nodes_kwargs::Dict=Dict{String, Any}(),
@@ -194,13 +194,11 @@ function draw(
         edge_labels::Union{Dict{Int, String}, Nothing}=nothing,
         collapse_nodes::Bool=false,
         collapse_edges::Bool=false,
+        node_radius::Union{Int, Nothing}=nothing,
         pos::Union{Dict{Int,Pair{Int,Int}}, Nothing}=nothing,
-        with_color::Bool=true,
-        with_node_counts::Bool=false,
-        with_edge_counts::Bool=false,
-        layout::PyObject=nx.spring_layout,
+        layout::Py=nx[].spring_layout,
         layout_kwargs::Dict=Dict{String, Any}(),
-        ax::Union{PyObject, Nothing}=nothing,
+        ax::Union{Py, Nothing}=nothing,
         no_border::Bool=false,
         edges_kwargs::Dict=Dict{String, Any}(),
         nodes_kwargs::Dict=Dict{String, Any}(),
@@ -208,7 +206,8 @@ function draw(
         node_labels_kwargs::Dict=Dict{String, Any}(),
         with_edge_labels::Bool=true,
         with_node_labels::Bool=true,
-        label_alpha::Float64=.35
+        node_label_alpha::Float64=.35,
+        edge_label_alpha::Float64=.35
         ) where {H<:AbstractSimpleHypergraph}
     if (!SimpleHypergraphs.support_hypernetx())
         throw("HyperNetX is not installed in Python used by this Julia. Install HyperNetX and reload SimpleHypergraphs.jl")
@@ -227,30 +226,31 @@ function draw(
     end
 
     if ax === nothing #isnothing(ax)
-        fig = plt.figure(figsize=[width,height])
-        ax = plt.gca()
+        fig = pyplot[].figure(figsize=[width,height])
+        ax = pyplot[].gca()
 
         if no_border
             ax.axis("off")
         end
     end
 
-    hnx.draw(h_hnx,
+    hnx[].draw(h_hnx,
         pos=pos,
-        with_color=with_color,
-        with_node_counts=with_node_counts,
-        with_edge_counts=with_edge_counts,
         layout=layout,
         layout_kwargs=layout_kwargs,
         ax=ax,
+        node_radius=node_radius,
         edges_kwargs=edges_kwargs,
         nodes_kwargs=nodes_kwargs,
         edge_labels_kwargs=edge_labels_kwargs,
         node_labels_kwargs=node_labels_kwargs,
         with_edge_labels=with_edge_labels,
         with_node_labels=with_node_labels,
-        label_alpha=label_alpha
+        node_label_alpha=node_label_alpha,
+        edge_label_alpha=edge_label_alpha
     )
+    
+    return pyplot[].gcf()
 end
 
 
@@ -271,23 +271,28 @@ function _convert_to_hnx(h::Hypergraph;
         node_labels::Union{Dict{Int, String}, Nothing}=nothing,
         edge_labels::Union{Dict{Int, String}, Nothing}=nothing,
         )
-    h_hnx = hnx.Hypergraph()
+    pybuiltins = pyimport("builtins")
+    edges_dict = pybuiltins.dict()
 
     for he=1:nhe(h)
-        if node_labels === nothing #isnothing(node_labels)
-            vertices = collect(keys(getvertices(h, he)))
+        vertices = collect(keys(getvertices(h, he)))
+        
+        if node_labels === nothing
+            vertices = [string(v) for v in vertices]
         else
-            vertices = [get(node_labels, v, v) for v in collect(keys(getvertices(h, he)))]
+            vertices = [get(node_labels, v, string(v)) for v in vertices]
         end
-
-        if edge_labels === nothing #isnothing(edge_labels)
-            he_hnx = hnx.Entity(string(he), elements=vertices)
+        
+        edge_label = if edge_labels === nothing
+            string(he)
         else
-            he_hnx = hnx.Entity(get(edge_labels, he, string(he)), elements=vertices)
+            get(edge_labels, he, string(he))
         end
-
-        h_hnx.add_edge(he_hnx)
+        
+        edges_dict[edge_label] = pybuiltins.list(vertices)
     end
-
+    
+    h_hnx = hnx[].Hypergraph(edges_dict)
+    
     h_hnx
 end

@@ -69,6 +69,121 @@ end
     end
 end
 
+
+@testset "Tutorials JSON Data          " begin
+    pth = joinpath(dirname(dirname(pathof(SimpleHypergraphs))), "tutorials", "basics", "data");
+    pth2 = joinpath(dirname(dirname(pathof(SimpleHypergraphs))), "tutorials", "hif-standard", "data");
+    files = String[]
+    for (root, dirs, filenames) in walkdir(pth)
+        for file in filenames
+            if endswith(file, ".json")
+                if contains(file, "hif.json")
+                    continue
+                end
+                push!(files, joinpath(root, file))
+            end
+        end
+    end
+    for (root, dirs, filenames) in walkdir(pth2)
+        for file in filenames
+            if endswith(file, ".json")
+                if contains(file, "hif.json")
+                    continue
+                end
+                push!(files, joinpath(root, file))
+            end
+        end
+    end
+    for file in files
+        println("Testing tutorials JSON file: $(basename(file))")
+
+        flush(stdout)
+        flush(stderr)
+        if !endswith(file, "hg_seasons_min.json")
+            loaded_hg = hg_load(file; format=JSON_Format(), HType=Hypergraph, T=Bool, V=Symbol, E=Symbol)
+        else 
+            loaded_hg = hg_load(file; format=JSON_Format(), HType=Hypergraph, T=Int, V=Symbol, E=Symbol)
+        end
+        io_h = IOBuffer()
+        hg_save(io_h, loaded_hg, JSON_Format(); pretty=true)
+        if !endswith(file, "hg_seasons_min.json")
+            h_loaded = hg_load(seekstart(io_h), JSON_Format(); HType=Hypergraph, T=Bool, V=Symbol, E=Symbol)
+        else 
+            h_loaded = hg_load(seekstart(io_h), JSON_Format(); HType=Hypergraph, T=Int, V=Symbol, E=Symbol)
+        end
+        @test loaded_hg == h_loaded
+    end
+
+end;
+
+@testset "Tutorials as HIF Data          " begin
+    pth = joinpath(dirname(dirname(pathof(SimpleHypergraphs))), "tutorials", "basics", "data");
+    pth2 = joinpath(dirname(dirname(pathof(SimpleHypergraphs))), "tutorials", "hif-standard", "data");
+    files = String[]
+    for (root, dirs, filenames) in walkdir(pth)
+        for file in filenames
+            if endswith(file, "hif.json")
+                push!(files, joinpath(root, file))
+            end
+        end
+    end
+    for (root, dirs, filenames) in walkdir(pth2)
+        for file in filenames
+            if endswith(file, "hif.json")
+                push!(files, joinpath(root, file))
+            end
+        end
+    end
+    for file in files
+        println("Testing tutorials as HIF file: $(basename(file))")
+        flush(stdout)
+        flush(stderr)
+        if !endswith(file, "hg_seasons_min.json")
+            loaded_hg = hg_load(
+                    file;
+                    format=HIF_Format(),
+                    HType=Hypergraph,
+                    T=Bool, V=:auto, E=:auto
+                )
+        else 
+            loaded_hg = hg_load(
+                    file;
+                    format=HIF_Format(),
+                    HType=Hypergraph,
+                    T=Int, V=:auto, E=:auto
+                )
+        end
+        io_h = IOBuffer()
+        hg_save(io_h, loaded_hg, HIF_Format(); pretty=true)
+        
+        if !endswith(file, "hg_seasons_min.json")
+            h_loaded = hg_load(seekstart(io_h), HIF_Format(); HType=Hypergraph, T=Bool, V=:auto, E=:auto)
+        else 
+            h_loaded = hg_load(seekstart(io_h), HIF_Format(); HType=Hypergraph, T=Int, V=:auto, E=:auto)
+        end
+
+        @test loaded_hg == h_loaded
+    end
+
+end;
+
+@testset "JSON and HIF correct load test" begin
+    path = joinpath(dirname(dirname(pathof(SimpleHypergraphs))), "tutorials", "basics", "data", "hg_seasons_min.json");
+    
+    h1 = SimpleHypergraphs.hg_load(
+        path; format=JSON_Format(), HType=Hypergraph, T=Int, V=:auto, E=:auto
+    )
+    
+    @test nhv(h1) == 149
+    @test nhe(h1) == 8
+
+    pth_hif = joinpath(dirname(dirname(pathof(SimpleHypergraphs))), "tutorials", "basics", "data", "hg_seasons_min.hif.json")
+    h2 = SimpleHypergraphs.hg_load(pth_hif; format=HIF_Format(), T=Int, V=:auto, E=:auto)
+    
+    @test nhv(h2) == 149
+    @test nhe(h2) == 8 
+end
+
 #==
 using Revise
 using SimpleHypergraphs
